@@ -416,6 +416,7 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .deck.playing #art .i{animation:float 3s ease-in-out infinite}
 @keyframes float{50%{transform:translateY(-4px)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.uslink{color:#fff;font-weight:700;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -1690,6 +1691,9 @@ const MT={};
 function loadMT(c){ const d=store.get('kr-mt-'+c,null); if(d) MT[c]=d; return d; }
 let L=store.get('kr-lang','en'); if(fullKey(L)) L=fullKey(L); else loadMT(L);
 function uiLocale(){ try{ return Intl.getCanonicalLocales(canon(L))[0]; }catch(e){ return 'en'; } }
+const US_URL='karaoke-youtube-eq.user.js';
+I18N.en.usInstall='Install userscript ↗'; I18N.ja.usInstall='ユーザースクリプトを入れる ↗';
+function usLink(){ const a=document.createElement('a'); a.href=US_URL; a.target='_blank'; a.rel='noopener'; a.className='uslink'; a.textContent=t('usInstall'); return a; }
 function t(k,v){
   const D=I18N[L]||MT[L]||I18N.en;
   let s=(D[k]!=null)?D[k]:(I18N.en[k]!=null?I18N.en[k]:k);
@@ -1899,7 +1903,8 @@ function pingYtEq(){ const f=ytFrame(); if(f&&f.contentWindow) f.contentWindow.p
 function updateYtEqNote(){
   const n=$('eqYt'); if(!n) return;
   n.hidden=!(eqState.target==='song'&&mode==='yt');
-  n.textContent=ytEqLinked?t('eqLinked'):t('eqYt')+' '+t('eqHowTo');
+  n.textContent=ytEqLinked?t('eqLinked'):t('eqYt')+' '+t('eqHowTo')+' ';
+  if(!ytEqLinked) n.appendChild(usLink());
   n.style.borderLeftColor=ytEqLinked?'var(--ok)':'';
 }
 window.addEventListener('message',e=>{
@@ -2934,7 +2939,8 @@ setInterval(()=>{
   const live=autoOn&&vad.at&&performance.now()-vad.at<400;
   const st=$('autoState'); st.classList.toggle('live',!!live);
   st.textContent=!autoOn?'OFF':live?('● LIVE '+(autoAdj>=0?'+':'')+autoAdj.toFixed(2)+t('sec')):'—';
-  $('autoNote').hidden=!(autoOn&&mode==='yt'&&!live&&!ytEqLinked);
+  { const an=$('autoNote'), h=!(autoOn&&mode==='yt'&&!live&&!ytEqLinked); an.hidden=h;
+    if(!h&&!an.querySelector('a')){ an.textContent=t('autoNoSrc')+' '; an.appendChild(usLink()); } }
   $('autoBadge').hidden=!live; if(live) $('autoBadge').textContent='AUTO '+(autoAdj>=0?'+':'')+autoAdj.toFixed(1)+t('sec');
 },120);
 /* 歌い出しの瞬間に1回タップ → いちばん近い行の開始時刻に合わせて、ズレ補正を自動で決める */

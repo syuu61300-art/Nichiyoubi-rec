@@ -184,7 +184,19 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .lyrics li.blank{min-height:.7em;padding-block:2px}
 .lyrics li.near{color:var(--mute)}
 .lyrics li.cur{color:var(--ink);font-weight:700;transform:scale(1.04)}
-.lyroff{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;color:var(--mute)}
+.calib{min-height:28px!important;padding:0 10px!important;font:500 12px var(--font)!important;gap:5px;border-color:var(--line2)!important}
+.full-off .calib{background:rgba(255,255,255,.14)!important;border:0!important;color:#fff}
+.calib.hit{animation:pop .35s cubic-bezier(.3,.7,.2,1)}
+/* 前奏中の待機表示：3つの点が歌い出しに向けて順に灯る */
+.lyrwrap{position:relative}
+.intro{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;justify-content:center;gap:12px;z-index:2;pointer-events:none}
+.full .intro{top:auto;bottom:auto;position:relative;transform:none;height:0;overflow:visible;z-index:2;max-width:760px;width:100%;margin:0 auto;justify-content:flex-start}
+.intro i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.18);transition:background .3s,transform .3s}
+.intro i.on{background:#fff;transform:scale(1.15);box-shadow:0 0 14px rgba(255,255,255,.35)}
+.intro.sm i{width:8px;height:8px}
+.intro.breathe i.on{animation:breathe 1.2s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(.85);opacity:.7}}
+.lyroff{flex-wrap:wrap;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;color:var(--mute)}
 .lyroff button{min-height:28px;padding:0 9px;font:500 11px var(--mono)}
 .lyroff output{font:500 11.5px var(--mono);min-width:4.4em;text-align:center;color:var(--ink)}
 .lrc-results{list-style:none;margin:0;padding:0;display:grid;gap:2px;max-height:260px;overflow-y:auto}
@@ -206,8 +218,23 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 
 /* equalizer */
 .eqcurve{width:100%;height:96px;display:block;border-radius:var(--r);background:var(--bg);border:1px solid var(--line)}
-.presets{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+/* プリセットの帯：指でも、マウスのドラッグ・ホイールでも横にスライド。端に矢印と影 */
+.pstrip{position:relative;flex:1;min-width:0;display:flex;align-items:center}
+.presets{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 30px;scroll-padding-inline:30px;scroll-behavior:smooth;cursor:grab;touch-action:pan-x;scroll-snap-type:x proximity}
+.presets.drag{cursor:grabbing;scroll-behavior:auto;scroll-snap-type:none}
+.presets.drag button{pointer-events:none}
 .presets::-webkit-scrollbar{display:none}
+.presets button{scroll-snap-align:start}
+.pstrip.fl .presets{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px);mask-image:linear-gradient(90deg,transparent,#000 28px)}
+.pstrip.fr .presets{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.pstrip.fl.fr .presets{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+.parrow{position:absolute;top:50%;z-index:2;width:26px;min-height:26px;height:26px;padding:0;border-radius:50%;transform:translateY(-50%);background:var(--s3);border-color:var(--line2)}
+.parrow.l{left:-2px} .parrow.r{right:-2px}
+.parrow.l .i{transform:rotate(90deg)} .parrow.r .i{transform:rotate(-90deg)}
+.eqlive{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0}
+.eqlive .livedot{width:7px;height:7px;border-radius:50%;background:var(--rec);box-shadow:0 0 0 0 rgba(255,69,58,.5);animation:live 1.6s ease-out infinite;flex:none}
+@keyframes live{70%{box-shadow:0 0 0 7px rgba(255,69,58,0)}}
+.eqlive button{min-height:30px;padding:0 10px;font-size:12px;flex:none}
 .presets button{min-height:32px;padding:0 12px;font-size:12.5px;border-radius:999px;flex:none}
 .presets button[aria-pressed="true"]{background:var(--ink);color:#111;border-color:var(--ink)}
 .faders{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:10px 4px 8px;direction:ltr}
@@ -412,6 +439,7 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
   <symbol id="i-fwd10" viewBox="0 0 24 24"><path d="M19.4 12a7.4 7.4 0 1 1-2.2-5.3"/><path d="M17.4 3.2v3.7h-3.7"/><text x="11.8" y="15" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="6.4" font-weight="600" fill="currentColor" stroke="none">10</text></symbol>
   <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6.2 5.5v13"/><path d="M18.2 6.3c0-.7-.8-1.1-1.4-.7l-8.3 5.6c-.5.4-.5 1.2 0 1.6l8.3 5.6c.6.4 1.4 0 1.4-.7z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-next" viewBox="0 0 24 24"><path d="M17.8 5.5v13"/><path d="M5.8 6.3c0-.7.8-1.1 1.4-.7l8.3 5.6c.5.4.5 1.2 0 1.6l-8.3 5.6c-.6.4-1.4 0-1.4-.7z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-echo" viewBox="0 0 24 24"><path d="M4 12h0"/><path d="M8 8.5a5 5 0 0 1 0 7"/><path d="M12 6a8.5 8.5 0 0 1 0 12" opacity=".7"/><path d="M16 3.8a12 12 0 0 1 0 16.4" opacity=".45"/></symbol>
   <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 12c1.6 0 1.6-5 3.2-5s1.6 10 3.2 10 1.6-10 3.2-10 1.6 10 3.2 10 1.6-5 3.2-5"/><path d="M21 12h0"/></symbol>
   <symbol id="i-tape" viewBox="0 0 24 24"><rect x="2.8" y="5.5" width="18.4" height="13" rx="2.4"/><circle cx="8.3" cy="11.3" r="2.2"/><circle cx="15.7" cy="11.3" r="2.2"/><path d="M8.3 13.5h7.4M7 18.5l1.6-2.6h6.8l1.6 2.6"/></symbol>
 </svg>
@@ -524,13 +552,13 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
         <button class="iconbtn" id="editLyricsBtn" data-i18n-aria="another"><svg class="i"><use href="#i-lines"/></svg></button>
         <button class="iconbtn" id="fullBtn2" data-i18n-aria="lyrics"><svg class="i"><use href="#i-expand"/></svg></button>
       </div>
-      <ol class="lyrics" id="lyricsList"></ol>
+      <div class="lyrwrap"><div class="intro sm" id="introP" hidden aria-hidden="true"><i></i><i></i><i></i></div><ol class="lyrics" id="lyricsList"></ol></div>
       <div class="row" id="syncBar" hidden>
         <button class="solid" id="nextLineBtn"><span data-i18n="next"></span></button>
         <button id="syncDoneBtn"><span data-i18n="done"></span></button>
         <span class="status" data-i18n="syncHint"></span>
       </div>
-      <div class="lyroff"><span data-i18n="offLabel"></span><button id="offMinus2">−0.1</button><output id="offVal2">0.0</output><button id="offPlus2">+0.1</button></div>
+      <div class="lyroff"><span data-i18n="offLabel"></span><button id="offMinus2">−0.1</button><output id="offVal2">0.0</output><button id="offPlus2">+0.1</button><button class="calib" id="calibP" data-i18n-aria="calibHint"><svg class="i sm"><use href="#i-metro"/></svg><span data-i18n="calib"></span></button></div>
       <p class="tip" id="lyricsHint" data-i18n="lineHint" style="text-align:center"></p>
     </div>
 
@@ -630,11 +658,16 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
   <section class="panel" id="p_eq" role="tabpanel">
     <div class="seg" role="group">
       <button id="eqTSong" aria-pressed="false"><svg class="i sm"><use href="#i-note"/></svg><span data-i18n="mixSong"></span></button>
-      <button id="eqTVoice" aria-pressed="true"><svg class="i sm"><use href="#i-voice"/></svg><span data-i18n="mixVoice"></span></button>
+      <button id="eqTVoice" aria-pressed="true"><svg class="i sm"><use href="#i-mic"/></svg><span data-i18n="eqMic"></span></button>
     </div>
+    <div class="eqlive" id="eqLiveRow"><span class="livedot"></span><span class="tip" data-i18n="eqLive" style="flex:1"></span><button id="monOnBtn" hidden><svg class="i sm"><use href="#i-phones"/></svg><span data-i18n="monOn"></span></button></div>
     <canvas class="eqcurve" id="eqCurve" width="640" height="192" aria-hidden="true"></canvas>
-    <div class="row" style="justify-content:space-between;flex-wrap:nowrap;gap:8px">
-      <div class="presets" id="presets" role="group" data-i18n-aria="eqPreset"></div>
+    <div class="row" style="justify-content:space-between;flex-wrap:nowrap;gap:6px">
+      <div class="pstrip" id="pstrip">
+        <button class="parrow l" id="pPrev" aria-label="‹" hidden><svg class="i sm"><use href="#i-chev"/></svg></button>
+        <div class="presets" id="presets" role="group" data-i18n-aria="eqPreset"></div>
+        <button class="parrow r" id="pNext" aria-label="›" hidden><svg class="i sm"><use href="#i-chev"/></svg></button>
+      </div>
       <button id="eqReset" style="flex:none;min-height:32px;font-size:12.5px"><span data-i18n="reset"></span></button>
     </div>
     <div class="faders" id="faders"></div>
@@ -643,6 +676,12 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
       <span class="nm"><b data-i18n="reverb"></b><small data-i18n="reverbSub"></small></span>
       <span></span>
       <div class="sl"><input type="range" id="revAmt" min="0" max="100" value="15" data-i18n-aria="reverb"><output id="outRev">15%</output></div>
+    </div>
+    <div class="ch" id="chEcho">
+      <span class="ico"><svg class="i sm"><use href="#i-echo"/></svg></span>
+      <span class="nm"><b data-i18n="echo"></b><small data-i18n="echoSub"></small></span>
+      <span></span>
+      <div class="sl"><input type="range" id="echoAmt" min="0" max="100" value="0" data-i18n-aria="echo"><output id="outEcho">0%</output></div>
     </div>
     <p class="eqnote" id="eqYt" hidden data-i18n="eqYt"></p>
   </section>
@@ -691,12 +730,13 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
     <div class="full-title"><img id="fullArt" alt="" hidden><span class="tx"><small>NOW SINGING</small><b id="fullTitle">—</b></span></div>
     <button class="iconbtn ghost" id="fullSwap" data-i18n-aria="another" title=""><svg class="i"><use href="#i-lines"/></svg></button>
   </div>
+  <div class="intro" id="introF" hidden aria-hidden="true"><i></i><i></i><i></i></div>
   <ol class="full-list" id="fullList"></ol>
   <p class="full-empty" id="fullEmpty" hidden data-i18n="fullEmpty"></p>
   <div class="full-bottom">
     <div class="full-off">
       <span data-i18n="offLabel"></span>
-      <button id="offMinus">−0.1</button><output id="offVal">0.0</output><button id="offPlus">+0.1</button>
+      <button id="offMinus">−0.1</button><output id="offVal">0.0</output><button id="offPlus">+0.1</button><button class="calib" id="calibF" data-i18n-aria="calibHint"><svg class="i sm"><use href="#i-metro"/></svg><span data-i18n="calib"></span></button>
     </div>
     <div class="bar"><span class="time" id="fNow" style="color:rgba(255,255,255,.7)">0:00</span><input id="fSeek" type="range" min="0" max="0" step="0.1" value="0" aria-label="Position"><span class="time" id="fDur" style="color:rgba(255,255,255,.7)">0:00</span></div>
     <div class="full-ctrl">
@@ -1543,6 +1583,32 @@ my:"စာသားတွေ့သော်လည်း ဤသီချင်း
 };
 for(const l in E5) I18N[l].lyrUnsure=E5[l];
 
+/* エコー・リアルタイムEQ・歌詞の1タップ同期 */
+const K6=['echo','echoSub','eqMic','eqLive','monOn','calib','calibHint','calibDone'];
+const E6={
+en:["Echo","Repeats your voice like a karaoke mic","Live mic","Applied live to the sound you hear now. You hear your voice through Monitor (earphones).","Turn on Monitor","Sync here","Tap the moment a line starts being sung","Lyrics shifted by {x}"],
+ja:["エコー","カラオケのマイクのように声を繰り返します","マイクの声（リアルタイム）","今聞こえている音にリアルタイムで掛かります。自分の声はマイク返し（イヤホン）で聞こえます。","マイク返しをオンにする","ここで合わせる","歌い出しの瞬間にタップ","歌詞を {x} ずらしました"],
+ko:["에코","노래방 마이크처럼 목소리를 반복합니다","마이크 (실시간)","지금 들리는 소리에 실시간으로 적용됩니다. 내 목소리는 모니터(이어폰)로 들립니다.","모니터 켜기","여기서 맞추기","가사가 시작되는 순간 누르세요","가사를 {x} 이동했습니다"],
+"zh-CN":["回声","像卡拉OK麦克风一样重复你的声音","麦克风（实时）","实时作用于你现在听到的声音。你的声音通过耳返（耳机）听到。","打开耳返","在此对齐","在一句开始唱的瞬间点按","歌词已偏移 {x}"],
+"zh-TW":["回音","像卡拉OK麥克風一樣重複你的聲音","麥克風（即時）","即時作用於你現在聽到的聲音。你的聲音透過耳返（耳機）聽到。","開啟耳返","在此對齊","在一句開始唱的瞬間點一下","歌詞已偏移 {x}"],
+es:["Eco","Repite tu voz como un micro de karaoke","Micro en vivo","Se aplica en vivo a lo que oyes ahora. Tu voz se oye por el retorno (auriculares).","Activar retorno","Sincronizar aquí","Toca justo cuando empiece a cantarse una línea","Letra desplazada {x}"],
+fr:["Écho","Répète votre voix comme un micro de karaoké","Micro en direct","S'applique en direct à ce que vous entendez. Votre voix s'entend via le retour (écouteurs).","Activer le retour","Caler ici","Touchez au moment où une ligne commence à être chantée","Paroles décalées de {x}"],
+de:["Echo","Wiederholt deine Stimme wie ein Karaoke-Mikro","Live-Mikro","Wirkt live auf das, was du gerade hörst. Deine Stimme hörst du über den Monitor (Kopfhörer).","Monitor einschalten","Hier angleichen","Tippe, sobald eine Zeile gesungen wird","Text um {x} verschoben"],
+"pt-BR":["Eco","Repete sua voz como um microfone de karaokê","Microfone ao vivo","Atua ao vivo no que você ouve agora. Sua voz é ouvida pelo retorno (fones).","Ligar retorno","Sincronizar aqui","Toque quando uma linha começar a ser cantada","Letra deslocada em {x}"],
+it:["Eco","Ripete la voce come un microfono da karaoke","Microfono dal vivo","Agisce dal vivo su ciò che senti ora. La tua voce si sente dalla spia (cuffie).","Attiva la spia","Allinea qui","Tocca quando una riga inizia a essere cantata","Testo spostato di {x}"],
+id:["Gema","Mengulang suara Anda seperti mik karaoke","Mik langsung","Diterapkan langsung pada suara yang Anda dengar. Suara Anda terdengar lewat monitor (earphone).","Nyalakan monitor","Selaraskan di sini","Ketuk saat sebuah baris mulai dinyanyikan","Lirik digeser {x}"],
+th:["เอคโค่","ทำให้เสียงร้องสะท้อนซ้ำแบบไมค์คาราโอเกะ","ไมค์สด","ใช้กับเสียงที่ได้ยินตอนนี้แบบเรียลไทม์ ได้ยินเสียงตัวเองผ่านมอนิเตอร์ (หูฟัง)","เปิดมอนิเตอร์","ซิงก์ตรงนี้","แตะทันทีที่เริ่มร้องบรรทัด","เลื่อนเนื้อเพลง {x}"],
+vi:["Tiếng vọng","Lặp lại giọng như micro karaoke","Micro trực tiếp","Áp dụng trực tiếp cho âm thanh bạn đang nghe. Giọng bạn nghe qua kiểm âm (tai nghe).","Bật kiểm âm","Canh tại đây","Chạm ngay khi một dòng bắt đầu được hát","Đã dời lời {x}"],
+ru:["Эхо","Повторяет голос, как караоке-микрофон","Микрофон вживую","Работает вживую на то, что вы слышите сейчас. Свой голос вы слышите через мониторинг (наушники).","Включить мониторинг","Синхронизировать здесь","Нажмите в момент, когда начинается строка","Текст сдвинут на {x}"],
+pl:["Echo","Powtarza głos jak mikrofon karaoke","Mikrofon na żywo","Działa na żywo na to, co teraz słyszysz. Swój głos słyszysz przez odsłuch (słuchawki).","Włącz odsłuch","Zsynchronizuj tutaj","Dotknij w chwili, gdy zaczyna się wers","Tekst przesunięto o {x}"],
+tr:["Eko","Sesinizi karaoke mikrofonu gibi tekrarlar","Canlı mikrofon","Şu an duyduğunuz sese canlı uygulanır. Sesinizi monitörden (kulaklık) duyarsınız.","Monitörü aç","Burada eşitle","Bir satır söylenmeye başladığı anda dokunun","Sözler {x} kaydırıldı"],
+hi:["इको","कराओके माइक की तरह आवाज़ दोहराता है","लाइव माइक","अभी सुनाई दे रही आवाज़ पर लाइव लगता है। अपनी आवाज़ मॉनिटर (ईयरफ़ोन) से सुनाई देती है।","मॉनिटर चालू करें","यहाँ मिलाएँ","जैसे ही कोई पंक्ति गाई जाने लगे, टैप करें","बोल {x} खिसकाए गए"],
+ur:["ایکو","کراؤکے مائیک کی طرح آواز دہراتا ہے","لائیو مائیک","ابھی سنائی دینے والی آواز پر لائیو لگتا ہے۔ اپنی آواز مانیٹر (ایئرفون) سے سنائی دیتی ہے۔","مانیٹر آن کریں","یہاں ملائیں","جیسے ہی کوئی سطر گائی جانے لگے، ٹیپ کریں","بول {x} سرکائے گئے"],
+ar:["إيكو","يكرر صوتك مثل ميكروفون الكاريوكي","ميكروفون مباشر","يُطبَّق مباشرة على ما تسمعه الآن. تسمع صوتك عبر المراقبة (السماعات).","تشغيل المراقبة","زامِن هنا","اضغط لحظة بدء غناء السطر","أُزيحت الكلمات {x}"],
+my:["အက်ကို","ကာရာအိုကေ မိုက်ကဲ့သို့ အသံကို ထပ်ခါထပ်ခါ ပြန်ကြားစေသည်","တိုက်ရိုက်မိုက်","ယခုကြားနေသော အသံပေါ်တွင် တိုက်ရိုက် သက်ရောက်သည်။ ကိုယ့်အသံကို မော်နီတာ (နားကြပ်) မှ ကြားရသည်။","မော်နီတာ ဖွင့်ရန်","ဒီမှာ ချိန်ကိုက်ရန်","စာကြောင်းတစ်ကြောင်း စဆိုချိန်တွင် နှိပ်ပါ","စာသားကို {x} ရွှေ့ပြီး"]
+};
+for(const l in E6) K6.forEach((k,i)=>{ I18N[l][k]=E6[l][i]; });
+
 /* ISO 639-2 の言語一覧（いただいたリストより。語族の総称「(Other)」と mis/mul/und/zxx は除く） */
 const ISO_RAW="aar:Afar;abk:Abkhaz;ace:Achinese;ach:Acoli;ada:Adangme;ady:Adygei;afh:Afrihili;afr:Afrikaans;ain:Ainu;aka:Akan;akk:Akkadian;alb:Albanian;ale:Aleut;amh:Amharic;anp:Angika;ara:Arabic;arg:Aragonese;arc:Aramaic;arp:Arapaho;arw:Arawak;arm:Armenian;rup:Aromanian;asm:Assamese;ava:Avaric;ave:Avestan;awa:Awadhi;aym:Aymara;aze:Azerbaijani;ast:Asturian;ban:Balinese;bal:Baluchi;bam:Bambara;bas:Basa;bak:Bashkir;baq:Basque;btk:Batak;bej:Beja;bel:Belarusian;bem:Bemba;ben:Bengali;bho:Bhojpuri;bik:Bikol;byn:Bilin;bin:Edo;bis:Bislama;zbl:Blissymbolics;bos:Bosnian;bra:Braj;bre:Breton;bug:Bugis;bul:Bulgarian;bua:Buriat;bur:Burmese;cad:Caddo;car:Carib;cat:Catalan;ceb:Cebuano;chg:Chagatai;cha:Chamorro;che:Chechen;chr:Cherokee;chy:Cheyenne;chb:Chibcha;chi:Chinese;chn:Chinook jargon;chp:Chipewyan;cho:Choctaw;chu:Church Slavic;chv:Chuvash;cop:Coptic;cor:Cornish;cos:Corsican;cre:Cree;mus:Creek;crh:Crimean Tatar;hrv:Croatian;cze:Czech;dak:Dakota;dan:Danish;dar:Dargwa;day:Dayak;del:Delaware;din:Dinka;div:Divehi;doi:Dogri;dgr:Dogrib;dua:Duala;dut:Dutch;dum:Middle Dutch;dyu:Dyula;dzo:Dzongkha;frs:East Frisian;efi:Efik;egy:Egyptian;eka:Ekajuk;elx:Elamite;eng:English;enm:Middle English;ang:Old English;myv:Erzya;epo:Esperanto;est:Estonian;gez:Ge'ez;ewe:Ewe;ewo:Ewondo;fan:Fang;fat:Fanti;fao:Faroese;fij:Fijian;fil:Filipino;fin:Finnish;fon:Fon;fre:French;frm:Middle French;fro:Old French;fry:Frisian;fur:Friulian;ful:Fula;gaa:Ga;glg:Galician;lug:Ganda;gay:Gayo;gba:Gbaya;geo:Georgian;ger:German;gmh:Middle High German;goh:Old High German;gil:Gilbertese;gon:Gondi;gor:Gorontalo;got:Gothic;grb:Grebo;grc:Ancient Greek;gre:Greek;grn:Guarani;guj:Gujarati;gwi:Gwich'in;hai:Haida;hat:Haitian Creole;hau:Hausa;haw:Hawaiian;heb:Hebrew;her:Herero;hil:Hiligaynon;hin:Hindi;hmo:Hiri Motu;hit:Hittite;hmn:Hmong;hun:Hungarian;hup:Hupa;iba:Iban;ice:Icelandic;ido:Ido;ibo:Igbo;ilo:Iloko;smn:Inari Sami;ind:Indonesian;inh:Ingush;ina:Interlingua;ile:Interlingue;iku:Inuktitut;ipk:Inupiaq;gle:Irish;mga:Middle Irish;sga:Old Irish;ita:Italian;jpn:Japanese;jav:Javanese;jrb:Judeo-Arabic;jpr:Judeo-Persian;kbd:Kabardian;kab:Kabyle;kac:Kachin;kal:Kalaallisut;xal:Oirat;kam:Kamba;kan:Kannada;kau:Kanuri;kaa:Kara-Kalpak;krc:Karachay-Balkar;krl:Karelian;kas:Kashmiri;csb:Kashubian;kaw:Kawi;kaz:Kazakh;kha:Khasi;khm:Khmer;kho:Khotanese;kik:Kikuyu;kmb:Kimbundu;kin:Kinyarwanda;tlh:Klingon;kom:Komi;kon:Kongo;kok:Konkani;kor:Korean;kpe:Kpelle;kua:Kuanyama;kum:Kumyk;kur:Kurdish;kru:Kurukh;kos:Kosraean;kut:Kootenai;kir:Kyrgyz;lad:Ladino;lah:Lahnda;lam:Lamba;lao:Lao;lat:Latin;lav:Latvian;ltz:Luxembourgish;lez:Lezgian;lim:Limburgish;lin:Lingala;lit:Lithuanian;jbo:Lojban;nds:Low German;dsb:Lower Sorbian;loz:Lozi;lub:Luba-Katanga;lua:Luba-Lulua;lui:Luiseño;smj:Lule Sami;lun:Lunda;luo:Luo;lus:Mizo;mac:Macedonian;mad:Madurese;mag:Magahi;mai:Maithili;mak:Makasar;mlg:Malagasy;may:Malay;mal:Malayalam;mlt:Maltese;mnc:Manchu;mdr:Mandar;man:Mandingo;mni:Manipuri;glv:Manx;mao:Maori;arn:Mapuche;mar:Marathi;chm:Mari;mah:Marshallese;mwr:Marwari;mas:Maasai;men:Mende;mic:Micmac;min:Minangkabau;mwl:Mirandese;moh:Mohawk;mdf:Moksha;lol:Mongo;mon:Mongolian;mos:Moore;nah:Nahuatl;nau:Nauru;nav:Navajo;nbl:South Ndebele;nde:North Ndebele;ndo:Ndonga;nap:Neapolitan;nep:Nepali;new:Newari;nwc:Old Newari;nia:Nias;niu:Niuean;nqo:N'Ko;nog:Nogai;frr:North Frisian;sme:Northern Sami;nso:Northern Sotho;nor:Norwegian;nob:Norwegian Bokmål;nno:Norwegian Nynorsk;nym:Nyamwezi;nya:Nyanja;nyn:Nyankole;nyo:Nyoro;nzi:Nzima;oci:Occitan;oji:Ojibwa;non:Old Norse;peo:Old Persian;ori:Odia;orm:Oromo;osa:Osage;oss:Ossetic;pal:Pahlavi;pau:Palauan;pli:Pali;pam:Pampanga;pag:Pangasinan;pan:Punjabi;pap:Papiamento;per:Persian;phn:Phoenician;pol:Polish;pon:Pohnpeian;por:Portuguese;pro:Old Provençal;pus:Pashto;que:Quechua;roh:Romansh;raj:Rajasthani;rap:Rapanui;rar:Rarotongan;rum:Romanian;rom:Romani;run:Rundi;rus:Russian;syc:Classical Syriac;sam:Samaritan Aramaic;smo:Samoan;sad:Sandawe;sag:Sango;san:Sanskrit;sat:Santali;srd:Sardinian;sas:Sasak;sco:Scots;gla:Scottish Gaelic;sel:Selkup;srp:Serbian;srr:Serer;shn:Shan;sna:Shona;iii:Sichuan Yi;scn:Sicilian;sid:Sidamo;bla:Siksika;snd:Sindhi;sin:Sinhala;sms:Skolt Sami;den:Slave;slo:Slovak;slv:Slovenian;sog:Sogdian;som:Somali;son:Songhai;snk:Soninke;sot:Southern Sotho;alt:Southern Altai;sma:Southern Sami;spa:Spanish;srn:Sranan Tongo;suk:Sukuma;sux:Sumerian;sun:Sundanese;sus:Susu;swa:Swahili;ssw:Swati;swe:Swedish;gsw:Swiss German;syr:Syriac;tgl:Tagalog;tah:Tahitian;tgk:Tajik;tmh:Tamashek;tam:Tamil;tat:Tatar;tel:Telugu;tem:Temne;ter:Tereno;tet:Tetum;tha:Thai;tib:Tibetan;tig:Tigre;tir:Tigrinya;tiv:Tiv;tli:Tlingit;tpi:Tok Pisin;tkl:Tokelau;tog:Nyasa Tonga;ton:Tongan;chk:Chuukese;tsi:Tsimshian;tso:Tsonga;tsn:Tswana;tum:Tumbuka;tur:Turkish;ota:Ottoman Turkish;tuk:Turkmen;tvl:Tuvalu;tyv:Tuvinian;twi:Twi;udm:Udmurt;uga:Ugaritic;uig:Uyghur;ukr:Ukrainian;umb:Umbundu;hsb:Upper Sorbian;urd:Urdu;uzb:Uzbek;vai:Vai;ven:Venda;vie:Vietnamese;vol:Volapük;vot:Votic;wal:Wolaytta;wln:Walloon;war:Waray;was:Washo;wel:Welsh;wol:Wolof;xho:Xhosa;sah:Yakut;yao:Yao;yap:Yapese;yid:Yiddish;yor:Yoruba;zap:Zapotec;zza:Zaza;zen:Zenaga;zha:Zhuang;zul:Zulu;zun:Zuni";
 const ISO=ISO_RAW.split(';').map(s=>{ const i=s.indexOf(':'); return {c:s.slice(0,i),en:s.slice(i+1)}; });
@@ -1742,7 +1808,7 @@ if(window.ResizeObserver){ const ro=new ResizeObserver(()=>{ fitPager(); placePi
 window.addEventListener('resize',()=>setTab(curTab,true));
 
 /* ===== オーディオ基盤 ===== */
-let ctx, trackGain, monitorGain, voiceGain, voiceDest, micStream, micSrc, analyser, songChain, voiceChain, outAn;
+let ctx, trackGain, monitorGain, voiceGain, voiceDest, micStream, micSrc, analyser, songChain, voiceChain, outAn, eqAnSong, eqAnMic;
 
 /* ===== イコライザー（10バンド）＋リバーブ ===== */
 const BANDS=[31,62,125,250,500,1000,2000,4000,8000,16000];
@@ -1751,8 +1817,10 @@ const PRESETS={
   pFlat:[0,0,0,0,0,0,0,0,0,0], pVocal:[-3,-2,-1,0,2,3.5,3.5,2.5,1,0], pBass:[6,5,4,2,0,0,0,0,0,0],
   pTreble:[0,0,0,0,0,1,2,4,5,6], pWarm:[2.5,2,1.5,1,0,-1,-1.5,-2,-2.5,-3], pBright:[-1,-1,0,0,0,1,2,3,4,4.5], pLoud:[5,4,2,0,-1,-1,0,2,4,5]
 };
-const eqState=(()=>{ const d={target:'voice',song:{g:PRESETS.pFlat.slice(),p:'pFlat'},voice:{g:PRESETS.pFlat.slice(),p:'pFlat',rev:15}};
-  const s=store.get('kr-eq',null); if(s&&s.song&&s.voice) return Object.assign(d,s); return d; })();
+const eqState=(()=>{ const d={target:'voice',song:{g:PRESETS.pFlat.slice(),p:'pFlat'},voice:{g:PRESETS.pFlat.slice(),p:'pFlat',rev:15,echo:0}};
+  const s=store.get('kr-eq',null); if(s&&s.song&&s.voice){ Object.assign(d,s); if(d.voice.echo==null) d.voice.echo=0; } return d; })();
+/* エコー：0〜100% を、返りの大きさと繰り返しの長さに割り当てる */
+const echoWet=p=>p/100*.65, echoFb=p=>.12+p/100*.48;
 const saveEq=()=>store.set('kr-eq',eqState);
 function impulse(c,sec,decay){
   const len=Math.floor(c.sampleRate*sec), b=c.createBuffer(2,len,c.sampleRate);
@@ -1763,13 +1831,20 @@ function makeChain(c,kind){
   const input=c.createGain(), out=c.createGain(); let prev=input;
   const filters=BANDS.map((f,i)=>{ const b=c.createBiquadFilter(); b.type=i===0?'lowshelf':i===BANDS.length-1?'highshelf':'peaking'; b.frequency.value=f; b.Q.value=1.05; b.gain.value=eqState[kind].g[i]; prev.connect(b); prev=b; return b; });
   prev.connect(out);
-  let wet=null;
-  if(kind==='voice'){ const conv=c.createConvolver(); conv.buffer=impulse(c,2.4,2.6); wet=c.createGain(); wet.gain.value=eqState.voice.rev/100*.55; prev.connect(conv); conv.connect(wet); wet.connect(out); }
-  return {input,output:out,filters,wet};
+  let wet=null, eWet=null, eFb=null;
+  if(kind==='voice'){
+    const conv=c.createConvolver(); conv.buffer=impulse(c,2.4,2.6); wet=c.createGain(); wet.gain.value=eqState.voice.rev/100*.55; prev.connect(conv); conv.connect(wet); wet.connect(out);
+    /* エコー：やまびこ型（約0.33秒ごとに少しずつ小さく、高域を丸めて返す） */
+    const dl=c.createDelay(2), tone=c.createBiquadFilter(); dl.delayTime.value=.33; tone.type='lowpass'; tone.frequency.value=3800;
+    eFb=c.createGain(); eFb.gain.value=echoFb(eqState.voice.echo); eWet=c.createGain(); eWet.gain.value=echoWet(eqState.voice.echo);
+    prev.connect(dl); dl.connect(tone); tone.connect(eFb); eFb.connect(dl); tone.connect(eWet); eWet.connect(out);
+  }
+  return {input,output:out,filters,wet,eWet,eFb};
 }
 function applyEq(){
   for(const [kind,ch] of [['song',songChain],['voice',voiceChain]]){ if(!ch) continue; ch.filters.forEach((b,i)=>b.gain.setTargetAtTime(eqState[kind].g[i],ctx.currentTime,.02)); }
   if(voiceChain&&voiceChain.wet) voiceChain.wet.gain.setTargetAtTime(eqState.voice.rev/100*.55,ctx.currentTime,.03);
+  if(voiceChain&&voiceChain.eWet){ voiceChain.eWet.gain.setTargetAtTime(echoWet(eqState.voice.echo),ctx.currentTime,.03); voiceChain.eFb.gain.setTargetAtTime(echoFb(eqState.voice.echo),ctx.currentTime,.03); }
   sendYtEq();
   saveEq();
 }
@@ -1793,12 +1868,16 @@ window.addEventListener('message',e=>{
 function ensureCtx(){
   if(!ctx){
     ctx=new (window.AudioContext||window.webkitAudioContext)();
-    /* 曲：音源 → 音量 → 曲EQ → 出力 ／ 声：テイク・マイク返し → 音量 → 声EQ＋リバーブ → 出力 */
+    /* イコライザーは「今鳴っている音」に掛ける：
+       曲：音源 → 音量 → 曲EQ → 出力 ／ マイク：マイク返し → マイクEQ＋リバーブ＋エコー → 出力
+       録音したテイクは加工せずそのまま再生する */
     outAn=ctx.createAnalyser(); outAn.fftSize=512; outAn.connect(ctx.destination);
     songChain=makeChain(ctx,'song'); songChain.output.connect(outAn);
     voiceChain=makeChain(ctx,'voice'); voiceChain.output.connect(outAn);
+    eqAnSong=ctx.createAnalyser(); eqAnSong.fftSize=4096; eqAnSong.smoothingTimeConstant=.82; songChain.output.connect(eqAnSong);
+    eqAnMic=ctx.createAnalyser(); eqAnMic.fftSize=4096; eqAnMic.smoothingTimeConstant=.82; voiceChain.output.connect(eqAnMic);
     trackGain=ctx.createGain(); trackGain.connect(songChain.input);
-    voiceGain=ctx.createGain(); voiceGain.connect(voiceChain.input);
+    voiceGain=ctx.createGain(); voiceGain.connect(outAn);
     applyMixer();
   }
   if(ctx.state!=='running') ctx.resume();
@@ -2372,7 +2451,8 @@ async function renderMix(tk){
   const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
   const off=new OAC(2,Math.ceil(dur*sr),sr);
   /* 書き出しにも、今のイコライザーとリバーブをそのまま掛ける */
-  const sc=makeChain(off,'song'), vc=makeChain(off,'voice'); sc.output.connect(off.destination); vc.output.connect(off.destination);
+  /* 曲には曲EQを掛け、録音した声はそのまま（マイクのEQはリアルタイムの音だけに掛かる） */
+  const sc=makeChain(off,'song'); sc.output.connect(off.destination); const vc={input:off.destination};
   const a=off.createBufferSource(); a.buffer=sb; const ag=off.createGain(); ag.gain.value=eff(mix.song); a.connect(ag); ag.connect(sc.input);
   const v=off.createBufferSource(); v.buffer=vb; const vg=off.createGain(); vg.gain.value=eff(mix.voice); v.connect(vg); vg.connect(vc.input);
   a.start(0,tk.startPos);
@@ -2491,6 +2571,14 @@ function smoothCenter(list,item,instant){
   l.addEventListener('wheel',hold,{passive:true}); l.addEventListener('touchstart',hold,{passive:true}); });
 function setLine(i,instant){
   if(i===curLine) return;
+  if(i<0){
+    const P=$('lyricsList').children, F=$('fullList').children;
+    if(P[curLine]) P[curLine].classList.remove('cur'); if(F[curLine]){ F[curLine].classList.remove('cur'); F[curLine].style.removeProperty('--p'); }
+    for(const x of F) x.classList.remove('past'); for(const x of P) x.classList.remove('near');
+    curLine=-1; const f=firstTimed();
+    if(f>=0){ smoothCenter($('lyricsList'),P[f],instant); if(!$('full').hidden) smoothCenter($('fullList'),F[f],instant); }
+    return;
+  }
   const items=$('lyricsList').children, fitems=$('fullList').children;
   if(items[curLine]) items[curLine].classList.remove('cur');
   if(fitems[curLine]){ fitems[curLine].classList.remove('cur'); fitems[curLine].style.removeProperty('--p'); }
@@ -2501,13 +2589,20 @@ function setLine(i,instant){
   if(fitems[i]){ fitems[i].classList.add('cur'); if(!$('full').hidden) smoothCenter($('fullList'),fitems[i],instant); }
 }
 /* 行の色づき：行の長さに合わせて一定の速さで進み、次の行の少し前に塗り終える */
+/* 1行を歌うおおよその長さ：かな・漢字・ハングル等は1文字＝1拍、ラテン文字は母音のまとまり＝1拍 */
+function beats(s){
+  s=String(s||'');
+  const cjk=(s.match(/[\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7af\u0e00-\u0e7f\u0980-\u09ff\u0900-\u097f\u1000-\u109f]/g)||[]).filter(c=>!/[ゃゅょャュョぁぃぅぇぉァィゥェォっッー]/.test(c)).length;
+  const lat=(s.replace(/[^A-Za-z\u00c0-\u024f\u0400-\u04ff' ]/g,' ').match(/[aeiouyáéíóúàèìòùâêîôûäëïöüåæøаеёиоуыэюя]+/gi)||[]).length;
+  return Math.max(1,cjk+lat);
+}
 function lineFill(k,p){
   const t0=times[k], nt=nextTimed(k), gap=nt!=null?nt-t0:5;
-  const len=[...(lines[k]||'')].length||1;
-  const dur=Math.max(.6,Math.min(gap-.12,Math.max(1.2,len*.32)));
+  const dur=Math.max(.8,Math.min(gap*.94-.1,Math.max(1.4,beats(lines[k])*.38)));
   return Math.max(0,Math.min(1,(p+lyrOff-t0)/dur));
 }
 function lineAt(p){ p+=lyrOff; let k=-1; for(let i=0;i<lines.length;i++) if(times[i]!=null&&times[i]<=p) k=i; return k; }
+function firstTimed(){ for(let k=0;k<times.length;k++) if(times[k]!=null) return k; return -1; }
 function nextTimed(i){ for(let k=i+1;k<lines.length;k++) if(times[k]!=null) return times[k]; return null; }
 function nextNonBlank(i){ while(i<lines.length&&!lines[i].trim()) i++; return i; }
 function parseLrc(text){
@@ -2635,7 +2730,7 @@ function openFull(){
   $('full').hidden=false; document.documentElement.style.overflow='hidden'; $('fullEmpty').hidden=hasTimes()||!lines.length;
   padFullList();
   const s=src(), p=s.ready()&&s.playing()?s.pos():+$('seek').value, k=hasTimes()?lineAt(p):-1;
-  const c=k>=0?k:(curLine>=0?curLine:0); curLine=-1; setLine(c,true);
+  curLine=-2; setLine(hasTimes()?k:(k>=0?k:0),true);
 }
 function closeFull(){ $('full').hidden=true; document.documentElement.style.overflow=''; }
 $('fullBtn').addEventListener('click',openFull); $('fullBtn2').addEventListener('click',openFull);
@@ -2644,6 +2739,19 @@ $('fullClose').addEventListener('click',closeFull);
 $('fullSwap').addEventListener('click',()=>{ closeFull(); setTab('lyr'); if(lines.length) $('editLyricsBtn').click(); setTimeout(()=>$('lrcQ').focus({preventScroll:true}),400); });
 function showOff(){ const s=(lyrOff>0?'+':'')+lyrOff.toFixed(1)+t('sec'); $('offVal').textContent=$('offVal2').textContent=s; store.set('kr-lyroff',lyrOff); }
 const nudge=d=>{ lyrOff=Math.round((lyrOff+d)*10)/10; showOff(); };
+/* 歌い出しの瞬間に1回タップ → いちばん近い行の開始時刻に合わせて、ズレ補正を自動で決める */
+function calibrate(btn){
+  if(!hasTimes()) return;
+  const s=src(); if(!s.ready()) return;
+  const p=s.playing()?s.pos():+$('seek').value;
+  let best=-1, bd=1e9; for(let i=0;i<times.length;i++){ if(times[i]==null) continue; const d=Math.abs(times[i]-(p+lyrOff)); if(d<bd){ bd=d; best=i; } }
+  if(best<0) return;
+  lyrOff=Math.max(-30,Math.min(30,Math.round((times[best]-p)*10)/10)); showOff();
+  curLine=-2; setLine(best,false); bump(btn,'hit');
+  toast(t('calibDone',{x:(lyrOff>0?'+':'')+lyrOff.toFixed(1)+t('sec')}),null,null,2500);
+}
+$('calibF').addEventListener('click',e=>calibrate(e.currentTarget));
+$('calibP').addEventListener('click',e=>calibrate(e.currentTarget));
 $('offPlus').addEventListener('click',()=>nudge(.1)); $('offPlus2').addEventListener('click',()=>nudge(.1));
 $('offMinus').addEventListener('click',()=>nudge(-.1)); $('offMinus2').addEventListener('click',()=>nudge(-.1));
 
@@ -2933,10 +3041,40 @@ const eqKind=()=>eqState.target;
 function setEqTarget(k){
   eqState.target=k; saveEq();
   $('eqTSong').setAttribute('aria-pressed',k==='song'); $('eqTVoice').setAttribute('aria-pressed',k==='voice');
-  $('chRev').hidden=k!=='voice';
-  updateYtEqNote();
+  $('chRev').hidden=$('chEcho').hidden=k!=='voice';
+  updateYtEqNote(); updateLiveRow();
   renderFaders(); renderPresets(); drawCurve(); fitPager();
 }
+/* マイクの声のEQは「マイク返し」を通して聞こえる。オフなら1タップでオンにできるボタンを出す */
+function updateLiveRow(){ const b=$('monOnBtn'); if(!b) return; b.hidden=!(eqState.target==='voice'&&!mix.mon.on); }
+$('monOnBtn').addEventListener('click',()=>{ $('swMon').click(); updateLiveRow(); fitPager(); });
+$('swMon').addEventListener('click',()=>setTimeout(updateLiveRow,0));
+$('echoAmt').value=eqState.voice.echo; $('outEcho').textContent=eqState.voice.echo+'%'; paintRange($('echoAmt'));
+$('echoAmt').addEventListener('input',e=>{ eqState.voice.echo=+e.target.value; $('outEcho').textContent=eqState.voice.echo+'%'; paintRange(e.target); applyEq(); });
+/* プリセットの帯：マウスのドラッグ・ホイールでも横に動かせる。端の矢印で1画面分ずつ送る */
+(function(){
+  const box=$('presets'), strip=$('pstrip'), L=$('pPrev'), R=$('pNext');
+  const edges=()=>{ const max=box.scrollWidth-box.clientWidth-1; const l=box.scrollLeft>1, r=box.scrollLeft<max;
+    L.hidden=!l; R.hidden=!r; strip.classList.toggle('fl',l); strip.classList.toggle('fr',r); };
+  box.addEventListener('scroll',edges,{passive:true});
+  if(window.ResizeObserver) new ResizeObserver(edges).observe(box);
+  /* 矢印は1つずつ区切りよく送る：›は右端で隠れている最初のプリセットを左端へ、‹はその逆 */
+  const PAD=30;
+  L.addEventListener('click',()=>{ const bs=[...box.children], v0=box.scrollLeft+PAD; let tgt=0;
+    for(const b of bs){ if(b.offsetLeft<v0-1){ tgt=b.offsetLeft+b.offsetWidth+PAD-box.clientWidth; } }
+    const hid=bs.filter(b=>b.offsetLeft<v0-1).pop(); if(hid) tgt=Math.max(0,hid.offsetLeft+hid.offsetWidth-(box.clientWidth-PAD));
+    box.scrollTo({left:Math.max(0,tgt),behavior:'smooth'}); });
+  R.addEventListener('click',()=>{ const max=box.scrollWidth-box.clientWidth, v1=box.scrollLeft+box.clientWidth-PAD;
+    const nxt=[...box.children].find(b=>b.offsetLeft+b.offsetWidth>v1+1);
+    box.scrollTo({left:nxt?Math.min(max,nxt.offsetLeft-PAD):max,behavior:'smooth'}); });
+  box.addEventListener('wheel',e=>{ if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&box.scrollWidth>box.clientWidth){ e.preventDefault(); box.scrollLeft+=e.deltaY; } },{passive:false});
+  let sx=0, sl=0, moved=false, pid=null;
+  box.addEventListener('pointerdown',e=>{ if(e.pointerType!=='mouse') return; pid=e.pointerId; sx=e.clientX; sl=box.scrollLeft; moved=false; });
+  window.addEventListener('pointermove',e=>{ if(e.pointerId!==pid) return; const dx=e.clientX-sx; if(Math.abs(dx)>4){ moved=true; box.classList.add('drag'); } if(moved) box.scrollLeft=sl-dx; });
+  window.addEventListener('pointerup',e=>{ if(e.pointerId!==pid) return; pid=null; setTimeout(()=>box.classList.remove('drag'),0); });
+  box.addEventListener('click',e=>{ if(moved){ e.stopPropagation(); e.preventDefault(); moved=false; } },true);
+  renderPresets.after=()=>{ edges(); const on=box.querySelector('[aria-pressed="true"]'); if(on&&(on.offsetLeft<box.scrollLeft||on.offsetLeft+on.offsetWidth>box.scrollLeft+box.clientWidth)) box.scrollTo({left:on.offsetLeft-30,behavior:'smooth'}); };
+})();
 $('eqTSong').addEventListener('click',()=>setEqTarget('song'));
 $('eqTVoice').addEventListener('click',()=>setEqTarget('voice'));
 function renderPresets(){
@@ -2947,6 +3085,7 @@ function renderPresets(){
     b.addEventListener('click',()=>{ const s=eqState[eqKind()]; s.g=PRESETS[k].slice(); s.p=k; applyEq(); renderFaders(); renderPresets(); drawCurve(); });
     box.appendChild(b);
   }
+  if(renderPresets.after) requestAnimationFrame(renderPresets.after);
 }
 $('eqReset').addEventListener('click',()=>{ const s=eqState[eqKind()]; s.g=PRESETS.pFlat.slice(); s.p='pFlat'; applyEq(); renderFaders(); renderPresets(); drawCurve(); });
 const DB=12;
@@ -2977,6 +3116,17 @@ function drawCurve(){
   for(const db of [-12,-6,0,6,12]){ const y=H/2-db/DB*(H/2-14); g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
   g.fillStyle='#5f5f69'; g.font='18px IBM Plex Mono, monospace';
   BANDS.forEach((f,i)=>{ const x=(Math.log2(f/20)/Math.log2(20000/20))*W; g.fillRect(x,H-6,1,6); });
+  /* リアルタイムのスペクトル（いま鳴っている音を、EQを通した後で表示） */
+  const an=eqKind()==='song'?eqAnSong:eqAnMic;
+  if(an){
+    const bins=drawCurve.buf&&drawCurve.buf.length===an.frequencyBinCount?drawCurve.buf:(drawCurve.buf=new Float32Array(an.frequencyBinCount));
+    an.getFloatFrequencyData(bins);
+    const ny=ctx.sampleRate/2, grd2=g.createLinearGradient(0,0,0,H); grd2.addColorStop(0,'rgba(50,215,75,.32)'); grd2.addColorStop(1,'rgba(50,215,75,.02)');
+    g.beginPath(); g.moveTo(0,H); let any=false;
+    for(let x=0;x<=W;x+=3){ const f=20*Math.pow(1000,x/W), i=Math.min(bins.length-1,Math.round(f/ny*bins.length)); const db=bins[i];
+      const y=H-Math.max(0,Math.min(1,(db+100)/80))*(H-10); if(db>-100) any=true; g.lineTo(x,y); }
+    g.lineTo(W,H); g.closePath(); if(any){ g.fillStyle=grd2; g.fill(); }
+  }
   const pts=[]; for(let x=0;x<=W;x+=4){ const f=20*Math.pow(1000,x/W); let db=0;
     gains.forEach((gn,i)=>{ const o=Math.log2(f/BANDS[i]);
       if(i===0) db+=gn/(1+Math.exp(o*3)); else if(i===BANDS.length-1) db+=gn/(1+Math.exp(-o*3)); else db+=gn*Math.exp(-(o*o)/(2*.42*.42)); });
@@ -3021,6 +3171,13 @@ paintRange($('seek')); paintRange($('fSeek'));
     $('timeNow').textContent=$('fNow').textContent=fmt(p);
     if(mode==='file') drawArtWave(p/(fileSrc.duration()||1));
   }
+  /* 前奏中：3つの点が歌い出しに向けて順に灯る */
+  { const f=firstTimed(), show=playing&&!syncing&&f>=0&&p+lyrOff<times[f]-.15;
+    for(const id of ['introF','introP']){ const el=$(id); if(el.hidden!==!show) el.hidden=!show;
+      if(show){ const pr=Math.max(0,(p+lyrOff)/Math.max(.1,times[f])), rem=times[f]-(p+lyrOff);
+        const n=rem<1.2?3:rem<2.4?2:rem<3.6?1:Math.min(3,Math.floor(pr*3)); [...el.children].forEach((d,j)=>d.classList.toggle('on',j<n)); el.classList.toggle('breathe',rem>3.6); } } }
+  if(playing&&!syncing&&hasTimes()&&lineAt(p)<0&&curLine!==-1) setLine(-1);
+  if(curTab==='eq'&&ctx&&(playing||micStream)&&!document.hidden) drawCurve();
   if(playing&&!syncing&&hasTimes()){
     const k=lineAt(p);
     if(k>=0){

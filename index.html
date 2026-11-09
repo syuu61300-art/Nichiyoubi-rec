@@ -297,6 +297,7 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .full-title .tx{display:grid;line-height:1.35;min-width:0;text-align:start}
 .full-title small{font:500 9.5px var(--mono);letter-spacing:.22em;color:rgba(255,255,255,.6)}
 .full-title b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.full-title{max-width:100%}.full-title .tx{max-width:min(520px,calc(100vw - 170px))}
 .full-list{position:relative;flex:1;overflow-y:auto;list-style:none;margin:0 auto;padding:44vh 0;max-width:760px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch;
   -webkit-mask-image:linear-gradient(transparent,#000 18%,#000 74%,transparent);mask-image:linear-gradient(transparent,#000 18%,#000 74%,transparent)}
 @media (prefers-reduced-motion:reduce){.full .aura i,.full .grain{animation:none}}
@@ -686,7 +687,7 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
   <div class="full-top">
     <button class="iconbtn ghost" id="fullClose" data-i18n-aria="close"><svg class="i"><use href="#i-chev"/></svg></button>
     <div class="full-title"><img id="fullArt" alt="" hidden><span class="tx"><small>NOW SINGING</small><b id="fullTitle">—</b></span></div>
-    <span></span>
+    <button class="iconbtn ghost" id="fullSwap" data-i18n-aria="another" title=""><svg class="i"><use href="#i-lines"/></svg></button>
   </div>
   <ol class="full-list" id="fullList"></ol>
   <p class="full-empty" id="fullEmpty" hidden data-i18n="fullEmpty"></p>
@@ -1489,6 +1490,57 @@ my:["ယခင်","နောက်ဗီဒီယို","ဆက်ဖွင့
 };
 for(const l in E3) K3.forEach((k,i)=>{ I18N[l][k]=E3[l][i]; });
 
+/* YouTube 用ユーザースクリプトとの連携 */
+const K4=['eqLinked','eqHowTo'];
+const E4={
+en:["YouTube sound is now equalized through the userscript.","Install the companion userscript to equalize YouTube sound too."],
+ja:["ユーザースクリプト経由で、YouTubeの音にもイコライザーが効いています。","付属のユーザースクリプトを入れると、YouTubeの音にもイコライザーが効きます。"],
+ko:["유저스크립트를 통해 YouTube 소리에도 이퀄라이저가 적용되고 있습니다.","함께 제공되는 유저스크립트를 설치하면 YouTube 소리에도 이퀄라이저를 쓸 수 있습니다."],
+"zh-CN":["已通过用户脚本对 YouTube 声音应用均衡器。","安装配套的用户脚本后，YouTube 的声音也能使用均衡器。"],
+"zh-TW":["已透過使用者腳本對 YouTube 聲音套用等化器。","安裝隨附的使用者腳本後，YouTube 的聲音也能使用等化器。"],
+es:["El ecualizador ya se aplica al sonido de YouTube mediante el userscript.","Instala el userscript complementario para ecualizar también el sonido de YouTube."],
+fr:["L'égaliseur s'applique maintenant au son de YouTube via le userscript.","Installez le userscript associé pour égaliser aussi le son de YouTube."],
+de:["Der EQ wirkt jetzt über das Userscript auch auf den YouTube-Ton.","Installiere das zugehörige Userscript, um auch den YouTube-Ton zu entzerren."],
+"pt-BR":["O equalizador agora atua no som do YouTube pelo userscript.","Instale o userscript complementar para equalizar também o som do YouTube."],
+it:["L'equalizzatore ora agisce sull'audio di YouTube tramite lo userscript.","Installa lo userscript abbinato per equalizzare anche l'audio di YouTube."],
+id:["Ekualiser kini bekerja pada suara YouTube lewat userscript.","Pasang userscript pendamping agar suara YouTube juga bisa diekualisasi."],
+th:["อีควอไลเซอร์ทำงานกับเสียง YouTube ผ่านยูสเซอร์สคริปต์แล้ว","ติดตั้งยูสเซอร์สคริปต์ที่มาคู่กันเพื่อปรับอีคิวเสียง YouTube ได้ด้วย"],
+vi:["EQ đang được áp dụng cho âm thanh YouTube qua userscript.","Cài userscript đi kèm để chỉnh EQ cho cả âm thanh YouTube."],
+ru:["Эквалайзер теперь работает со звуком YouTube через юзерскрипт.","Установите сопутствующий юзерскрипт, чтобы эквализировать и звук YouTube."],
+pl:["Korektor działa teraz na dźwięk YouTube przez userscript.","Zainstaluj dołączony userscript, aby korygować także dźwięk YouTube."],
+tr:["Ekolayzer artık kullanıcı betiği üzerinden YouTube sesine de uygulanıyor.","YouTube sesini de ayarlamak için eşlik eden kullanıcı betiğini yükleyin."],
+hi:["यूज़रस्क्रिप्ट के ज़रिए अब YouTube की आवाज़ पर भी इक्वलाइज़र लग रहा है।","YouTube की आवाज़ पर भी इक्वलाइज़र के लिए साथ वाली यूज़रस्क्रिप्ट इंस्टॉल करें।"],
+ur:["یوزر اسکرپٹ کے ذریعے اب YouTube کی آواز پر بھی ایکولائزر لگ رہا ہے۔","YouTube کی آواز پر بھی ایکولائزر کے لیے ساتھ والی یوزر اسکرپٹ انسٹال کریں۔"],
+ar:["يُطبَّق المعادل الآن على صوت YouTube عبر سكربت المستخدم.","ثبّت سكربت المستخدم المرافق لمعادلة صوت YouTube أيضًا."],
+my:["ယူဆာစခရစ်မှတစ်ဆင့် YouTube အသံတွင်လည်း အီကွာလိုက်ဇာ အလုပ်လုပ်နေပါပြီ။","YouTube အသံကိုလည်း ချိန်ညှိရန် တွဲဖက်ယူဆာစခရစ်ကို ထည့်သွင်းပါ။"]
+};
+for(const l in E4) K4.forEach((k,i)=>{ I18N[l][k]=E4[l][i]; });
+
+/* 自動でセットしなかったときの案内 */
+const E5={
+en:"Lyrics were found, but they don't seem to match this song, so none were set. Pick one below only if it's right.",
+ja:"歌詞の候補はありましたが、この曲と一致しないため自動ではセットしていません。合っているものがあれば下から選んでください。",
+ko:"가사 후보는 있었지만 이 곡과 맞지 않아 자동으로 적용하지 않았습니다. 맞는 것이 있으면 아래에서 고르세요.",
+"zh-CN":"找到了歌词候选，但与这首歌不符，因此没有自动应用。如有正确的，请在下方选择。",
+"zh-TW":"找到了歌詞候選，但與這首歌不符，因此沒有自動套用。如有正確的，請在下方選擇。",
+es:"Se encontraron letras, pero no parecen de esta canción, así que no se aplicó ninguna. Elige una abajo solo si es la correcta.",
+fr:"Des paroles ont été trouvées, mais elles ne semblent pas correspondre à ce titre : rien n'a été appliqué. Choisissez-en une ci-dessous seulement si elle est correcte.",
+de:"Es wurden Songtexte gefunden, die aber nicht zu diesem Song zu passen scheinen. Daher wurde keiner übernommen. Wähle unten nur einen passenden aus.",
+"pt-BR":"Foram encontradas letras, mas não parecem ser desta música, então nenhuma foi aplicada. Escolha uma abaixo só se estiver certa.",
+it:"Sono stati trovati dei testi, ma non sembrano di questo brano, quindi non ne è stato applicato nessuno. Scegline uno qui sotto solo se è giusto.",
+id:"Lirik ditemukan, tetapi tampaknya bukan untuk lagu ini, jadi tidak dipasang otomatis. Pilih di bawah hanya jika memang benar.",
+th:"พบเนื้อเพลง แต่ดูไม่ตรงกับเพลงนี้ จึงไม่ได้ใส่ให้อัตโนมัติ เลือกจากด้านล่างเฉพาะเมื่อถูกต้อง",
+vi:"Đã tìm thấy lời, nhưng có vẻ không khớp với bài này nên chưa áp dụng. Chỉ chọn bên dưới nếu đúng.",
+ru:"Тексты нашлись, но, похоже, не от этой песни, поэтому ничего не применено. Выберите ниже, только если текст подходит.",
+pl:"Znaleziono teksty, ale nie pasują do tego utworu, więc żadnego nie ustawiono. Wybierz poniżej tylko właściwy.",
+tr:"Söz bulundu ama bu şarkıyla eşleşmiyor gibi, bu yüzden otomatik eklenmedi. Yalnızca doğruysa aşağıdan seçin.",
+hi:"बोल मिले, पर इस गाने से मेल नहीं खाते, इसलिए अपने-आप नहीं लगाए गए। सही हों तभी नीचे से चुनें।",
+ur:"بول ملے، مگر اس گانے سے میل نہیں کھاتے، اس لیے خود بخود نہیں لگائے گئے۔ درست ہوں تو ہی نیچے سے منتخب کریں۔",
+ar:"عُثر على كلمات، لكنها لا تبدو لهذه الأغنية، لذا لم يُطبَّق شيء. اختر من الأسفل فقط إن كانت صحيحة.",
+my:"စာသားတွေ့သော်လည်း ဤသီချင်းနှင့် မကိုက်ညီသဖြင့် အလိုအလျောက် မထည့်ပါ။ မှန်မှသာ အောက်မှ ရွေးပါ။"
+};
+for(const l in E5) I18N[l].lyrUnsure=E5[l];
+
 /* ISO 639-2 の言語一覧（いただいたリストより。語族の総称「(Other)」と mis/mul/und/zxx は除く） */
 const ISO_RAW="aar:Afar;abk:Abkhaz;ace:Achinese;ach:Acoli;ada:Adangme;ady:Adygei;afh:Afrihili;afr:Afrikaans;ain:Ainu;aka:Akan;akk:Akkadian;alb:Albanian;ale:Aleut;amh:Amharic;anp:Angika;ara:Arabic;arg:Aragonese;arc:Aramaic;arp:Arapaho;arw:Arawak;arm:Armenian;rup:Aromanian;asm:Assamese;ava:Avaric;ave:Avestan;awa:Awadhi;aym:Aymara;aze:Azerbaijani;ast:Asturian;ban:Balinese;bal:Baluchi;bam:Bambara;bas:Basa;bak:Bashkir;baq:Basque;btk:Batak;bej:Beja;bel:Belarusian;bem:Bemba;ben:Bengali;bho:Bhojpuri;bik:Bikol;byn:Bilin;bin:Edo;bis:Bislama;zbl:Blissymbolics;bos:Bosnian;bra:Braj;bre:Breton;bug:Bugis;bul:Bulgarian;bua:Buriat;bur:Burmese;cad:Caddo;car:Carib;cat:Catalan;ceb:Cebuano;chg:Chagatai;cha:Chamorro;che:Chechen;chr:Cherokee;chy:Cheyenne;chb:Chibcha;chi:Chinese;chn:Chinook jargon;chp:Chipewyan;cho:Choctaw;chu:Church Slavic;chv:Chuvash;cop:Coptic;cor:Cornish;cos:Corsican;cre:Cree;mus:Creek;crh:Crimean Tatar;hrv:Croatian;cze:Czech;dak:Dakota;dan:Danish;dar:Dargwa;day:Dayak;del:Delaware;din:Dinka;div:Divehi;doi:Dogri;dgr:Dogrib;dua:Duala;dut:Dutch;dum:Middle Dutch;dyu:Dyula;dzo:Dzongkha;frs:East Frisian;efi:Efik;egy:Egyptian;eka:Ekajuk;elx:Elamite;eng:English;enm:Middle English;ang:Old English;myv:Erzya;epo:Esperanto;est:Estonian;gez:Ge'ez;ewe:Ewe;ewo:Ewondo;fan:Fang;fat:Fanti;fao:Faroese;fij:Fijian;fil:Filipino;fin:Finnish;fon:Fon;fre:French;frm:Middle French;fro:Old French;fry:Frisian;fur:Friulian;ful:Fula;gaa:Ga;glg:Galician;lug:Ganda;gay:Gayo;gba:Gbaya;geo:Georgian;ger:German;gmh:Middle High German;goh:Old High German;gil:Gilbertese;gon:Gondi;gor:Gorontalo;got:Gothic;grb:Grebo;grc:Ancient Greek;gre:Greek;grn:Guarani;guj:Gujarati;gwi:Gwich'in;hai:Haida;hat:Haitian Creole;hau:Hausa;haw:Hawaiian;heb:Hebrew;her:Herero;hil:Hiligaynon;hin:Hindi;hmo:Hiri Motu;hit:Hittite;hmn:Hmong;hun:Hungarian;hup:Hupa;iba:Iban;ice:Icelandic;ido:Ido;ibo:Igbo;ilo:Iloko;smn:Inari Sami;ind:Indonesian;inh:Ingush;ina:Interlingua;ile:Interlingue;iku:Inuktitut;ipk:Inupiaq;gle:Irish;mga:Middle Irish;sga:Old Irish;ita:Italian;jpn:Japanese;jav:Javanese;jrb:Judeo-Arabic;jpr:Judeo-Persian;kbd:Kabardian;kab:Kabyle;kac:Kachin;kal:Kalaallisut;xal:Oirat;kam:Kamba;kan:Kannada;kau:Kanuri;kaa:Kara-Kalpak;krc:Karachay-Balkar;krl:Karelian;kas:Kashmiri;csb:Kashubian;kaw:Kawi;kaz:Kazakh;kha:Khasi;khm:Khmer;kho:Khotanese;kik:Kikuyu;kmb:Kimbundu;kin:Kinyarwanda;tlh:Klingon;kom:Komi;kon:Kongo;kok:Konkani;kor:Korean;kpe:Kpelle;kua:Kuanyama;kum:Kumyk;kur:Kurdish;kru:Kurukh;kos:Kosraean;kut:Kootenai;kir:Kyrgyz;lad:Ladino;lah:Lahnda;lam:Lamba;lao:Lao;lat:Latin;lav:Latvian;ltz:Luxembourgish;lez:Lezgian;lim:Limburgish;lin:Lingala;lit:Lithuanian;jbo:Lojban;nds:Low German;dsb:Lower Sorbian;loz:Lozi;lub:Luba-Katanga;lua:Luba-Lulua;lui:Luiseño;smj:Lule Sami;lun:Lunda;luo:Luo;lus:Mizo;mac:Macedonian;mad:Madurese;mag:Magahi;mai:Maithili;mak:Makasar;mlg:Malagasy;may:Malay;mal:Malayalam;mlt:Maltese;mnc:Manchu;mdr:Mandar;man:Mandingo;mni:Manipuri;glv:Manx;mao:Maori;arn:Mapuche;mar:Marathi;chm:Mari;mah:Marshallese;mwr:Marwari;mas:Maasai;men:Mende;mic:Micmac;min:Minangkabau;mwl:Mirandese;moh:Mohawk;mdf:Moksha;lol:Mongo;mon:Mongolian;mos:Moore;nah:Nahuatl;nau:Nauru;nav:Navajo;nbl:South Ndebele;nde:North Ndebele;ndo:Ndonga;nap:Neapolitan;nep:Nepali;new:Newari;nwc:Old Newari;nia:Nias;niu:Niuean;nqo:N'Ko;nog:Nogai;frr:North Frisian;sme:Northern Sami;nso:Northern Sotho;nor:Norwegian;nob:Norwegian Bokmål;nno:Norwegian Nynorsk;nym:Nyamwezi;nya:Nyanja;nyn:Nyankole;nyo:Nyoro;nzi:Nzima;oci:Occitan;oji:Ojibwa;non:Old Norse;peo:Old Persian;ori:Odia;orm:Oromo;osa:Osage;oss:Ossetic;pal:Pahlavi;pau:Palauan;pli:Pali;pam:Pampanga;pag:Pangasinan;pan:Punjabi;pap:Papiamento;per:Persian;phn:Phoenician;pol:Polish;pon:Pohnpeian;por:Portuguese;pro:Old Provençal;pus:Pashto;que:Quechua;roh:Romansh;raj:Rajasthani;rap:Rapanui;rar:Rarotongan;rum:Romanian;rom:Romani;run:Rundi;rus:Russian;syc:Classical Syriac;sam:Samaritan Aramaic;smo:Samoan;sad:Sandawe;sag:Sango;san:Sanskrit;sat:Santali;srd:Sardinian;sas:Sasak;sco:Scots;gla:Scottish Gaelic;sel:Selkup;srp:Serbian;srr:Serer;shn:Shan;sna:Shona;iii:Sichuan Yi;scn:Sicilian;sid:Sidamo;bla:Siksika;snd:Sindhi;sin:Sinhala;sms:Skolt Sami;den:Slave;slo:Slovak;slv:Slovenian;sog:Sogdian;som:Somali;son:Songhai;snk:Soninke;sot:Southern Sotho;alt:Southern Altai;sma:Southern Sami;spa:Spanish;srn:Sranan Tongo;suk:Sukuma;sux:Sumerian;sun:Sundanese;sus:Susu;swa:Swahili;ssw:Swati;swe:Swedish;gsw:Swiss German;syr:Syriac;tgl:Tagalog;tah:Tahitian;tgk:Tajik;tmh:Tamashek;tam:Tamil;tat:Tatar;tel:Telugu;tem:Temne;ter:Tereno;tet:Tetum;tha:Thai;tib:Tibetan;tig:Tigre;tir:Tigrinya;tiv:Tiv;tli:Tlingit;tpi:Tok Pisin;tkl:Tokelau;tog:Nyasa Tonga;ton:Tongan;chk:Chuukese;tsi:Tsimshian;tso:Tsonga;tsn:Tswana;tum:Tumbuka;tur:Turkish;ota:Ottoman Turkish;tuk:Turkmen;tvl:Tuvalu;tyv:Tuvinian;twi:Twi;udm:Udmurt;uga:Ugaritic;uig:Uyghur;ukr:Ukrainian;umb:Umbundu;hsb:Upper Sorbian;urd:Urdu;uzb:Uzbek;vai:Vai;ven:Venda;vie:Vietnamese;vol:Volapük;vot:Votic;wal:Wolaytta;wln:Walloon;war:Waray;was:Washo;wel:Welsh;wol:Wolof;xho:Xhosa;sah:Yakut;yao:Yao;yap:Yapese;yid:Yiddish;yor:Yoruba;zap:Zapotec;zza:Zaza;zen:Zenaga;zha:Zhuang;zul:Zulu;zun:Zuni";
 const ISO=ISO_RAW.split(';').map(s=>{ const i=s.indexOf(':'); return {c:s.slice(0,i),en:s.slice(i+1)}; });
@@ -1549,6 +1601,7 @@ function applyI18n(){
   if(!micStream) say($('micStatus'),t('micTap'));
   buildAsrLang(); renderTakes(); showLyrics(); syncPlayBtn(); refreshAsrSrc(); updateOnAir();
   if(typeof renderPresets==='function'&&$('presets')) renderPresets();
+  if(typeof updateYtEqNote==="function") updateYtEqNote();
   requestAnimationFrame(()=>{ placePill($('t_'+curTab),pill); placePill($('t_'+curTab),ghost); fitPager(); });
   if(gpuInfo&&!gpuInfo.ok) $('asrDevTip').textContent=t('noGpu');
 }
@@ -1715,8 +1768,26 @@ function makeChain(c,kind){
 function applyEq(){
   for(const [kind,ch] of [['song',songChain],['voice',voiceChain]]){ if(!ch) continue; ch.filters.forEach((b,i)=>b.gain.setTargetAtTime(eqState[kind].g[i],ctx.currentTime,.02)); }
   if(voiceChain&&voiceChain.wet) voiceChain.wet.gain.setTargetAtTime(eqState.voice.rev/100*.55,ctx.currentTime,.03);
+  sendYtEq();
   saveEq();
 }
+/* 埋め込みプレーヤー内のユーザースクリプトへ「曲の音」EQを送る（入っていなければ何も起きない） */
+let ytEqLinked=false;
+function ytFrame(){ try{ return ytSrc.player&&ytSrc.player.getIframe&&ytSrc.player.getIframe(); }catch(e){ return null; } }
+function sendYtEq(){ const f=ytFrame(); if(f&&f.contentWindow) f.contentWindow.postMessage({type:'kr-eq',g:eqState.song.g.slice(),on:true},'*'); }
+function pingYtEq(){ const f=ytFrame(); if(f&&f.contentWindow) f.contentWindow.postMessage({type:'kr-eq-ping'},'*'); }
+function updateYtEqNote(){
+  const n=$('eqYt'); if(!n) return;
+  n.hidden=!(eqState.target==='song'&&mode==='yt');
+  n.textContent=ytEqLinked?t('eqLinked'):t('eqYt')+' '+t('eqHowTo');
+  n.style.borderLeftColor=ytEqLinked?'var(--ok)':'';
+}
+window.addEventListener('message',e=>{
+  if(!/^https:\/\/(www\.|m\.)?youtube(-nocookie)?\.com$/.test(e.origin)) return;
+  const d=e.data; if(!d||typeof d!=='object'||d.type!=='kr-eq-ready') return;
+  if(!ytEqLinked){ ytEqLinked=true; updateYtEqNote(); }
+  sendYtEq();
+});
 function ensureCtx(){
   if(!ctx){
     ctx=new (window.AudioContext||window.webkitAudioContext)();
@@ -1811,7 +1882,7 @@ function setMode(m){
   if(m==='yt'){ nowTitle=ytSrc.title||''; srcKey=ytSrc.id?'yt:'+ytSrc.id:''; }
   else { nowTitle=fileSrc.name; srcKey=fileSrc.name?'file:'+fileSrc.name:''; }
   showNow(); refreshDuration(); updateButtons(); refreshAsrSrc();
-  $('eqYt').hidden=!(eqState.target==='song'&&m==='yt');
+  updateYtEqNote();
 }
 $('modeYt').addEventListener('click',()=>setMode('yt'));
 $('modeFile').addEventListener('click',()=>setMode('file'));
@@ -1940,6 +2011,7 @@ function waitYt(n=0){
   if(d>0){
     try{ const tt=ytSrc.player.getVideoData().title; if(tt&&!ytSrc.title){ ytSrc.title=tt; nowTitle=tt; showNow(); store.set('kr-yt',{id:ytSrc.id,title:tt}); } }catch(e){}
     say($('ytStatus'),''); refreshDuration(); updateButtons(); autoLyrics();
+    pingYtEq(); setTimeout(pingYtEq,1500);
   } else if(n<40) setTimeout(()=>waitYt(n+1),250);
 }
 
@@ -2480,7 +2552,12 @@ async function searchLrc(q,auto){
     lrcItems=items;
     if(!items.length){ say($('lrcStatus'),t('lyrNone')); $('lrcResults').hidden=true; return; }
     renderLrcResults();
-    if(auto) applyLrc(items[0]); else say($('lrcStatus'),t('lyrFound',{n:items.length}));
+    if(auto){
+      /* 自動でセットするのは「曲名が一致」かつ「文字の種類がタイトルと矛盾しない」候補だけ */
+      const ok=items.find(it=>lrcMatches(it,nowTitle||q));
+      if(ok) applyLrc(ok);
+      else { lines=[]; times=[]; showLyrics(); renderLrcResults(); say($('lrcStatus'),t('lyrUnsure')); }
+    } else say($('lrcStatus'),t('lyrFound',{n:items.length}));
   }catch(e){ if(seq===lrcSeq) say($('lrcStatus'),t('lyrFail'),'err'); }
   finally{ if(seq===lrcSeq) $('lrcBtn').disabled=false; }
 }
@@ -2502,6 +2579,10 @@ function applyLrc(it){
 }
 $('lrcForm').addEventListener('submit',e=>{ e.preventDefault(); $('lrcQ').blur(); searchLrc($('lrcQ').value,false); });
 function autoLyrics(){
+  /* 保存済みの歌詞でも、文字の種類が混ざっている・タイトルと矛盾するものは捨てて探し直す */
+  if(srcKey&&lyrKey===srcKey&&lines.length&&!/^AI|貼り付け|Pasted/i.test(lyrLabel)&&lyrLabel!==t('pasted')){
+    if(!lrcMatches({trackName:cleanTitle(nowTitle)||'x',syncedLyrics:lines.join('\n')},nowTitle)&&!lrcScriptOk(lines.join('\n'),nowTitle)) lyrKey='';
+  }
   if(!srcKey||lyrKey===srcKey) return;
   const q=cleanTitle(nowTitle||$('q').value); if(!q) return;
   lines=[]; times=[]; lyrKey=''; showLyrics();
@@ -2553,6 +2634,8 @@ function openFull(){
 function closeFull(){ $('full').hidden=true; document.documentElement.style.overflow=''; }
 $('fullBtn').addEventListener('click',openFull); $('fullBtn2').addEventListener('click',openFull);
 $('fullClose').addEventListener('click',closeFull);
+/* 全画面から歌詞を差し替える：歌詞タブを開き、候補とAI文字起こしを表示 */
+$('fullSwap').addEventListener('click',()=>{ closeFull(); setTab('lyr'); if(lines.length) $('editLyricsBtn').click(); setTimeout(()=>$('lrcQ').focus({preventScroll:true}),400); });
 function showOff(){ const s=(lyrOff>0?'+':'')+lyrOff.toFixed(1)+t('sec'); $('offVal').textContent=$('offVal2').textContent=s; store.set('kr-lyroff',lyrOff); }
 const nudge=d=>{ lyrOff=Math.round((lyrOff+d)*10)/10; showOff(); };
 $('offPlus').addEventListener('click',()=>nudge(.1)); $('offPlus2').addEventListener('click',()=>nudge(.1));
@@ -2692,7 +2775,63 @@ function segmentsToLines(segs,audio,shift){
     const total=parts.reduce((k,p)=>k+p.length,0)||1; let tt=st;
     for(const p of parts){ out.push({t:Math.max(0,tt+shift),s:p.replace(/[。]$/,'')}); tt+=(en-st)*p.length/total; }
   }
-  return out;
+  return keepOneScript(out,segmentsToLines.lang);
+}
+/* ===== 文字の種類の判定（歌詞の取り違え・言語の混ざりを防ぐ） ===== */
+const SCRIPTS=[['kana',/[぀-ヿ]/g],['hangul',/[가-힯ᄀ-ᇿ㄰-㆏]/g],['han',/[一-鿿㐀-䶿]/g],
+  ['cyr',/[Ѐ-ӿ]/g],['arab',/[؀-ۿݐ-ݿ]/g],['deva',/[ऀ-ॿ]/g],['beng',/[ঀ-৿]/g],['guru',/[਀-੿]/g],
+  ['gujr',/[઀-૿]/g],['taml',/[஀-௿]/g],['telu',/[ఀ-౿]/g],['knda',/[ಀ-೿]/g],['mlym',/[ഀ-ൿ]/g],['sinh',/[඀-෿]/g],
+  ['thai',/[฀-๿]/g],['laoo',/[຀-໿]/g],['tibt',/[ༀ-࿿]/g],['mymr',/[က-႟]/g],['geor',/[Ⴀ-ჿ]/g],['ethi',/[ሀ-፿]/g],
+  ['khmr',/[ក-៿]/g],['hebr',/[֐-׿]/g],['greek',/[Ͱ-Ͽ]/g],['armn',/[԰-֏]/g],['latin',/[A-Za-zÀ-ɏ]/g]];
+function scriptCounts(s){ const r={}; let tot=0; for(const [k,re] of SCRIPTS){ const n=(String(s).match(re)||[]).length; if(n){ r[k]=n; tot+=n; } } return {r,tot}; }
+/* 日本語は かな＋漢字 をひとまとまりとして扱う */
+function mainScript(s){
+  const {r,tot}=scriptCounts(s); if(!tot) return '';
+  if(r.kana&&(r.kana+(r.han||0))/tot>.4) return 'kana';
+  let best='',bn=0; for(const k in r) if(r[k]>bn){ bn=r[k]; best=k; }
+  return best;
+}
+const LANG_SCRIPT={ja:'kana',ko:'hangul',zh:'han',yue:'han',ru:'cyr',uk:'cyr',be:'cyr',bg:'cyr',mk:'cyr',sr:'cyr',kk:'cyr',ky:'cyr',tg:'cyr',mn:'cyr',tt:'cyr',ba:'cyr',
+  ar:'arab',fa:'arab',ur:'arab',ps:'arab',sd:'arab',hi:'deva',mr:'deva',ne:'deva',sa:'deva',bn:'beng',as:'beng',pa:'guru',gu:'gujr',ta:'taml',te:'telu',kn:'knda',ml:'mlym',
+  si:'sinh',th:'thai',lo:'laoo',bo:'tibt',my:'mymr',ka:'geor',am:'ethi',km:'khmr',he:'hebr',yi:'hebr',el:'greek',hy:'armn'};
+/* 書き起こし：判定した言語の文字、なければ多数派の文字の行だけを残す（ローマ字の行は残す） */
+function keepOneScript(rows,lang){
+  if(!rows.length) return rows;
+  let want=LANG_SCRIPT[lang]||'';
+  if(!want){ const tally={}; for(const r of rows){ const m=mainScript(r.s); if(m&&m!=='latin') tally[m]=(tally[m]||0)+r.s.length; }
+    let bn=0; for(const k in tally) if(tally[k]>bn){ bn=tally[k]; want=k; } }
+  if(!want) return rows;
+  const okSet=want==='kana'?['kana','han','latin']:want==='han'?['han','latin']:[want,'latin'];
+  return rows.filter(r=>{ const m=mainScript(r.s); return !m||okSet.includes(m); });
+}
+/* 文字の種類だけの確認（保存済み歌詞の点検用） */
+function lrcScriptOk(body,title){
+  const {r,tot}=scriptCounts(body); if(!tot) return true;
+  const big=Object.keys(r).filter(k=>k!=='latin'&&r[k]/tot>.15&&!(k==='han'&&r.kana));
+  if(big.length>1) return false;
+  const ls=mainScript(body), tr=scriptCounts(title).r;
+  const ts=Object.entries(tr).filter(([k,n])=>k!=='latin'&&n>=2).map(([k])=>k==='han'&&tr.kana?'kana':k);
+  return !(ts.length&&ls&&ls!=='latin'&&!ts.includes(ls)&&!(ls==='kana'&&ts.includes('han'))&&!(ls==='han'&&ts.includes('kana')));
+}
+/* 歌詞候補がこの曲のものとして筋が通るか */
+const normT=s=>String(s||'').toLowerCase().normalize('NFKC').replace(/[\s\p{P}\p{S}]+/gu,' ').trim();
+function lrcMatches(it,title){
+  const tn=normT(it.trackName), ti=normT(title);
+  if(!tn||!ti) return false;
+  /* 曲名が動画タイトルに含まれているか（短すぎる曲名は単語として一致すること） */
+  const nameOk=tn.length>=4?ti.includes(tn):(' '+ti+' ').includes(' '+tn+' ');
+  if(!nameOk) return false;
+  const body=(it.syncedLyrics||it.plainLyrics||'').replace(/\[[^\]]*\]/g,'');
+  const ls=mainScript(body);
+  /* 歌詞の中で別々の非ラテン文字が混ざっていたら不採用 */
+  const {r,tot}=scriptCounts(body); const big=Object.keys(r).filter(k=>k!=='latin'&&r[k]/tot>.15&&!(k==='han'&&r.kana));
+  if(big.length>1) return false;
+  /* タイトルに非ラテン文字があるのに、歌詞が別の非ラテン文字なら不採用 */
+  const ts=Object.entries(scriptCounts(title).r).filter(([k,n])=>k!=='latin'&&n>=2).map(([k])=>k==='han'&&scriptCounts(title).r.kana?'kana':k);
+  if(ts.length&&ls&&ls!=='latin'&&!ts.includes(ls)&&!(ls==='kana'&&ts.includes('han'))&&!(ls==='han'&&ts.includes('kana'))) return false;
+  /* 長さが大きく違うものは別の曲かライブ版の可能性が高い */
+  const d=src().duration(); if(d>0&&it.duration&&Math.abs(it.duration-d)>25) return false;
+  return true;
 }
 function applyAsr(rows,label){
   if(!rows.length){ asrSay(t('asrNone'),'err'); return; }
@@ -2742,7 +2881,7 @@ $('asrStart').addEventListener('click',async()=>{
         const segs=(j.segments||[]).filter(s=>!(s.no_speech_prob>0.6)).map(s=>({start:s.start,end:s.end,text:s.text}));
         const got=lang||decideLang(j.language,j.text||segs.map(s=>s.text).join(' '));
         asrSay(got?t('asrDetected',{x:langLabel(got)}):'','ok');
-        applyAsr(segmentsToLines(segs,audio,shift),t('aiLabel')+' · '+(got?got.toUpperCase()+' · ':'')+'Groq '+model);
+        segmentsToLines.lang=got; applyAsr(segmentsToLines(segs,audio,shift),t('aiLabel')+' · '+(got?got.toUpperCase()+' · ':'')+'Groq '+model);
       }
     }catch(e){ if(e.name!=='AbortError') asrSay(t('groqConn'),'err'); }
     asrProgress(null); asrDone(); return;
@@ -2773,7 +2912,7 @@ $('asrStart').addEventListener('click',async()=>{
     else if(m.type==='done'){
       const segs=m.chunks.map(c=>({start:c.timestamp&&c.timestamp[0],end:c.timestamp&&c.timestamp[1],text:c.text}));
       asrSay(useLang?t('asrDetected',{x:langLabel(useLang)}):'','ok');
-      applyAsr(segmentsToLines(segs,audio,shift),t('aiLabel')+' · '+(useLang?useLang.toUpperCase()+' · ':'')+model.split('/')[1]);
+      segmentsToLines.lang=useLang; applyAsr(segmentsToLines(segs,audio,shift),t('aiLabel')+' · '+(useLang?useLang.toUpperCase()+' · ':'')+model.split('/')[1]);
       asrProgress(null); asrDone();
     }
     else if(m.type==='error'){ asrSay(t('asrFail',{m:m.message.slice(0,120)}),'err'); asrProgress(null); asrDone(); killWorker(); }
@@ -2789,7 +2928,7 @@ function setEqTarget(k){
   eqState.target=k; saveEq();
   $('eqTSong').setAttribute('aria-pressed',k==='song'); $('eqTVoice').setAttribute('aria-pressed',k==='voice');
   $('chRev').hidden=k!=='voice';
-  $('eqYt').hidden=!(k==='song'&&mode==='yt');
+  updateYtEqNote();
   renderFaders(); renderPresets(); drawCurve(); fitPager();
 }
 $('eqTSong').addEventListener('click',()=>setEqTarget('song'));

@@ -298,7 +298,9 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .full-title small{font:500 9.5px var(--mono);letter-spacing:.22em;color:rgba(255,255,255,.6)}
 .full-title b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .full-title{max-width:100%}.full-title .tx{max-width:min(520px,calc(100vw - 170px))}
-.full-list{position:relative;flex:1;overflow-y:auto;list-style:none;margin:0 auto;padding:44vh 0;max-width:760px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+/* 歌詞リストは残りの高さに収め、その中でスクロール（下の操作ボタンを押し出さない） */
+.full-top,.full-bottom{flex:none}
+.full-list{position:relative;flex:1 1 0;min-height:0;overflow-y:auto;list-style:none;margin:0 auto;padding:0;max-width:760px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch;
   -webkit-mask-image:linear-gradient(transparent,#000 18%,#000 74%,transparent);mask-image:linear-gradient(transparent,#000 18%,#000 74%,transparent)}
 @media (prefers-reduced-motion:reduce){.full .aura i,.full .grain{animation:none}}
 .full-list::-webkit-scrollbar{display:none}
@@ -2626,8 +2628,12 @@ $('nextLineBtn').addEventListener('click',markNext);
 $('syncDoneBtn').addEventListener('click',()=>{ endSync(); src().stop(); setTimeout(syncPlayBtn,80); });
 
 /* 全画面歌詞 */
+/* 歌詞リストの上下の余白は、リスト自身の高さから決める（画面の高さで決めると低い画面で下のボタンが押し出される） */
+function padFullList(){ const fl=$('fullList'); if($('full').hidden) return; fl.style.paddingBlock='0px'; const h=fl.clientHeight; fl.style.paddingBlock=Math.round(h*.42)+'px'; }
+window.addEventListener('resize',()=>{ padFullList(); const it=$('fullList').children[curLine]; if(it) smoothCenter($('fullList'),it,true); });
 function openFull(){
   $('full').hidden=false; document.documentElement.style.overflow='hidden'; $('fullEmpty').hidden=hasTimes()||!lines.length;
+  padFullList();
   const s=src(), p=s.ready()&&s.playing()?s.pos():+$('seek').value, k=hasTimes()?lineAt(p):-1;
   const c=k>=0?k:(curLine>=0?curLine:0); curLine=-1; setLine(c,true);
 }

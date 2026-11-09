@@ -257,6 +257,11 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .langlist .ln b{font-size:14.5px;font-weight:500}
 .langlist .ln span{font-size:11.5px;color:var(--mute)}
 .langlist button[aria-current="true"]{background:var(--s2);border-color:var(--line2)}
+.langlist .lh{font:500 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:14px 12px 6px;position:sticky;top:0;background:var(--s1);z-index:1}
+.langlist .lh:first-child{padding-top:4px}
+/* 右から左に書く言語でも、時間の流れ（シークバー・時刻）は左→右のまま */
+[dir="rtl"] .bar,[dir="rtl"] input[type=range],[dir="rtl"] .wave,[dir="rtl"] canvas{direction:ltr}
+[dir="rtl"] .search .i,[dir="rtl"] .full-top .i{transform:scaleX(-1)}
 .count{position:fixed;inset:0;z-index:25;display:grid;place-items:center;align-content:center;gap:6px;background:rgba(0,0,0,.6);cursor:pointer}
 .count b{font:500 min(34vw,180px)/1 var(--mono);color:#fff}
 .count span{font-size:13px;color:rgba(255,255,255,.7)}
@@ -1049,9 +1054,249 @@ privacy:"Записи и тексты остаются на этом устро�
 fullEmpty:"Тайминга пока нет. Используйте «Тайминг» или вставьте текст с метками (LRC).",recFail:"Запись здесь недоступна. Используйте Safari на iOS 14.3+ или свежий Chrome.",
 keys:"Пробел — играть · R — запись · L — текст",close:"Закрыть",sec:"с",recording:"Запись",getReady:"Приготовьтесь"}
 };
-const LANGS=[{c:'ja',r:'JP',n:'日本語'},{c:'en',r:'US',n:'English'},{c:'ko',r:'KR',n:'한국어'},{c:'zh-CN',r:'CN',n:'简体中文'},{c:'zh-TW',r:'TW',n:'繁體中文'},
-{c:'es',r:'ES',n:'Español'},{c:'fr',r:'FR',n:'Français'},{c:'de',r:'DE',n:'Deutsch'},{c:'pt-BR',r:'BR',n:'Português'},{c:'it',r:'IT',n:'Italiano'},
-{c:'id',r:'ID',n:'Bahasa Indonesia'},{c:'th',r:'TH',n:'ไทย'},{c:'vi',r:'VN',n:'Tiếng Việt'},{c:'ru',r:'RU',n:'Русский'}];
+/* 追加の文言（言語一覧・自動翻訳・言語判定） */
+const EXTRA={
+en:{langFull:"Fully translated",langAll:"All languages",trRun:"Translating the interface into {x}…",trNA:"{x}: the interface isn't translated yet, so it stays in English.",trDone:"Your browser translated the interface into {x}.",asrDetecting:"Identifying the sung language…",asrDetected:"Detected language: {x}"},
+ja:{langFull:"完全翻訳",langAll:"すべての言語",trRun:"画面を{x}に翻訳しています…",trNA:"{x}：画面はまだ翻訳されていないため、英語で表示します。",trDone:"ブラウザの翻訳機能で画面を{x}にしました。",asrDetecting:"歌われている言語を判定中…",asrDetected:"判定した言語：{x}"},
+ko:{langFull:"완전 번역",langAll:"모든 언어",trRun:"화면을 {x}(으)로 번역하는 중…",trNA:"{x}: 아직 화면이 번역되지 않아 영어로 표시합니다.",trDone:"브라우저가 화면을 {x}(으)로 번역했습니다.",asrDetecting:"노래 언어를 판별하는 중…",asrDetected:"감지된 언어: {x}"},
+"zh-CN":{langFull:"完整翻译",langAll:"所有语言",trRun:"正在将界面翻译为{x}…",trNA:"{x}：界面尚未翻译，将以英语显示。",trDone:"浏览器已将界面翻译为{x}。",asrDetecting:"正在识别演唱语言…",asrDetected:"识别的语言：{x}"},
+"zh-TW":{langFull:"完整翻譯",langAll:"所有語言",trRun:"正在將介面翻譯為{x}…",trNA:"{x}：介面尚未翻譯，將以英文顯示。",trDone:"瀏覽器已將介面翻譯為{x}。",asrDetecting:"正在辨識演唱語言…",asrDetected:"辨識的語言：{x}"},
+es:{langFull:"Traducción completa",langAll:"Todos los idiomas",trRun:"Traduciendo la interfaz al {x}…",trNA:"{x}: la interfaz aún no está traducida, así que se muestra en inglés.",trDone:"Tu navegador tradujo la interfaz al {x}.",asrDetecting:"Identificando el idioma cantado…",asrDetected:"Idioma detectado: {x}"},
+fr:{langFull:"Traduction complète",langAll:"Toutes les langues",trRun:"Traduction de l'interface en {x}…",trNA:"{x} : l'interface n'est pas encore traduite, elle reste en anglais.",trDone:"Votre navigateur a traduit l'interface en {x}.",asrDetecting:"Identification de la langue chantée…",asrDetected:"Langue détectée : {x}"},
+de:{langFull:"Vollständig übersetzt",langAll:"Alle Sprachen",trRun:"Oberfläche wird auf {x} übersetzt…",trNA:"{x}: Die Oberfläche ist noch nicht übersetzt und bleibt auf Englisch.",trDone:"Dein Browser hat die Oberfläche auf {x} übersetzt.",asrDetecting:"Gesungene Sprache wird erkannt…",asrDetected:"Erkannte Sprache: {x}"},
+"pt-BR":{langFull:"Tradução completa",langAll:"Todos os idiomas",trRun:"Traduzindo a interface para {x}…",trNA:"{x}: a interface ainda não foi traduzida, então fica em inglês.",trDone:"Seu navegador traduziu a interface para {x}.",asrDetecting:"Identificando o idioma cantado…",asrDetected:"Idioma detectado: {x}"},
+it:{langFull:"Traduzione completa",langAll:"Tutte le lingue",trRun:"Traduzione dell'interfaccia in {x}…",trNA:"{x}: l'interfaccia non è ancora tradotta, quindi resta in inglese.",trDone:"Il browser ha tradotto l'interfaccia in {x}.",asrDetecting:"Riconoscimento della lingua cantata…",asrDetected:"Lingua rilevata: {x}"},
+id:{langFull:"Terjemahan lengkap",langAll:"Semua bahasa",trRun:"Menerjemahkan antarmuka ke {x}…",trNA:"{x}: antarmuka belum diterjemahkan, jadi tetap dalam bahasa Inggris.",trDone:"Browser Anda menerjemahkan antarmuka ke {x}.",asrDetecting:"Mengenali bahasa lagu…",asrDetected:"Bahasa terdeteksi: {x}"},
+th:{langFull:"แปลครบถ้วน",langAll:"ทุกภาษา",trRun:"กำลังแปลหน้าจอเป็น{x}…",trNA:"{x}: ยังไม่มีคำแปลหน้าจอ จึงแสดงเป็นภาษาอังกฤษ",trDone:"เบราว์เซอร์แปลหน้าจอเป็น{x}แล้ว",asrDetecting:"กำลังระบุภาษาที่ร้อง…",asrDetected:"ภาษาที่ตรวจพบ: {x}"},
+vi:{langFull:"Dịch đầy đủ",langAll:"Tất cả ngôn ngữ",trRun:"Đang dịch giao diện sang {x}…",trNA:"{x}: giao diện chưa được dịch nên vẫn hiển thị tiếng Anh.",trDone:"Trình duyệt đã dịch giao diện sang {x}.",asrDetecting:"Đang nhận diện ngôn ngữ hát…",asrDetected:"Ngôn ngữ phát hiện: {x}"},
+ru:{langFull:"Полный перевод",langAll:"Все языки",trRun:"Переводим интерфейс на {x}…",trNA:"{x}: интерфейс ещё не переведён, поэтому остаётся на английском.",trDone:"Браузер перевёл интерфейс на {x}.",asrDetecting:"Определяем язык песни…",asrDetected:"Определённый язык: {x}"}
+};
+for(const k in EXTRA) Object.assign(I18N[k],EXTRA[k]);
+
+/* 追加の完全翻訳：ポーランド語・トルコ語・ヒンディー語・ウルドゥー語・アラビア語・ビルマ語 */
+I18N.pl={lang:"Język",langTitle:"Wybierz język",langSearch:"Szukaj",chipSong:"Utwór",chipMic:"Mikrofon",chipLyr:"Tekst",
+insecure:"Tutaj nie można użyć mikrofonu. Otwórz stronę z adresu https://.",
+s1:"Wybierz utwór",tabYt:"YouTube",tabFile:"Plik audio",searchPh:"Utwór lub wykonawca",search:"Szukaj",searching:"Szukanie…",
+noResults:"Nic nie znaleziono. Spróbuj innych słów.",quota:"Dzisiejszy limit wyszukiwań został wyczerpany. Odnowi się jutro.",keyBad:"Ten klucz API nie działa. Wklej go ponownie.",
+key403:"Ten klucz nie może korzystać z YouTube Data API v3. Sprawdź, czy API jest włączone.",searchFail:"Nie udało się wyszukać. Sprawdź połączenie.",
+keyIntro:"Aby pierwszy wynik odtwarzał się automatycznie, ustaw raz darmowy klucz API YouTube.",keyStep1:"Otwórz {link} i naciśnij Włącz",keyStep2:"Dane logowania → Utwórz dane logowania → Klucz API",keyStep3:"Skopiuj klucz, wklej poniżej i zapisz",
+save:"Zapisz",noKey:"Brak klucza? {link}, dotknij Udostępnij → Kopiuj i wróć:",findOnYt:"Szukaj na YouTube ↗",pastePlay:"Wklej i odtwórz",
+pasteFail:"Nie udało się odczytać linku. Przytrzymaj pole poniżej, aby wkleić.",urlDirect:"Wpisz URL",load:"Wczytaj",urlBad:"To nie jest link YouTube.",loading:"Wczytywanie…",
+ytFail:"Nie udało się wczytać YouTube. Sprawdź połączenie i czy strona zaczyna się od https://.",ytBlocked:"Tego filmu nie można odtwarzać poza YouTube. Wybierz inny.",ytErr:"Nie można odtworzyć tego filmu.",
+pickFile:"Wybierz plik",fileHint:"mp3, m4a lub wav (na iPhonie z aplikacji Pliki)",fileMix:"Z plikiem audio możesz też zapisać utwór i swój głos jako jeden miks.",fileFail:"Nie udało się odczytać pliku. Chronione utwory z aplikacji streamingowych nie działają.",
+s2:"Mikrofon",micTap:"Dotknij, aby zezwolić na mikrofon. Zalecane słuchawki.",micReady:"Mikrofon gotowy",micIos:"Mikrofon jest zablokowany. Zezwól w Ustawienia › Safari › Mikrofon i dotknij ponownie.",micDesk:"Mikrofon jest zablokowany. Zezwól przez ikonę obok paska adresu.",input:"Wejście",
+s3:"Mikser",mixSong:"Utwór",mixSongSub:"Film lub plik audio",mixVoice:"Nagrany głos",mixVoiceSub:"Twój głos w nagraniach i miksach",mixMon:"Odsłuch",mixMonSub:"Słysz siebie podczas śpiewania (tylko w słuchawkach)",
+offset:"Opóźnienie głosu",offsetSub:"Przesuń w prawo, jeśli głos jest spóźniony",countIn:"Odliczanie",countInSub:"3, 2, 1 przed startem utworu",iosVol:"Na iPhonie głośność YouTube zmieniają przyciski boczne. Włączanie i wyłączanie działa.",
+s4:"Tekst",timing:"Synchronizacja",another:"Inny tekst",lyrSearchPh:"Utwór i wykonawca",lyrSearch:"Znajdź tekst",lyrSearching:"Szukanie tekstu…",
+lyrNone:"Nie znaleziono tekstu. Spróbuj innych słów, wklej go lub rozpoznaj poniżej.",lyrFound:"Znaleziono: {n}. Dotknij właściwego.",lyrFail:"Brak połączenia z serwisem tekstów. Spróbuj za chwilę.",
+synced:"Zsynchronizowany",plain:"Sam tekst",noTiming:"Bez czasów",pasteOwn:"Wklej tekst samodzielnie",lyrPh:"Wklej tekst, jeden wers w linii.\nTekst z czasami jak [00:12.30] (LRC) synchronizuje się sam.",
+setLyr:"Użyj tekstu",localOnly:"Zapisano tylko w tej przeglądarce",pasted:"Wklejony tekst",next:"Następny wers ▶",done:"Gotowe",syncHint:"Dotykaj na początku każdego wersu (na komputerze spacja)",lineHint:"Dotknij wersu, aby do niego przejść.",
+asrTitle:"Transkrypcja AI",asrTip:"Wybierz nagranie własnego głosu. Bez podkładu wynik jest dużo dokładniejszy.",asrSrc:"Audio",asrLang:"Język śpiewu",auto:"Wykryj automatycznie",
+engLocal:"Na urządzeniu · za darmo",engGroq:"Groq · dokładnie",model:"Model",mBase:"Standard · whisper-base · ~80 MB",mSmall:"Lepszy · whisper-small · ~250 MB",mLarge:"Najlepszy · large-v3-turbo · ~600 MB · WebGPU",
+devTip:"Model pobiera się raz i zostaje na urządzeniu. Dźwięk nigdy go nie opuszcza.",noGpu:"Brak WebGPU, więc działa na procesorze i trwa dłużej. Dźwięk nie opuszcza urządzenia.",
+groqWarn:"Z Groq wybrane audio jest wysyłane na serwery Groq.",groqKeyTip:"Utwórz darmowy klucz na {link}. Jest zapisany tylko na tym urządzeniu.",gLarge:"whisper-large-v3 · dokładność",gTurbo:"whisper-large-v3-turbo · szybkość",
+start:"Start",cancel:"Anuluj",takeOpt:"Nagranie {n} · twój głos · {d} (zalecane)",songOpt:"Plik utworu (z podkładem mniej dokładnie)",
+needTakeYt:"Najpierw nagraj próbę. Dźwięku z YouTube nie da się rozpoznać.",needTakeFile:"Najpierw wczytaj plik audio lub nagraj próbę.",prep:"Przygotowanie audio…",convFail:"Nie udało się przekonwertować audio.",
+groqNeedKey:"Wpisz klucz API Groq.",tooLong:"Audio jest za długie (maks. 25 MB). Wybierz krótsze nagranie.",groqRun:"Transkrypcja przez Groq…",groq401:"Klucz API Groq jest nieprawidłowy.",
+groq429:"Osiągnięto limit Groq. Spróbuj za chwilę.",groqErr:"Groq zwrócił błąd ({s}).",groqConn:"Brak połączenia z Groq. Sprawdź połączenie i klucz.",
+needGpu:"Ten model wymaga WebGPU. Wybierz model standardowy.",noWorker:"Ta przeglądarka nie obsługuje transkrypcji na urządzeniu. Spróbuj Groq.",
+modelPrep:"Przygotowanie modelu… Za pierwszym razem trwa to kilka minut.",modelDl:"Pobieranie modelu… {a} / {b} MB",asrRun:"Transkrypcja… Utwór zajmuje od kilku sekund do kilku minut.",
+asrFail:"Transkrypcja nie powiodła się: {m}",asrLoadFail:"Nie udało się wczytać transkrypcji. Sprawdź połączenie.",asrNone:"Nie rozpoznano słów. Nagraj bliżej mikrofonu i spróbuj ponownie.",
+asrOk:"Rozpoznano wersów: {n}. Popraw błędy przez Inny tekst → Wklej tekst samodzielnie.",canceled:"Anulowano.",aiLabel:"Transkrypcja AI",
+s5:"Nagrania",takesEmpty:"Naciśnij ●, aby włączyć utwór i nagrywać",take:"Nagranie {n}",overlay:"▶ odtwarza utwór i twój głos razem. Włączaj i wyłączaj każde w mikserze.",
+voiceOnlyNote:"Ten utwór nie jest wczytany, więc ▶ odtwarza tylko głos.",voiceOnly:"Tylko głos",saveVoice:"Zapisz głos",saveMix:"Zapisz miks",making:"Tworzenie…",del:"Usuń",deleted:"Usunięto nagranie {n}",undo:"Cofnij",
+privacy:"Nagrania i teksty zostają na tym urządzeniu i nigdy nie są wysyłane.",play:"Odtwórz",stop:"Stop",lyrics:"Tekst",offLabel:"Przesunięcie tekstu",
+fullEmpty:"Brak czasów. Użyj Synchronizacji lub wklej tekst z czasami (LRC).",recFail:"Tu nie można nagrywać. Użyj Safari na iOS 14.3+ lub aktualnego Chrome.",
+keys:"Spacja odtwórz · R nagraj · L tekst",close:"Zamknij",sec:"s",recording:"Nagrywanie",getReady:"Przygotuj się",
+langFull:"Pełne tłumaczenie",langAll:"Wszystkie języki",trRun:"Tłumaczenie interfejsu na: {x}…",trNA:"{x}: interfejs nie jest jeszcze przetłumaczony, więc zostaje po angielsku.",trDone:"Przeglądarka przetłumaczyła interfejs na: {x}.",asrDetecting:"Rozpoznawanie języka śpiewu…",asrDetected:"Wykryty język: {x}"};
+I18N.tr={lang:"Dil",langTitle:"Dil seçin",langSearch:"Ara",chipSong:"Şarkı",chipMic:"Mikrofon",chipLyr:"Sözler",
+insecure:"Mikrofon burada kullanılamıyor. Sayfayı https:// ile başlayan bir adresten açın.",
+s1:"Şarkı seçin",tabYt:"YouTube",tabFile:"Ses dosyası",searchPh:"Şarkı veya sanatçı",search:"Ara",searching:"Aranıyor…",
+noResults:"Sonuç yok. Başka kelimeler deneyin.",quota:"Bugünkü arama sınırına ulaşıldı. Yarın sıfırlanır.",keyBad:"Bu API anahtarı çalışmıyor. Yeniden yapıştırın.",
+key403:"Bu anahtar YouTube Data API v3'ü kullanamıyor. API'nin etkin olduğunu kontrol edin.",searchFail:"Arama yapılamadı. Bağlantınızı kontrol edin.",
+keyIntro:"İlk sonucu otomatik çalmak için bir kez ücretsiz YouTube API anahtarı ayarlayın.",keyStep1:"{link} sayfasını açıp Etkinleştir'e basın",keyStep2:"Kimlik bilgileri → Kimlik bilgisi oluştur → API anahtarı",keyStep3:"Anahtarı kopyalayın, aşağıya yapıştırıp kaydedin",
+save:"Kaydet",noKey:"Anahtar yok mu? {link}, Paylaş → Kopyala'ya dokunup geri gelin:",findOnYt:"YouTube'da ara ↗",pastePlay:"Yapıştır ve çal",
+pasteFail:"Bağlantı okunamadı. Yapıştırmak için aşağıdaki alana basılı tutun.",urlDirect:"URL girin",load:"Yükle",urlBad:"Bu bir YouTube bağlantısı değil.",loading:"Yükleniyor…",
+ytFail:"YouTube yüklenemedi. Bağlantıyı ve sayfanın https:// ile başladığını kontrol edin.",ytBlocked:"Bu video YouTube dışında oynatılamaz. Başka birini seçin.",ytErr:"Bu video oynatılamıyor.",
+pickFile:"Dosya seç",fileHint:"mp3, m4a veya wav (iPhone'da Dosyalar uygulamasından)",fileMix:"Ses dosyasıyla şarkıyı ve sesinizi tek bir miks olarak da kaydedebilirsiniz.",fileFail:"Dosya okunamadı. Yayın uygulamalarındaki korumalı şarkılar kullanılamaz.",
+s2:"Mikrofon",micTap:"Mikrofona izin vermek için dokunun. Kulaklık önerilir.",micReady:"Mikrofon hazır",micIos:"Mikrofon engelli. Ayarlar › Safari › Mikrofon'dan izin verip yeniden dokunun.",micDesk:"Mikrofon engelli. Adres çubuğunun yanındaki simgeden izin verin.",input:"Giriş",
+s3:"Mikser",mixSong:"Şarkı",mixSongSub:"Video veya ses dosyası",mixVoice:"Kaydedilen ses",mixVoiceSub:"Kayıtlarda ve mikslerde sesiniz",mixMon:"Monitör",mixMonSub:"Söylerken kendinizi duyun (yalnızca kulaklıkla)",
+offset:"Ses gecikmesi",offsetSub:"Sesiniz geç geliyorsa sağa kaydırın",countIn:"Geri sayım",countInSub:"Şarkı başlamadan önce 3, 2, 1",iosVol:"iPhone'da YouTube sesi yan tuşlarla ayarlanır. Açma/kapama çalışır.",
+s4:"Sözler",timing:"Zamanlama",another:"Başka sözler",lyrSearchPh:"Şarkı ve sanatçı",lyrSearch:"Söz bul",lyrSearching:"Sözler aranıyor…",
+lyrNone:"Söz bulunamadı. Başka kelimeler deneyin, yapıştırın ya da aşağıda yazıya dökün.",lyrFound:"{n} sonuç bulundu. Kullanmak istediğinize dokunun.",lyrFail:"Söz servisine ulaşılamadı. Biraz sonra tekrar deneyin.",
+synced:"Senkron",plain:"Yalnızca metin",noTiming:"Zamanlama yok",pasteOwn:"Sözleri kendin yapıştır",lyrPh:"Sözleri her satıra bir dize olacak şekilde yapıştırın.\n[00:12.30] gibi zamanlı sözler (LRC) otomatik senkron olur.",
+setLyr:"Sözleri kullan",localOnly:"Yalnızca bu tarayıcıda saklanır",pasted:"Yapıştırılan sözler",next:"Sonraki satır ▶",done:"Bitti",syncHint:"Her satır başladığında dokunun (bilgisayarda Boşluk)",lineHint:"Oraya gitmek için bir satıra dokunun.",
+asrTitle:"Yapay zekâ ile yazıya dökme",asrTip:"Kendi sesinizin kaydını seçin. Altyapı olmadığı için çok daha doğrudur.",asrSrc:"Ses",asrLang:"Söylenen dil",auto:"Otomatik algıla",
+engLocal:"Cihazda · ücretsiz",engGroq:"Groq · hassas",model:"Model",mBase:"Standart · whisper-base · ~80 MB",mSmall:"Daha iyi · whisper-small · ~250 MB",mLarge:"En iyi · large-v3-turbo · ~600 MB · WebGPU",
+devTip:"Model bir kez indirilir ve bu cihazda kalır. Ses cihazdan çıkmaz.",noGpu:"Bu cihazda WebGPU yok; işlem CPU'da yapılır ve daha uzun sürer. Ses cihazdan çıkmaz.",
+groqWarn:"Groq ile seçilen ses Groq sunucularına gönderilir.",groqKeyTip:"{link} adresinden ücretsiz anahtar oluşturun. Yalnızca bu cihazda saklanır.",gLarge:"whisper-large-v3 · doğruluk",gTurbo:"whisper-large-v3-turbo · hız",
+start:"Başlat",cancel:"İptal",takeOpt:"Kayıt {n} · sesiniz · {d} (önerilen)",songOpt:"Şarkı ses dosyası (altyapıyla daha az doğru)",
+needTakeYt:"Önce bir kayıt yapın. YouTube sesi yazıya dökülemez.",needTakeFile:"Önce bir ses dosyası yükleyin veya kayıt yapın.",prep:"Ses hazırlanıyor…",convFail:"Ses dönüştürülemedi.",
+groqNeedKey:"Groq API anahtarınızı girin.",tooLong:"Ses çok uzun (en fazla 25 MB). Daha kısa bir kayıt seçin.",groqRun:"Groq ile yazıya dökülüyor…",groq401:"Groq API anahtarı geçersiz.",
+groq429:"Groq sınırına ulaşıldı. Biraz sonra tekrar deneyin.",groqErr:"Groq bir hata döndürdü ({s}).",groqConn:"Groq'a ulaşılamadı. Bağlantıyı ve anahtarı kontrol edin.",
+needGpu:"Bu model WebGPU gerektirir. Standart modeli seçin.",noWorker:"Bu tarayıcı cihazda yazıya dökmeyi desteklemiyor. Groq'u deneyin.",
+modelPrep:"Model hazırlanıyor… İlk seferde birkaç dakika sürer.",modelDl:"Model indiriliyor… {a} / {b} MB",asrRun:"Yazıya dökülüyor… Bir şarkı birkaç saniye ile birkaç dakika sürer.",
+asrFail:"Yazıya dökme başarısız: {m}",asrLoadFail:"Yazıya dökme yüklenemedi. Bağlantıyı kontrol edin.",asrNone:"Kullanılabilir kelime duyulmadı. Mikrofona daha yakın kaydedip tekrar deneyin.",
+asrOk:"{n} satır yazıya döküldü. Hataları Başka sözler → Sözleri kendin yapıştır ile düzeltin.",canceled:"İptal edildi.",aiLabel:"Yapay zekâ dökümü",
+s5:"Kayıtlar",takesEmpty:"Şarkıyı başlatıp kaydetmek için ● düğmesine basın",take:"Kayıt {n}",overlay:"▶ şarkıyı ve sesinizi birlikte çalar. Her birini mikserden açıp kapatın.",
+voiceOnlyNote:"Bu şarkı yüklü değil, bu yüzden ▶ yalnızca sesinizi çalar.",voiceOnly:"Yalnızca ses",saveVoice:"Sesi kaydet",saveMix:"Miksi kaydet",making:"Oluşturuluyor…",del:"Sil",deleted:"Kayıt {n} silindi",undo:"Geri al",
+privacy:"Kayıtlar ve sözler bu cihazda kalır, asla yüklenmez.",play:"Çal",stop:"Durdur",lyrics:"Sözler",offLabel:"Söz kayması",
+fullEmpty:"Henüz zamanlama yok. Zamanlama'yı kullanın veya zamanlı sözler (LRC) yapıştırın.",recFail:"Burada kayıt yapılamıyor. iOS 14.3+ Safari veya güncel Chrome kullanın.",
+keys:"Boşluk çal · R kaydet · L sözler",close:"Kapat",sec:"sn",recording:"Kaydediliyor",getReady:"Hazır ol",
+langFull:"Tam çeviri",langAll:"Tüm diller",trRun:"Arayüz {x} diline çevriliyor…",trNA:"{x}: arayüz henüz çevrilmedi, bu yüzden İngilizce kalıyor.",trDone:"Tarayıcınız arayüzü {x} diline çevirdi.",asrDetecting:"Söylenen dil belirleniyor…",asrDetected:"Algılanan dil: {x}"};
+I18N.hi={lang:"भाषा बदलें",langTitle:"भाषा चुनें",langSearch:"खोजें",chipSong:"गाना",chipMic:"माइक",chipLyr:"बोल",
+insecure:"यहाँ माइक्रोफ़ोन का उपयोग नहीं हो सकता। इस पेज को https:// पते से खोलें।",
+s1:"गाना चुनें",tabYt:"YouTube",tabFile:"ऑडियो फ़ाइल",searchPh:"गाना या कलाकार",search:"खोजें",searching:"खोज रहे हैं…",
+noResults:"कुछ नहीं मिला। दूसरे शब्द आज़माएँ।",quota:"आज की खोज सीमा पूरी हो गई। कल फिर से शुरू होगी।",keyBad:"यह API कुंजी काम नहीं कर रही। फिर से पेस्ट करें।",
+key403:"यह कुंजी YouTube Data API v3 का उपयोग नहीं कर सकती। जाँचें कि API चालू है।",searchFail:"खोज नहीं हो सकी। अपना कनेक्शन जाँचें।",
+keyIntro:"पहला परिणाम अपने-आप चलाने के लिए एक बार मुफ़्त YouTube API कुंजी सेट करें।",keyStep1:"{link} खोलें और Enable दबाएँ",keyStep2:"Credentials → Create credentials → API key",keyStep3:"कुंजी कॉपी करें, नीचे पेस्ट करें और सेव करें",
+save:"सेव करें",noKey:"कुंजी नहीं है? {link} में Share → Copy दबाकर वापस आएँ:",findOnYt:"YouTube पर खोजें ↗",pastePlay:"पेस्ट करके चलाएँ",
+pasteFail:"लिंक पढ़ा नहीं जा सका। पेस्ट करने के लिए नीचे के बॉक्स को दबाकर रखें।",urlDirect:"URL डालें",load:"लोड करें",urlBad:"यह YouTube लिंक नहीं है।",loading:"लोड हो रहा है…",
+ytFail:"YouTube लोड नहीं हुआ। कनेक्शन जाँचें और देखें कि पेज https:// से शुरू होता है।",ytBlocked:"यह वीडियो YouTube के बाहर नहीं चल सकता। दूसरा चुनें।",ytErr:"यह वीडियो नहीं चल सकता।",
+pickFile:"फ़ाइल चुनें",fileHint:"mp3, m4a या wav (iPhone पर Files ऐप से)",fileMix:"ऑडियो फ़ाइल से आप गाना और अपनी आवाज़ एक मिक्स में भी सेव कर सकते हैं।",fileFail:"यह फ़ाइल पढ़ी नहीं जा सकी। स्ट्रीमिंग ऐप के सुरक्षित गाने काम नहीं करते।",
+s2:"माइक्रोफ़ोन",micTap:"माइक की अनुमति देने के लिए टैप करें। ईयरफ़ोन बेहतर है।",micReady:"माइक तैयार है",micIos:"माइक ब्लॉक है। Settings › Safari › Microphone में अनुमति दें और फिर टैप करें।",micDesk:"माइक ब्लॉक है। एड्रेस बार के पास वाले आइकन से अनुमति दें।",input:"इनपुट",
+s3:"मिक्सर",mixSong:"गाना",mixSongSub:"वीडियो या ऑडियो फ़ाइल",mixVoice:"रिकॉर्ड की गई आवाज़",mixVoiceSub:"टेक और मिक्स में आपकी आवाज़",mixMon:"मॉनिटर",mixMonSub:"गाते समय अपनी आवाज़ सुनें (सिर्फ़ ईयरफ़ोन पर)",
+offset:"आवाज़ की देरी",offsetSub:"आवाज़ देर से लगे तो दाईं ओर करें",countIn:"काउंट-इन",countInSub:"गाना शुरू होने से पहले 3, 2, 1",iosVol:"iPhone पर YouTube की आवाज़ साइड बटन से बदलती है। चालू/बंद काम करता है।",
+s4:"बोल",timing:"टाइमिंग",another:"दूसरे बोल",lyrSearchPh:"गाना और कलाकार",lyrSearch:"बोल खोजें",lyrSearching:"बोल खोज रहे हैं…",
+lyrNone:"बोल नहीं मिले। दूसरे शब्द आज़माएँ, पेस्ट करें या नीचे लिखवाएँ।",lyrFound:"{n} मिले। जिसे इस्तेमाल करना है उस पर टैप करें।",lyrFail:"बोल सेवा से जुड़ नहीं सके। थोड़ी देर बाद कोशिश करें।",
+synced:"सिंक",plain:"सिर्फ़ टेक्स्ट",noTiming:"टाइमिंग नहीं",pasteOwn:"खुद बोल पेस्ट करें",lyrPh:"बोल पेस्ट करें, हर पंक्ति अलग।\n[00:12.30] जैसे समय वाले बोल (LRC) अपने-आप सिंक होते हैं।",
+setLyr:"बोल लगाएँ",localOnly:"सिर्फ़ इसी ब्राउज़र में सेव",pasted:"पेस्ट किए बोल",next:"अगली पंक्ति ▶",done:"हो गया",syncHint:"हर पंक्ति शुरू होने पर टैप करें (कंप्यूटर पर Space)",lineHint:"किसी पंक्ति पर टैप करके वहाँ जाएँ।",
+asrTitle:"AI से बोल लिखवाएँ",asrTip:"अपनी आवाज़ वाला टेक चुनें। संगीत न होने से नतीजा कहीं ज़्यादा सटीक होता है।",asrSrc:"ऑडियो",asrLang:"गाने की भाषा",auto:"अपने-आप पहचानें",
+engLocal:"डिवाइस पर · मुफ़्त",engGroq:"Groq · सटीक",model:"मॉडल",mBase:"सामान्य · whisper-base · ~80 MB",mSmall:"बेहतर · whisper-small · ~250 MB",mLarge:"सबसे अच्छा · large-v3-turbo · ~600 MB · WebGPU",
+devTip:"मॉडल एक बार डाउनलोड होकर इसी डिवाइस पर रहता है। आवाज़ डिवाइस से बाहर नहीं जाती।",noGpu:"इस डिवाइस पर WebGPU नहीं है, इसलिए CPU पर चलेगा और ज़्यादा समय लगेगा। आवाज़ डिवाइस से बाहर नहीं जाती।",
+groqWarn:"Groq चुनने पर चुना गया ऑडियो Groq के सर्वर पर भेजा जाता है।",groqKeyTip:"{link} पर मुफ़्त कुंजी बनाएँ। यह सिर्फ़ इसी डिवाइस पर सेव रहती है।",gLarge:"whisper-large-v3 · सटीकता",gTurbo:"whisper-large-v3-turbo · गति",
+start:"शुरू करें",cancel:"रद्द करें",takeOpt:"टेक {n} · आपकी आवाज़ · {d} (सुझाया गया)",songOpt:"गाने की ऑडियो फ़ाइल (संगीत के कारण कम सटीक)",
+needTakeYt:"पहले एक टेक रिकॉर्ड करें। YouTube का ऑडियो लिखा नहीं जा सकता।",needTakeFile:"पहले ऑडियो फ़ाइल लोड करें या टेक रिकॉर्ड करें।",prep:"ऑडियो तैयार हो रहा है…",convFail:"ऑडियो बदला नहीं जा सका।",
+groqNeedKey:"अपनी Groq API कुंजी डालें।",tooLong:"ऑडियो बहुत लंबा है (अधिकतम 25 MB)। छोटा टेक चुनें।",groqRun:"Groq से लिखा जा रहा है…",groq401:"Groq API कुंजी सही नहीं है।",
+groq429:"Groq की सीमा पूरी हो गई। थोड़ी देर बाद कोशिश करें।",groqErr:"Groq ने त्रुटि लौटाई ({s})।",groqConn:"Groq से जुड़ नहीं सके। कनेक्शन और कुंजी जाँचें।",
+needGpu:"इस मॉडल को WebGPU चाहिए। सामान्य मॉडल चुनें।",noWorker:"यह ब्राउज़र डिवाइस पर लिखवाने का समर्थन नहीं करता। Groq आज़माएँ।",
+modelPrep:"मॉडल तैयार हो रहा है… पहली बार कुछ मिनट लगते हैं।",modelDl:"मॉडल डाउनलोड हो रहा है… {a} / {b} MB",asrRun:"लिखा जा रहा है… एक गाने में कुछ सेकंड से कुछ मिनट लगते हैं।",
+asrFail:"लिखवाना विफल रहा: {m}",asrLoadFail:"लिखवाने का टूल लोड नहीं हुआ। कनेक्शन जाँचें।",asrNone:"काम के शब्द सुनाई नहीं दिए। माइक के पास रिकॉर्ड करके फिर कोशिश करें।",
+asrOk:"{n} पंक्तियाँ लिखी गईं। गलतियाँ दूसरे बोल → खुद बोल पेस्ट करें से सुधारें।",canceled:"रद्द किया गया।",aiLabel:"AI से लिखे बोल",
+s5:"टेक",takesEmpty:"गाना चलाकर रिकॉर्ड करने के लिए ● दबाएँ",take:"टेक {n}",overlay:"▶ गाना और आपकी आवाज़ साथ चलाता है। मिक्सर में दोनों को अलग-अलग चालू/बंद करें।",
+voiceOnlyNote:"यह गाना लोड नहीं है, इसलिए ▶ सिर्फ़ आपकी आवाज़ चलाता है।",voiceOnly:"सिर्फ़ आवाज़",saveVoice:"आवाज़ सेव करें",saveMix:"मिक्स सेव करें",making:"बन रहा है…",del:"हटाएँ",deleted:"टेक {n} हटाया गया",undo:"वापस लाएँ",
+privacy:"रिकॉर्डिंग और बोल इसी डिवाइस पर रहते हैं और कभी अपलोड नहीं होते।",play:"चलाएँ",stop:"रोकें",lyrics:"बोल",offLabel:"बोल का अंतर",
+fullEmpty:"अभी टाइमिंग नहीं है। टाइमिंग का उपयोग करें या समय वाले बोल (LRC) पेस्ट करें।",recFail:"यहाँ रिकॉर्डिंग नहीं हो सकती। iOS 14.3+ पर Safari या नया Chrome इस्तेमाल करें।",
+keys:"Space चलाएँ · R रिकॉर्ड · L बोल",close:"बंद करें",sec:"से",recording:"रिकॉर्ड हो रहा है",getReady:"तैयार हो जाइए",
+langFull:"पूरा अनुवाद",langAll:"सभी भाषाएँ",trRun:"इंटरफ़ेस का {x} में अनुवाद हो रहा है…",trNA:"{x}: इंटरफ़ेस का अभी अनुवाद नहीं हुआ है, इसलिए अंग्रेज़ी में रहेगा।",trDone:"आपके ब्राउज़र ने इंटरफ़ेस का {x} में अनुवाद किया।",asrDetecting:"गाने की भाषा पहचानी जा रही है…",asrDetected:"पहचानी गई भाषा: {x}"};
+I18N.ur={lang:"زبان بدلیں",langTitle:"زبان منتخب کریں",langSearch:"تلاش",chipSong:"گانا",chipMic:"مائیک",chipLyr:"بول",
+insecure:"یہاں مائیکروفون استعمال نہیں ہو سکتا۔ یہ صفحہ https:// والے پتے سے کھولیں۔",
+s1:"گانا منتخب کریں",tabYt:"YouTube",tabFile:"آڈیو فائل",searchPh:"گانا یا فنکار",search:"تلاش",searching:"تلاش جاری ہے…",
+noResults:"کچھ نہیں ملا۔ دوسرے الفاظ آزمائیں۔",quota:"آج کی تلاش کی حد پوری ہو گئی۔ کل دوبارہ شروع ہوگی۔",keyBad:"یہ API کلید کام نہیں کر رہی۔ دوبارہ پیسٹ کریں۔",
+key403:"یہ کلید YouTube Data API v3 استعمال نہیں کر سکتی۔ دیکھیں کہ API فعال ہے۔",searchFail:"تلاش نہیں ہو سکی۔ کنکشن چیک کریں۔",
+keyIntro:"پہلا نتیجہ خود بخود چلانے کے لیے ایک بار مفت YouTube API کلید سیٹ کریں۔",keyStep1:"{link} کھولیں اور Enable دبائیں",keyStep2:"Credentials ← Create credentials ← API key",keyStep3:"کلید کاپی کریں، نیچے پیسٹ کریں اور محفوظ کریں",
+save:"محفوظ کریں",noKey:"کلید نہیں ہے؟ {link} میں Share ← Copy دبا کر واپس آئیں:",findOnYt:"YouTube پر تلاش کریں ↗",pastePlay:"پیسٹ کر کے چلائیں",
+pasteFail:"لنک پڑھا نہیں جا سکا۔ پیسٹ کرنے کے لیے نیچے کے خانے کو دبائے رکھیں۔",urlDirect:"URL درج کریں",load:"لوڈ کریں",urlBad:"یہ YouTube لنک نہیں ہے۔",loading:"لوڈ ہو رہا ہے…",
+ytFail:"YouTube لوڈ نہیں ہوا۔ کنکشن چیک کریں اور دیکھیں کہ صفحہ https:// سے شروع ہوتا ہے۔",ytBlocked:"یہ ویڈیو YouTube کے باہر نہیں چل سکتی۔ کوئی اور منتخب کریں۔",ytErr:"یہ ویڈیو نہیں چل سکتی۔",
+pickFile:"فائل منتخب کریں",fileHint:"mp3، m4a یا wav (iPhone پر Files ایپ سے)",fileMix:"آڈیو فائل کے ساتھ آپ گانا اور اپنی آواز ایک مکس میں بھی محفوظ کر سکتے ہیں۔",fileFail:"یہ فائل پڑھی نہیں جا سکی۔ اسٹریمنگ ایپس کے محفوظ گانے کام نہیں کرتے۔",
+s2:"مائیکروفون",micTap:"مائیک کی اجازت کے لیے ٹیپ کریں۔ ایئرفون بہتر ہیں۔",micReady:"مائیک تیار ہے",micIos:"مائیک بلاک ہے۔ Settings › Safari › Microphone میں اجازت دے کر دوبارہ ٹیپ کریں۔",micDesk:"مائیک بلاک ہے۔ ایڈریس بار کے ساتھ والے آئیکن سے اجازت دیں۔",input:"ان پٹ",
+s3:"مکسر",mixSong:"گانا",mixSongSub:"ویڈیو یا آڈیو فائل",mixVoice:"ریکارڈ شدہ آواز",mixVoiceSub:"ٹیک اور مکس میں آپ کی آواز",mixMon:"مانیٹر",mixMonSub:"گاتے ہوئے اپنی آواز سنیں (صرف ایئرفون پر)",
+offset:"آواز کی تاخیر",offsetSub:"آواز دیر سے لگے تو دائیں طرف کریں",countIn:"کاؤنٹ اِن",countInSub:"گانا شروع ہونے سے پہلے 3، 2، 1",iosVol:"iPhone پر YouTube کی آواز سائیڈ بٹنوں سے بدلتی ہے۔ آن/آف کام کرتا ہے۔",
+s4:"بول",timing:"ٹائمنگ",another:"دوسرے بول",lyrSearchPh:"گانا اور فنکار",lyrSearch:"بول تلاش کریں",lyrSearching:"بول تلاش ہو رہے ہیں…",
+lyrNone:"بول نہیں ملے۔ دوسرے الفاظ آزمائیں، پیسٹ کریں یا نیچے لکھوائیں۔",lyrFound:"{n} ملے۔ جسے استعمال کرنا ہے اس پر ٹیپ کریں۔",lyrFail:"بول کی سروس سے رابطہ نہیں ہو سکا۔ تھوڑی دیر بعد کوشش کریں۔",
+synced:"ہم آہنگ",plain:"صرف متن",noTiming:"ٹائمنگ نہیں",pasteOwn:"خود بول پیسٹ کریں",lyrPh:"بول پیسٹ کریں، ہر سطر الگ۔\n[00:12.30] جیسے وقت والے بول (LRC) خود ہم آہنگ ہو جاتے ہیں۔",
+setLyr:"بول لگائیں",localOnly:"صرف اسی براؤزر میں محفوظ",pasted:"پیسٹ کیے گئے بول",next:"اگلی سطر ▶",done:"مکمل",syncHint:"ہر سطر شروع ہونے پر ٹیپ کریں (کمپیوٹر پر Space)",lineHint:"کسی سطر پر ٹیپ کر کے وہاں جائیں۔",
+asrTitle:"AI سے بول لکھوائیں",asrTip:"اپنی آواز والا ٹیک منتخب کریں۔ موسیقی نہ ہونے سے نتیجہ کہیں زیادہ درست ہوتا ہے۔",asrSrc:"آڈیو",asrLang:"گانے کی زبان",auto:"خود پہچانیں",
+engLocal:"ڈیوائس پر · مفت",engGroq:"Groq · درست",model:"ماڈل",mBase:"معیاری · whisper-base · ~80 MB",mSmall:"بہتر · whisper-small · ~250 MB",mLarge:"بہترین · large-v3-turbo · ~600 MB · WebGPU",
+devTip:"ماڈل ایک بار ڈاؤن لوڈ ہو کر اسی ڈیوائس پر رہتا ہے۔ آواز ڈیوائس سے باہر نہیں جاتی۔",noGpu:"اس ڈیوائس پر WebGPU نہیں، اس لیے CPU پر چلے گا اور زیادہ وقت لگے گا۔ آواز ڈیوائس سے باہر نہیں جاتی۔",
+groqWarn:"Groq استعمال کرنے پر منتخب آڈیو Groq کے سرورز پر بھیجا جاتا ہے۔",groqKeyTip:"{link} پر مفت کلید بنائیں۔ یہ صرف اسی ڈیوائس پر محفوظ رہتی ہے۔",gLarge:"whisper-large-v3 · درستی",gTurbo:"whisper-large-v3-turbo · رفتار",
+start:"شروع کریں",cancel:"منسوخ",takeOpt:"ٹیک {n} · آپ کی آواز · {d} (تجویز کردہ)",songOpt:"گانے کی آڈیو فائل (موسیقی کی وجہ سے کم درست)",
+needTakeYt:"پہلے ایک ٹیک ریکارڈ کریں۔ YouTube کی آواز لکھی نہیں جا سکتی۔",needTakeFile:"پہلے آڈیو فائل لوڈ کریں یا ٹیک ریکارڈ کریں۔",prep:"آڈیو تیار ہو رہا ہے…",convFail:"آڈیو تبدیل نہیں ہو سکا۔",
+groqNeedKey:"اپنی Groq API کلید درج کریں۔",tooLong:"آڈیو بہت لمبا ہے (زیادہ سے زیادہ 25 MB)۔ چھوٹا ٹیک منتخب کریں۔",groqRun:"Groq سے لکھا جا رہا ہے…",groq401:"Groq API کلید درست نہیں۔",
+groq429:"Groq کی حد پوری ہو گئی۔ تھوڑی دیر بعد کوشش کریں۔",groqErr:"Groq نے خرابی بتائی ({s})۔",groqConn:"Groq سے رابطہ نہیں ہو سکا۔ کنکشن اور کلید چیک کریں۔",
+needGpu:"اس ماڈل کو WebGPU چاہیے۔ معیاری ماڈل منتخب کریں۔",noWorker:"یہ براؤزر ڈیوائس پر لکھوانے کی سہولت نہیں دیتا۔ Groq آزمائیں۔",
+modelPrep:"ماڈل تیار ہو رہا ہے… پہلی بار چند منٹ لگتے ہیں۔",modelDl:"ماڈل ڈاؤن لوڈ ہو رہا ہے… {a} / {b} MB",asrRun:"لکھا جا رہا ہے… ایک گانے میں چند سیکنڈ سے چند منٹ لگتے ہیں۔",
+asrFail:"لکھوانا ناکام رہا: {m}",asrLoadFail:"لکھوانے کا ٹول لوڈ نہیں ہوا۔ کنکشن چیک کریں۔",asrNone:"کارآمد الفاظ سنائی نہیں دیے۔ مائیک کے قریب ریکارڈ کر کے دوبارہ کوشش کریں۔",
+asrOk:"{n} سطریں لکھی گئیں۔ غلطیاں دوسرے بول ← خود بول پیسٹ کریں سے درست کریں۔",canceled:"منسوخ کر دیا گیا۔",aiLabel:"AI سے لکھے بول",
+s5:"ٹیک",takesEmpty:"گانا چلا کر ریکارڈنگ شروع کرنے کے لیے ● دبائیں",take:"ٹیک {n}",overlay:"▶ گانا اور آپ کی آواز ساتھ چلاتا ہے۔ مکسر میں ہر ایک کو الگ آن/آف کریں۔",
+voiceOnlyNote:"یہ گانا لوڈ نہیں، اس لیے ▶ صرف آپ کی آواز چلاتا ہے۔",voiceOnly:"صرف آواز",saveVoice:"آواز محفوظ کریں",saveMix:"مکس محفوظ کریں",making:"بن رہا ہے…",del:"حذف کریں",deleted:"ٹیک {n} حذف ہو گیا",undo:"واپس لائیں",
+privacy:"ریکارڈنگز اور بول اسی ڈیوائس پر رہتے ہیں اور کبھی اپ لوڈ نہیں ہوتے۔",play:"چلائیں",stop:"روکیں",lyrics:"بول",offLabel:"بول کا فرق",
+fullEmpty:"ابھی ٹائمنگ نہیں ہے۔ ٹائمنگ استعمال کریں یا وقت والے بول (LRC) پیسٹ کریں۔",recFail:"یہاں ریکارڈنگ نہیں ہو سکتی۔ iOS 14.3+ پر Safari یا تازہ Chrome استعمال کریں۔",
+keys:"Space چلائیں · R ریکارڈ · L بول",close:"بند کریں",sec:"سیکنڈ",recording:"ریکارڈنگ",getReady:"تیار ہو جائیں",
+langFull:"مکمل ترجمہ",langAll:"تمام زبانیں",trRun:"انٹرفیس کا {x} میں ترجمہ ہو رہا ہے…",trNA:"{x}: انٹرفیس کا ابھی ترجمہ نہیں ہوا، اس لیے انگریزی میں رہے گا۔",trDone:"آپ کے براؤزر نے انٹرفیس کا {x} میں ترجمہ کیا۔",asrDetecting:"گانے کی زبان پہچانی جا رہی ہے…",asrDetected:"پہچانی گئی زبان: {x}"};
+I18N.ar={lang:"تغيير اللغة",langTitle:"اختر لغة",langSearch:"بحث",chipSong:"الأغنية",chipMic:"الميكروفون",chipLyr:"الكلمات",
+insecure:"لا يمكن استخدام الميكروفون هنا. افتح الصفحة من عنوان يبدأ بـ https://.",
+s1:"اختر أغنية",tabYt:"YouTube",tabFile:"ملف صوتي",searchPh:"الأغنية أو الفنان",search:"بحث",searching:"جارٍ البحث…",
+noResults:"لا توجد نتائج. جرّب كلمات أخرى.",quota:"تم بلوغ حد البحث لليوم. يُعاد ضبطه غدًا.",keyBad:"مفتاح API هذا لا يعمل. الصقه مرة أخرى.",
+key403:"لا يمكن لهذا المفتاح استخدام YouTube Data API v3. تحقّق من تفعيل الواجهة.",searchFail:"تعذّر البحث. تحقّق من الاتصال.",
+keyIntro:"لتشغيل النتيجة الأولى تلقائيًا، اضبط مفتاح YouTube API مجانيًا مرة واحدة.",keyStep1:"افتح {link} واضغط تفعيل",keyStep2:"بيانات الاعتماد ← إنشاء بيانات اعتماد ← مفتاح API",keyStep3:"انسخ المفتاح والصقه أدناه ثم احفظ",
+save:"حفظ",noKey:"لا مفتاح؟ {link}، اضغط مشاركة ← نسخ ثم عُد:",findOnYt:"ابحث في YouTube ↗",pastePlay:"لصق وتشغيل",
+pasteFail:"تعذّرت قراءة الرابط. اضغط مطولًا على الحقل أدناه للّصق.",urlDirect:"أدخل رابطًا",load:"تحميل",urlBad:"هذا ليس رابط YouTube.",loading:"جارٍ التحميل…",
+ytFail:"تعذّر تحميل YouTube. تحقّق من الاتصال وأن الصفحة تبدأ بـ https://.",ytBlocked:"لا يمكن تشغيل هذا الفيديو خارج YouTube. اختر فيديو آخر.",ytErr:"لا يمكن تشغيل هذا الفيديو.",
+pickFile:"اختر ملفًا",fileHint:"mp3 أو m4a أو wav (على iPhone من تطبيق الملفات)",fileMix:"مع الملف الصوتي يمكنك أيضًا حفظ الأغنية وصوتك في مزيج واحد.",fileFail:"تعذّرت قراءة الملف. لا تعمل الأغاني المحمية من تطبيقات البث.",
+s2:"الميكروفون",micTap:"اضغط للسماح بالميكروفون. يُنصح بالسماعات.",micReady:"الميكروفون جاهز",micIos:"الميكروفون محظور. اسمح به من الإعدادات › Safari › الميكروفون ثم اضغط مجددًا.",micDesk:"الميكروفون محظور. اسمح به من الأيقونة بجوار شريط العنوان.",input:"الإدخال",
+s3:"الميكسر",mixSong:"الأغنية",mixSongSub:"فيديو أو ملف صوتي",mixVoice:"الصوت المسجّل",mixVoiceSub:"صوتك في التسجيلات والمزج",mixMon:"المراقبة",mixMonSub:"اسمع نفسك أثناء الغناء (مع السماعات فقط)",
+offset:"تأخير الصوت",offsetSub:"حرّكه يمينًا إذا بدا صوتك متأخرًا",countIn:"العدّ التنازلي",countInSub:"3، 2، 1 قبل بدء الأغنية",iosVol:"على iPhone يتبع صوت YouTube الأزرار الجانبية. التشغيل والإيقاف يعملان.",
+s4:"الكلمات",timing:"التوقيت",another:"كلمات أخرى",lyrSearchPh:"الأغنية والفنان",lyrSearch:"ابحث عن الكلمات",lyrSearching:"جارٍ البحث عن الكلمات…",
+lyrNone:"لم يُعثر على الكلمات. جرّب كلمات أخرى أو الصقها أو انسخها صوتيًا أدناه.",lyrFound:"تم العثور على {n}. اضغط على ما تريد استخدامه.",lyrFail:"تعذّر الوصول إلى خدمة الكلمات. حاول بعد قليل.",
+synced:"متزامنة",plain:"نص فقط",noTiming:"بلا توقيت",pasteOwn:"الصق الكلمات بنفسك",lyrPh:"الصق الكلمات، سطرًا لكل مقطع.\nالكلمات الموقّتة مثل [00:12.30] (LRC) تتزامن تلقائيًا.",
+setLyr:"استخدم الكلمات",localOnly:"تُحفظ في هذا المتصفح فقط",pasted:"كلمات ملصقة",next:"السطر التالي ▶",done:"تم",syncHint:"اضغط عند بداية كل سطر (المسافة على الكمبيوتر)",lineHint:"اضغط على سطر للانتقال إليه.",
+asrTitle:"تفريغ الكلمات بالذكاء الاصطناعي",asrTip:"اختر تسجيلًا لصوتك أنت. بدون موسيقى مصاحبة تكون النتيجة أدق بكثير.",asrSrc:"الصوت",asrLang:"لغة الغناء",auto:"اكتشاف تلقائي",
+engLocal:"على الجهاز · مجانًا",engGroq:"Groq · دقيق",model:"النموذج",mBase:"قياسي · whisper-base · ~80 MB",mSmall:"أفضل · whisper-small · ~250 MB",mLarge:"الأفضل · large-v3-turbo · ~600 MB · WebGPU",
+devTip:"يُنزَّل النموذج مرة واحدة ويبقى على الجهاز. لا يغادر الصوت جهازك.",noGpu:"لا يوجد WebGPU على هذا الجهاز، لذا يعمل على المعالج ويستغرق وقتًا أطول. لا يغادر الصوت جهازك.",
+groqWarn:"مع Groq يُرسَل الصوت المختار إلى خوادم Groq.",groqKeyTip:"أنشئ مفتاحًا مجانيًا من {link}. يُحفظ على هذا الجهاز فقط.",gLarge:"whisper-large-v3 · الدقة",gTurbo:"whisper-large-v3-turbo · السرعة",
+start:"ابدأ",cancel:"إلغاء",takeOpt:"تسجيل {n} · صوتك · {d} (مُوصى به)",songOpt:"ملف الأغنية (أقل دقة بسبب الموسيقى)",
+needTakeYt:"سجّل أولًا. لا يمكن تفريغ صوت YouTube.",needTakeFile:"حمّل ملفًا صوتيًا أو سجّل أولًا.",prep:"جارٍ تجهيز الصوت…",convFail:"تعذّر تحويل الصوت.",
+groqNeedKey:"أدخل مفتاح Groq API.",tooLong:"الصوت طويل جدًا (الحد 25 MB). اختر تسجيلًا أقصر.",groqRun:"جارٍ التفريغ عبر Groq…",groq401:"مفتاح Groq API غير صالح.",
+groq429:"تم بلوغ حد Groq. حاول بعد قليل.",groqErr:"أعاد Groq خطأ ({s}).",groqConn:"تعذّر الوصول إلى Groq. تحقّق من الاتصال والمفتاح.",
+needGpu:"يحتاج هذا النموذج إلى WebGPU. اختر النموذج القياسي.",noWorker:"هذا المتصفح لا يدعم التفريغ على الجهاز. جرّب Groq.",
+modelPrep:"جارٍ تجهيز النموذج… تستغرق المرة الأولى بضع دقائق.",modelDl:"جارٍ تنزيل النموذج… {a} / {b} MB",asrRun:"جارٍ التفريغ… تستغرق الأغنية من ثوانٍ إلى بضع دقائق.",
+asrFail:"فشل التفريغ: {m}",asrLoadFail:"تعذّر تحميل أداة التفريغ. تحقّق من الاتصال.",asrNone:"لم تُسمع كلمات صالحة. سجّل قرب الميكروفون وحاول مجددًا.",
+asrOk:"تم تفريغ {n} سطرًا. صحّح الأخطاء من كلمات أخرى ← الصق الكلمات بنفسك.",canceled:"تم الإلغاء.",aiLabel:"تفريغ بالذكاء الاصطناعي",
+s5:"التسجيلات",takesEmpty:"اضغط ● لتشغيل الأغنية وبدء التسجيل",take:"تسجيل {n}",overlay:"▶ يشغّل الأغنية وصوتك معًا. شغّل أو أوقف كلًّا منهما من الميكسر.",
+voiceOnlyNote:"هذه الأغنية غير محمّلة، لذا يشغّل ▶ صوتك فقط.",voiceOnly:"الصوت فقط",saveVoice:"حفظ الصوت",saveMix:"حفظ المزج",making:"جارٍ الإنشاء…",del:"حذف",deleted:"حُذف التسجيل {n}",undo:"تراجع",
+privacy:"تبقى التسجيلات والكلمات على هذا الجهاز ولا تُرفع أبدًا.",play:"تشغيل",stop:"إيقاف",lyrics:"الكلمات",offLabel:"إزاحة الكلمات",
+fullEmpty:"لا يوجد توقيت بعد. استخدم التوقيت أو الصق كلمات موقّتة (LRC).",recFail:"لا يمكن التسجيل هنا. استخدم Safari على iOS 14.3+ أو أحدث Chrome.",
+keys:"المسافة تشغيل · R تسجيل · L الكلمات",close:"إغلاق",sec:"ث",recording:"جارٍ التسجيل",getReady:"استعد",
+langFull:"ترجمة كاملة",langAll:"كل اللغات",trRun:"جارٍ ترجمة الواجهة إلى {x}…",trNA:"{x}: الواجهة غير مترجمة بعد، لذا تبقى بالإنجليزية.",trDone:"ترجم متصفحك الواجهة إلى {x}.",asrDetecting:"جارٍ تحديد لغة الغناء…",asrDetected:"اللغة المكتشفة: {x}"};
+I18N.my={lang:"ဘာသာစကား ပြောင်းရန်",langTitle:"ဘာသာစကား ရွေးပါ",langSearch:"ရှာရန်",chipSong:"သီချင်း",chipMic:"မိုက်",chipLyr:"စာသား",
+insecure:"ဤနေရာတွင် မိုက်ခရိုဖုန်း သုံး၍မရပါ။ https:// ဖြင့်စသော လိပ်စာမှ စာမျက်နှာကို ဖွင့်ပါ။",
+s1:"သီချင်း ရွေးပါ",tabYt:"YouTube",tabFile:"အသံဖိုင်",searchPh:"သီချင်း သို့မဟုတ် အဆိုတော်",search:"ရှာရန်",searching:"ရှာနေသည်…",
+noResults:"မတွေ့ပါ။ အခြားစကားလုံးဖြင့် ရှာကြည့်ပါ။",quota:"ယနေ့ ရှာဖွေမှု အကန့်အသတ် ပြည့်သွားပါပြီ။ မနက်ဖြန် ပြန်စပါမည်။",keyBad:"ဤ API ကီး အလုပ်မလုပ်ပါ။ ပြန်ကူးထည့်ပါ။",
+key403:"ဤကီးဖြင့် YouTube Data API v3 ကို သုံး၍မရပါ။ API ဖွင့်ထားခြင်း ရှိမရှိ စစ်ပါ။",searchFail:"ရှာ၍မရပါ။ ချိတ်ဆက်မှုကို စစ်ပါ။",
+keyIntro:"ပထမရလဒ်ကို အလိုအလျောက် ဖွင့်ရန် အခမဲ့ YouTube API ကီးကို တစ်ကြိမ် သတ်မှတ်ပါ။",keyStep1:"{link} ကိုဖွင့်ပြီး Enable နှိပ်ပါ",keyStep2:"Credentials → Create credentials → API key",keyStep3:"ကီးကို ကူးပြီး အောက်တွင် ထည့်ကာ သိမ်းပါ",
+save:"သိမ်းရန်",noKey:"ကီးမရှိဘူးလား? {link} တွင် Share → Copy နှိပ်ပြီး ပြန်လာပါ:",findOnYt:"YouTube တွင် ရှာရန် ↗",pastePlay:"ကူးထည့်ပြီး ဖွင့်ရန်",
+pasteFail:"လင့်ခ်ကို ဖတ်၍မရပါ။ အောက်ပါအကွက်ကို ဖိထားပြီး ကူးထည့်ပါ။",urlDirect:"URL ထည့်ရန်",load:"ဖွင့်ရန်",urlBad:"ဤသည် YouTube လင့်ခ် မဟုတ်ပါ။",loading:"ဖွင့်နေသည်…",
+ytFail:"YouTube ကို ဖွင့်၍မရပါ။ ချိတ်ဆက်မှုနှင့် စာမျက်နှာ https:// ဖြင့်စခြင်းကို စစ်ပါ။",ytBlocked:"ဤဗီဒီယိုကို YouTube အပြင်တွင် ဖွင့်ခွင့်မရှိပါ။ အခြားတစ်ခု ရွေးပါ။",ytErr:"ဤဗီဒီယိုကို ဖွင့်၍မရပါ။",
+pickFile:"ဖိုင်ရွေးရန်",fileHint:"mp3၊ m4a သို့မဟုတ် wav (iPhone တွင် Files အက်ပ်မှ)",fileMix:"အသံဖိုင်ဖြင့် သီချင်းနှင့် သင့်အသံကို မစ်တစ်ခုအဖြစ်လည်း သိမ်းနိုင်သည်။",fileFail:"ဤဖိုင်ကို ဖတ်၍မရပါ။ စထရီမင်းအက်ပ်မှ ကာကွယ်ထားသော သီချင်းများ သုံး၍မရပါ။",
+s2:"မိုက်ခရိုဖုန်း",micTap:"မိုက်ကို ခွင့်ပြုရန် နှိပ်ပါ။ နားကြပ် သုံးရန် အကြံပြုပါသည်။",micReady:"မိုက် အဆင်သင့်",micIos:"မိုက်ကို ပိတ်ထားသည်။ Settings › Safari › Microphone တွင် ခွင့်ပြုပြီး ပြန်နှိပ်ပါ။",micDesk:"မိုက်ကို ပိတ်ထားသည်။ လိပ်စာဘားဘေးရှိ အိုင်ကွန်မှ ခွင့်ပြုပါ။",input:"အဝင်",
+s3:"မစ်ဆာ",mixSong:"သီချင်း",mixSongSub:"ဗီဒီယို သို့မဟုတ် အသံဖိုင်",mixVoice:"အသံသွင်းထားသောအသံ",mixVoiceSub:"တိတ်များနှင့် မစ်ထဲရှိ သင့်အသံ",mixMon:"မော်နီတာ",mixMonSub:"သီဆိုနေစဉ် ကိုယ့်အသံကို နားထောင်ရန် (နားကြပ်ဖြင့်သာ)",
+offset:"အသံ နောက်ကျမှု",offsetSub:"အသံ နောက်ကျနေလျှင် ညာဘက်သို့ ရွှေ့ပါ",countIn:"ရေတွက်ချိန်",countInSub:"သီချင်းမစမီ 3၊ 2၊ 1",iosVol:"iPhone တွင် YouTube အသံကို ဘေးခလုတ်ဖြင့် ချိန်ရသည်။ ဖွင့်/ပိတ် အလုပ်လုပ်သည်။",
+s4:"စာသား",timing:"အချိန်ညှိ",another:"အခြားစာသား",lyrSearchPh:"သီချင်းနှင့် အဆိုတော်",lyrSearch:"စာသားရှာရန်",lyrSearching:"စာသား ရှာနေသည်…",
+lyrNone:"စာသား မတွေ့ပါ။ အခြားစကားလုံးဖြင့် ရှာပါ၊ ကူးထည့်ပါ သို့မဟုတ် အောက်တွင် စာပြန်ချပါ။",lyrFound:"{n} ခု တွေ့သည်။ သုံးလိုသည့်တစ်ခုကို နှိပ်ပါ။",lyrFail:"စာသားဝန်ဆောင်မှုကို ချိတ်၍မရပါ။ ခဏနေမှ ပြန်ကြိုးစားပါ။",
+synced:"ချိန်ကိုက်",plain:"စာသားသာ",noTiming:"အချိန်မရှိ",pasteOwn:"ကိုယ်တိုင် စာသားကူးထည့်ရန်",lyrPh:"စာသားကို တစ်ကြောင်းချင်း ကူးထည့်ပါ။\n[00:12.30] ကဲ့သို့ အချိန်ပါစာသား (LRC) သည် အလိုအလျောက် ချိန်ကိုက်သည်။",
+setLyr:"စာသားသုံးရန်",localOnly:"ဤဘရောက်ဆာတွင်သာ သိမ်းသည်",pasted:"ကူးထည့်ထားသောစာသား",next:"နောက်တစ်ကြောင်း ▶",done:"ပြီးပြီ",syncHint:"စာကြောင်းတိုင်း စချိန်တွင် နှိပ်ပါ (ကွန်ပျူတာတွင် Space)",lineHint:"စာကြောင်းကို နှိပ်၍ ထိုနေရာသို့ သွားပါ။",
+asrTitle:"AI ဖြင့် စာသားပြန်ချရန်",asrTip:"ကိုယ့်အသံ တိတ်ကို ရွေးပါ။ တီးလုံးမပါသဖြင့် ပိုမိုတိကျသည်။",asrSrc:"အသံ",asrLang:"သီဆိုသည့်ဘာသာ",auto:"အလိုအလျောက်ခွဲခြား",
+engLocal:"စက်ပေါ်တွင် · အခမဲ့",engGroq:"Groq · တိကျ",model:"မော်ဒယ်",mBase:"စံ · whisper-base · ~80 MB",mSmall:"ပိုကောင်း · whisper-small · ~250 MB",mLarge:"အကောင်းဆုံး · large-v3-turbo · ~600 MB · WebGPU",
+devTip:"မော်ဒယ်ကို တစ်ကြိမ်သာ ဒေါင်းလုဒ်လုပ်ပြီး ဤစက်ပေါ်တွင် ထားသည်။ အသံသည် စက်ပြင်ပသို့ မထွက်ပါ။",noGpu:"ဤစက်တွင် WebGPU မရှိသဖြင့် CPU ဖြင့် လုပ်ဆောင်ပြီး ပိုကြာသည်။ အသံသည် စက်ပြင်ပသို့ မထွက်ပါ။",
+groqWarn:"Groq ကိုသုံးလျှင် ရွေးထားသောအသံကို Groq ဆာဗာသို့ ပို့သည်။",groqKeyTip:"{link} တွင် အခမဲ့ကီး ဖန်တီးပါ။ ဤစက်ပေါ်တွင်သာ သိမ်းသည်။",gLarge:"whisper-large-v3 · တိကျမှု",gTurbo:"whisper-large-v3-turbo · အမြန်",
+start:"စတင်ရန်",cancel:"ပယ်ဖျက်ရန်",takeOpt:"တိတ် {n} · သင့်အသံ · {d} (အကြံပြု)",songOpt:"သီချင်းအသံဖိုင် (တီးလုံးပါ၍ တိကျမှုနည်း)",
+needTakeYt:"အရင် တိတ်တစ်ခု အသံသွင်းပါ။ YouTube အသံကို စာပြန်ချ၍မရပါ။",needTakeFile:"အရင် အသံဖိုင်ဖွင့်ပါ သို့မဟုတ် အသံသွင်းပါ။",prep:"အသံ ပြင်ဆင်နေသည်…",convFail:"အသံကို ပြောင်း၍မရပါ။",
+groqNeedKey:"Groq API ကီး ထည့်ပါ။",tooLong:"အသံ အရှည်လွန်သည် (အများဆုံး 25 MB)။ ပိုတိုသော တိတ်ကို ရွေးပါ။",groqRun:"Groq ဖြင့် စာပြန်ချနေသည်…",groq401:"Groq API ကီး မမှန်ပါ။",
+groq429:"Groq အကန့်အသတ် ပြည့်ပြီ။ ခဏနေမှ ပြန်ကြိုးစားပါ။",groqErr:"Groq အမှား ပြန်ပေးသည် ({s})။",groqConn:"Groq ကို ချိတ်၍မရပါ။ ချိတ်ဆက်မှုနှင့် ကီးကို စစ်ပါ။",
+needGpu:"ဤမော်ဒယ်အတွက် WebGPU လိုသည်။ စံမော်ဒယ်ကို ရွေးပါ။",noWorker:"ဤဘရောက်ဆာသည် စက်ပေါ်တွင် စာပြန်ချခြင်းကို မပံ့ပိုးပါ။ Groq ကို စမ်းပါ။",
+modelPrep:"မော်ဒယ် ပြင်ဆင်နေသည်… ပထမအကြိမ်တွင် မိနစ်အနည်းငယ် ကြာသည်။",modelDl:"မော်ဒယ် ဒေါင်းလုဒ်လုပ်နေသည်… {a} / {b} MB",asrRun:"စာပြန်ချနေသည်… သီချင်းတစ်ပုဒ်လျှင် စက္ကန့်မှ မိနစ်အနည်းငယ် ကြာသည်။",
+asrFail:"စာပြန်ချခြင်း မအောင်မြင်ပါ: {m}",asrLoadFail:"စာပြန်ချကိရိယာကို ဖွင့်၍မရပါ။ ချိတ်ဆက်မှုကို စစ်ပါ။",asrNone:"သုံးနိုင်သော စကားလုံး မကြားရပါ။ မိုက်အနီးတွင် ပြန်အသံသွင်းပါ။",
+asrOk:"စာကြောင်း {n} ကြောင်း ပြန်ချပြီး။ အမှားများကို အခြားစာသား → ကိုယ်တိုင် စာသားကူးထည့်ရန် တွင် ပြင်ပါ။",canceled:"ပယ်ဖျက်ပြီး။",aiLabel:"AI စာပြန်ချ",
+s5:"တိတ်များ",takesEmpty:"သီချင်းဖွင့်ပြီး အသံသွင်းရန် ● ကို နှိပ်ပါ",take:"တိတ် {n}",overlay:"▶ သည် သီချင်းနှင့် သင့်အသံကို အတူဖွင့်သည်။ မစ်ဆာတွင် တစ်ခုချင်း ဖွင့်/ပိတ်ပါ။",
+voiceOnlyNote:"ဤသီချင်းကို မဖွင့်ထားသဖြင့် ▶ သည် သင့်အသံကိုသာ ဖွင့်သည်။",voiceOnly:"အသံသာ",saveVoice:"အသံသိမ်းရန်",saveMix:"မစ်သိမ်းရန်",making:"ပြုလုပ်နေသည်…",del:"ဖျက်ရန်",deleted:"တိတ် {n} ကို ဖျက်ပြီး",undo:"ပြန်ယူရန်",
+privacy:"အသံသွင်းချက်နှင့် စာသားများ ဤစက်ပေါ်တွင်သာ ရှိပြီး ဘယ်တော့မှ အပ်လုဒ်မလုပ်ပါ။",play:"ဖွင့်ရန်",stop:"ရပ်ရန်",lyrics:"စာသား",offLabel:"စာသား ရွှေ့ချိန်",
+fullEmpty:"အချိန်မရှိသေးပါ။ အချိန်ညှိ ကိုသုံးပါ သို့မဟုတ် အချိန်ပါစာသား (LRC) ကူးထည့်ပါ။",recFail:"ဤနေရာတွင် အသံသွင်း၍မရပါ။ iOS 14.3+ ရှိ Safari သို့မဟုတ် နောက်ဆုံး Chrome ကို သုံးပါ။",
+keys:"Space ဖွင့် · R အသံသွင်း · L စာသား",close:"ပိတ်ရန်",sec:"စက္ကန့်",recording:"အသံသွင်းနေသည်",getReady:"အဆင်သင့်ပြင်ပါ",
+langFull:"အပြည့်အစုံ ဘာသာပြန်",langAll:"ဘာသာစကား အားလုံး",trRun:"မျက်နှာပြင်ကို {x} သို့ ဘာသာပြန်နေသည်…",trNA:"{x}: မျက်နှာပြင်ကို ဘာသာမပြန်ရသေးသဖြင့် အင်္ဂလိပ်ဖြင့်သာ ပြမည်။",trDone:"ဘရောက်ဆာက မျက်နှာပြင်ကို {x} သို့ ဘာသာပြန်ပြီး။",asrDetecting:"သီဆိုသည့်ဘာသာကို ခွဲခြားနေသည်…",asrDetected:"ခွဲခြားရသည့်ဘာသာ: {x}"};
+
+/* 完全翻訳の言語（いただいたリストの主要言語を先頭に） */
+const LANGS=[{c:'ja',r:'JP',n:'日本語'},{c:'en',r:'US',n:'English'},{c:'zh-CN',r:'CN',n:'简体中文'},{c:'zh-TW',r:'TW',n:'繁體中文'},{c:'ru',r:'RU',n:'Русский'},
+{c:'fr',r:'FR',n:'Français'},{c:'ko',r:'KR',n:'한국어'},{c:'hi',r:'IN',n:'हिन्दी'},{c:'de',r:'DE',n:'Deutsch'},{c:'ur',r:'PK',n:'اردو'},
+{c:'ar',r:'SA',n:'العربية'},{c:'pl',r:'PL',n:'Polski'},{c:'my',r:'MM',n:'မြန်မာ'},{c:'es',r:'ES',n:'Español'},{c:'tr',r:'TR',n:'Türkçe'},
+{c:'pt-BR',r:'BR',n:'Português'},{c:'it',r:'IT',n:'Italiano'},{c:'id',r:'ID',n:'Bahasa Indonesia'},{c:'th',r:'TH',n:'ไทย'},{c:'vi',r:'VN',n:'Tiếng Việt'}];
+const RTL=new Set(['ar','ur','fa','he','ps','sd','yi','ug','dv','ckb','syr','arc']);
+
+/* ISO 639-2 の言語一覧（いただいたリストより。語族の総称「(Other)」と mis/mul/und/zxx は除く） */
+const ISO_RAW="aar:Afar;abk:Abkhaz;ace:Achinese;ach:Acoli;ada:Adangme;ady:Adygei;afh:Afrihili;afr:Afrikaans;ain:Ainu;aka:Akan;akk:Akkadian;alb:Albanian;ale:Aleut;amh:Amharic;anp:Angika;ara:Arabic;arg:Aragonese;arc:Aramaic;arp:Arapaho;arw:Arawak;arm:Armenian;rup:Aromanian;asm:Assamese;ava:Avaric;ave:Avestan;awa:Awadhi;aym:Aymara;aze:Azerbaijani;ast:Asturian;ban:Balinese;bal:Baluchi;bam:Bambara;bas:Basa;bak:Bashkir;baq:Basque;btk:Batak;bej:Beja;bel:Belarusian;bem:Bemba;ben:Bengali;bho:Bhojpuri;bik:Bikol;byn:Bilin;bin:Edo;bis:Bislama;zbl:Blissymbolics;bos:Bosnian;bra:Braj;bre:Breton;bug:Bugis;bul:Bulgarian;bua:Buriat;bur:Burmese;cad:Caddo;car:Carib;cat:Catalan;ceb:Cebuano;chg:Chagatai;cha:Chamorro;che:Chechen;chr:Cherokee;chy:Cheyenne;chb:Chibcha;chi:Chinese;chn:Chinook jargon;chp:Chipewyan;cho:Choctaw;chu:Church Slavic;chv:Chuvash;cop:Coptic;cor:Cornish;cos:Corsican;cre:Cree;mus:Creek;crh:Crimean Tatar;hrv:Croatian;cze:Czech;dak:Dakota;dan:Danish;dar:Dargwa;day:Dayak;del:Delaware;din:Dinka;div:Divehi;doi:Dogri;dgr:Dogrib;dua:Duala;dut:Dutch;dum:Middle Dutch;dyu:Dyula;dzo:Dzongkha;frs:East Frisian;efi:Efik;egy:Egyptian;eka:Ekajuk;elx:Elamite;eng:English;enm:Middle English;ang:Old English;myv:Erzya;epo:Esperanto;est:Estonian;gez:Ge'ez;ewe:Ewe;ewo:Ewondo;fan:Fang;fat:Fanti;fao:Faroese;fij:Fijian;fil:Filipino;fin:Finnish;fon:Fon;fre:French;frm:Middle French;fro:Old French;fry:Frisian;fur:Friulian;ful:Fula;gaa:Ga;glg:Galician;lug:Ganda;gay:Gayo;gba:Gbaya;geo:Georgian;ger:German;gmh:Middle High German;goh:Old High German;gil:Gilbertese;gon:Gondi;gor:Gorontalo;got:Gothic;grb:Grebo;grc:Ancient Greek;gre:Greek;grn:Guarani;guj:Gujarati;gwi:Gwich'in;hai:Haida;hat:Haitian Creole;hau:Hausa;haw:Hawaiian;heb:Hebrew;her:Herero;hil:Hiligaynon;hin:Hindi;hmo:Hiri Motu;hit:Hittite;hmn:Hmong;hun:Hungarian;hup:Hupa;iba:Iban;ice:Icelandic;ido:Ido;ibo:Igbo;ilo:Iloko;smn:Inari Sami;ind:Indonesian;inh:Ingush;ina:Interlingua;ile:Interlingue;iku:Inuktitut;ipk:Inupiaq;gle:Irish;mga:Middle Irish;sga:Old Irish;ita:Italian;jpn:Japanese;jav:Javanese;jrb:Judeo-Arabic;jpr:Judeo-Persian;kbd:Kabardian;kab:Kabyle;kac:Kachin;kal:Kalaallisut;xal:Oirat;kam:Kamba;kan:Kannada;kau:Kanuri;kaa:Kara-Kalpak;krc:Karachay-Balkar;krl:Karelian;kas:Kashmiri;csb:Kashubian;kaw:Kawi;kaz:Kazakh;kha:Khasi;khm:Khmer;kho:Khotanese;kik:Kikuyu;kmb:Kimbundu;kin:Kinyarwanda;tlh:Klingon;kom:Komi;kon:Kongo;kok:Konkani;kor:Korean;kpe:Kpelle;kua:Kuanyama;kum:Kumyk;kur:Kurdish;kru:Kurukh;kos:Kosraean;kut:Kootenai;kir:Kyrgyz;lad:Ladino;lah:Lahnda;lam:Lamba;lao:Lao;lat:Latin;lav:Latvian;ltz:Luxembourgish;lez:Lezgian;lim:Limburgish;lin:Lingala;lit:Lithuanian;jbo:Lojban;nds:Low German;dsb:Lower Sorbian;loz:Lozi;lub:Luba-Katanga;lua:Luba-Lulua;lui:Luiseño;smj:Lule Sami;lun:Lunda;luo:Luo;lus:Mizo;mac:Macedonian;mad:Madurese;mag:Magahi;mai:Maithili;mak:Makasar;mlg:Malagasy;may:Malay;mal:Malayalam;mlt:Maltese;mnc:Manchu;mdr:Mandar;man:Mandingo;mni:Manipuri;glv:Manx;mao:Maori;arn:Mapuche;mar:Marathi;chm:Mari;mah:Marshallese;mwr:Marwari;mas:Maasai;men:Mende;mic:Micmac;min:Minangkabau;mwl:Mirandese;moh:Mohawk;mdf:Moksha;lol:Mongo;mon:Mongolian;mos:Moore;nah:Nahuatl;nau:Nauru;nav:Navajo;nbl:South Ndebele;nde:North Ndebele;ndo:Ndonga;nap:Neapolitan;nep:Nepali;new:Newari;nwc:Old Newari;nia:Nias;niu:Niuean;nqo:N'Ko;nog:Nogai;frr:North Frisian;sme:Northern Sami;nso:Northern Sotho;nor:Norwegian;nob:Norwegian Bokmål;nno:Norwegian Nynorsk;nym:Nyamwezi;nya:Nyanja;nyn:Nyankole;nyo:Nyoro;nzi:Nzima;oci:Occitan;oji:Ojibwa;non:Old Norse;peo:Old Persian;ori:Odia;orm:Oromo;osa:Osage;oss:Ossetic;pal:Pahlavi;pau:Palauan;pli:Pali;pam:Pampanga;pag:Pangasinan;pan:Punjabi;pap:Papiamento;per:Persian;phn:Phoenician;pol:Polish;pon:Pohnpeian;por:Portuguese;pro:Old Provençal;pus:Pashto;que:Quechua;roh:Romansh;raj:Rajasthani;rap:Rapanui;rar:Rarotongan;rum:Romanian;rom:Romani;run:Rundi;rus:Russian;syc:Classical Syriac;sam:Samaritan Aramaic;smo:Samoan;sad:Sandawe;sag:Sango;san:Sanskrit;sat:Santali;srd:Sardinian;sas:Sasak;sco:Scots;gla:Scottish Gaelic;sel:Selkup;srp:Serbian;srr:Serer;shn:Shan;sna:Shona;iii:Sichuan Yi;scn:Sicilian;sid:Sidamo;bla:Siksika;snd:Sindhi;sin:Sinhala;sms:Skolt Sami;den:Slave;slo:Slovak;slv:Slovenian;sog:Sogdian;som:Somali;son:Songhai;snk:Soninke;sot:Southern Sotho;alt:Southern Altai;sma:Southern Sami;spa:Spanish;srn:Sranan Tongo;suk:Sukuma;sux:Sumerian;sun:Sundanese;sus:Susu;swa:Swahili;ssw:Swati;swe:Swedish;gsw:Swiss German;syr:Syriac;tgl:Tagalog;tah:Tahitian;tgk:Tajik;tmh:Tamashek;tam:Tamil;tat:Tatar;tel:Telugu;tem:Temne;ter:Tereno;tet:Tetum;tha:Thai;tib:Tibetan;tig:Tigre;tir:Tigrinya;tiv:Tiv;tli:Tlingit;tpi:Tok Pisin;tkl:Tokelau;tog:Nyasa Tonga;ton:Tongan;chk:Chuukese;tsi:Tsimshian;tso:Tsonga;tsn:Tswana;tum:Tumbuka;tur:Turkish;ota:Ottoman Turkish;tuk:Turkmen;tvl:Tuvalu;tyv:Tuvinian;twi:Twi;udm:Udmurt;uga:Ugaritic;uig:Uyghur;ukr:Ukrainian;umb:Umbundu;hsb:Upper Sorbian;urd:Urdu;uzb:Uzbek;vai:Vai;ven:Venda;vie:Vietnamese;vol:Volapük;vot:Votic;wal:Wolaytta;wln:Walloon;war:Waray;was:Washo;wel:Welsh;wol:Wolof;xho:Xhosa;sah:Yakut;yao:Yao;yap:Yapese;yid:Yiddish;yor:Yoruba;zap:Zapotec;zza:Zaza;zen:Zenaga;zha:Zhuang;zul:Zulu;zun:Zuni";
+const ISO=ISO_RAW.split(';').map(s=>{ const i=s.indexOf(':'); return {c:s.slice(0,i),en:s.slice(i+1)}; });
+/* 書誌用コード(B)→用語コード(T) */
+const B2T={alb:'sq',arm:'hy',baq:'eu',bur:'my',chi:'zh',cze:'cs',dut:'nl',fre:'fr',geo:'ka',ger:'de',gre:'el',ice:'is',mac:'mk',mao:'mi',may:'ms',per:'fa',rum:'ro',slo:'sk',tib:'bo',wel:'cy'};
 /* Whisper が聞き取れる全言語 */
 const WHISPER=['en','zh','de','es','ru','ko','fr','ja','pt','tr','pl','ca','nl','ar','sv','it','id','hi','fi','vi','he','uk','el','ms','cs','ro','da','hu','ta','no','th','ur','hr','bg','lt','la','mi','ml','cy','sk','te','fa','lv','bn','sr','az','sl','kn','et','mk','br','eu','is','hy','ne','mn','bs','kk','sq','sw','gl','mr','pa','si','km','sn','yo','so','af','oc','ka','be','tg','sd','gu','am','yi','lo','uz','fo','ht','ps','tk','nn','mt','sa','lb','my','bo','tl','mg','as','tt','haw','ln','ha','ba','jw','su','yue'];
 </script>
@@ -1067,33 +1312,117 @@ const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform===
 const ic=(n,c='')=>`<svg class="i ${c}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 
 /* ===== 言語 ===== */
-let L=store.get('kr-lang','en'); if(!I18N[L]) L='en';
-function t(k,v){ let s=(I18N[L]&&I18N[L][k]!=null)?I18N[L][k]:(I18N.en[k]!=null?I18N.en[k]:k); if(v) for(const x in v) s=s.split('{'+x+'}').join(v[x]); return s; }
+/* 言語コードを BCP47 に正規化（jpn→ja, fre→fr など） */
+function canon(code){
+  code=B2T[code]||code;
+  try{ return Intl.getCanonicalLocales(code)[0]; }catch(e){ return code; }
+}
+/* 完全翻訳の辞書キーに対応づけ（zh→zh-CN, pt→pt-BR） */
+function fullKey(code){
+  if(I18N[code]) return code;
+  const c=canon(code); if(I18N[c]) return c;
+  const base=c.split('-')[0];
+  if(base==='zh') return /TW|HK|MO|Hant/.test(c)?'zh-TW':'zh-CN';
+  if(base==='pt') return 'pt-BR';
+  return I18N[base]?base:null;
+}
+const MT={};
+function loadMT(c){ const d=store.get('kr-mt-'+c,null); if(d) MT[c]=d; return d; }
+let L=store.get('kr-lang','en'); if(fullKey(L)) L=fullKey(L); else loadMT(L);
+function uiLocale(){ try{ return Intl.getCanonicalLocales(canon(L))[0]; }catch(e){ return 'en'; } }
+function t(k,v){
+  const D=I18N[L]||MT[L]||I18N.en;
+  let s=(D[k]!=null)?D[k]:(I18N.en[k]!=null?I18N.en[k]:k);
+  if(v) for(const x in v) s=s.split('{'+x+'}').join(v[x]);
+  return s;
+}
 function say(el,msg,cls){ el.hidden=!msg; el.textContent=msg||''; el.className='status'+(cls?' '+cls:''); }
-function regionName(r){ try{ return new Intl.DisplayNames([L],{type:'region'}).of(r); }catch(e){ return r; } }
-function langName(code,inLang){ try{ return new Intl.DisplayNames([inLang],{type:'language'}).of(code); }catch(e){ return code; } }
+function regionName(r){ try{ return new Intl.DisplayNames([uiLocale()],{type:'region'}).of(r); }catch(e){ return r; } }
+function langName(code,inLang){ try{ const n=new Intl.DisplayNames([inLang],{type:'language',fallback:'none'}).of(canon(code)); return n||''; }catch(e){ return ''; } }
+function likelyRegion(code){ try{ return new Intl.Locale(canon(code)).maximize().region||''; }catch(e){ return ''; } }
 function applyI18n(){
-  document.documentElement.lang=L;
+  document.documentElement.lang=uiLocale();
+  document.documentElement.dir=RTL.has(canon(L).split('-')[0])?'rtl':'ltr';
   document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>el.placeholder=t(el.dataset.i18nPh));
   document.querySelectorAll('[data-i18n-aria]').forEach(el=>el.setAttribute('aria-label',t(el.dataset.i18nAria)));
   document.querySelectorAll('[data-i18n-tpl]').forEach(el=>{ if(!el._lnk) el._lnk=el.querySelector('a'); const [a,b='']=t(el.dataset.i18nTpl).split('{link}'); el.replaceChildren(a,el._lnk,b); });
-  $('langCode').textContent=(LANGS.find(x=>x.c===L)||LANGS[1]).r;
+  const fl=LANGS.find(x=>x.c===L);
+  $('langCode').textContent=fl?fl.r:(likelyRegion(L)||canon(L).toUpperCase());
   if(!micStream) say($('micStatus'),t('micTap'));
   buildAsrLang(); renderTakes(); showLyrics(); syncPlayBtn(); refreshAsrSrc(); updateOnAir();
   if(gpuInfo&&!gpuInfo.ok) $('asrDevTip').textContent=t('noGpu');
 }
+/* 一覧：完全翻訳の20言語 → ISO 639-2 の全言語 */
+let allRows=null;
+function buildAllRows(){
+  const fullSet=new Set(LANGS.map(x=>x.c));
+  allRows=ISO.filter(x=>!fullSet.has(fullKey(x.c)||'')).map(x=>{
+    const c=canon(x.c), nat=langName(c,c), r=likelyRegion(c);
+    return {code:x.c,c,en:x.en,nat:nat||x.en,r};
+  });
+}
+function langRow(title,sub,current,onPick){
+  const li=document.createElement('li');
+  li.innerHTML=`<button type="button" aria-current="${current}"><span class="ln"><b>${esc(title)}</b><span>${esc(sub)}</span></span>${current?ic('check'):''}</button>`;
+  li.firstChild.addEventListener('click',onPick);
+  return li;
+}
 function renderLangList(q){
   q=(q||'').trim().toLowerCase();
   const ul=$('langList'); ul.innerHTML='';
+  const hit=(...a)=>!q||a.some(s=>String(s||'').toLowerCase().includes(q));
+  const head=txt=>{ const li=document.createElement('li'); li.className='lh'; li.textContent=txt; ul.appendChild(li); };
+  let n=0;
+  head(t('langFull'));
   for(const x of LANGS){
-    const rn=regionName(x.r), en=langName(x.c,'en');
-    if(q&&![x.n,rn,en,x.c,x.r].some(s=>String(s).toLowerCase().includes(q))) continue;
-    const li=document.createElement('li');
-    li.innerHTML=`<button type="button" aria-current="${x.c===L}"><span class="ln"><b>${esc(x.n)}</b><span>${esc(rn)} (${x.r})</span></span>${x.c===L?ic('check'):''}</button>`;
-    li.firstChild.addEventListener('click',()=>{ L=x.c; store.set('kr-lang',L); applyI18n(); closeLang(); });
-    ul.appendChild(li);
+    const rn=regionName(x.r), en=langName(x.c,'en'), loc=langName(x.c,uiLocale());
+    if(!hit(x.n,rn,en,loc,x.c,x.r)) continue;
+    ul.appendChild(langRow(x.n,`${loc&&loc!==x.n?loc+' · ':''}${rn} (${x.r})`,x.c===L,()=>chooseLang(x.c))); n++;
   }
+  if(!allRows) buildAllRows();
+  head(t('langAll')+' · '+allRows.length);
+  const loc=uiLocale();
+  for(const x of allRows){
+    const local=langName(x.c,loc)||x.en;
+    if(!hit(x.nat,local,x.en,x.code,x.c,x.r)) continue;
+    const place=x.r?`${regionName(x.r)} (${x.r})`:x.code.toUpperCase();
+    ul.appendChild(langRow(x.nat,`${local!==x.nat?local+' · ':''}${place} · ${x.code.toUpperCase()}`,x.code===L,()=>chooseLang(x.code,x.nat))); n++;
+  }
+}
+/* 完全翻訳が無い言語：ブラウザ内蔵の翻訳（Chrome の Translator API）で画面を訳す。無ければ英語のまま */
+async function chooseLang(code,label){
+  closeLang();
+  const fk=fullKey(code);
+  if(fk){ L=fk; store.set('kr-lang',L); applyI18n(); return; }
+  L=code; store.set('kr-lang',L);
+  if(loadMT(code)){ applyI18n(); return; }
+  applyI18n();
+  const ok=await machineTranslate(code,label||code);
+  if(ok&&L===code){ applyI18n(); toast(t('trDone',{x:label||code})); }
+  else if(L===code) toast(t('trNA',{x:label||code}),null,null,7000);
+}
+async function machineTranslate(code,label){
+  const tgt=canon(code);
+  if(!('Translator' in self)) return false;
+  let av; try{ av=await Translator.availability({sourceLanguage:'en',targetLanguage:tgt}); }catch(e){ return false; }
+  if(!av||av==='unavailable') return false;
+  toast(t('trRun',{x:label}),null,null,120000);
+  let tr; try{ tr=await Translator.create({sourceLanguage:'en',targetLanguage:tgt}); }catch(e){ hideToast(); return false; }
+  const out={};
+  for(const k of Object.keys(I18N.en)){
+    const s=I18N.en[k];
+    if(!/[A-Za-z]{2}/.test(s)||k==='tabYt'){ out[k]=s; continue; }
+    const ph=[]; const prot=s.replace(/\{\w+\}/g,m=>{ ph.push(m); return '{'+(ph.length-1)+'}'; });
+    try{
+      let r=await tr.translate(prot);
+      for(let i=0;i<ph.length&&r;i++){ r=r.includes('{'+i+'}')?r.replace('{'+i+'}',ph[i]):null; }
+      out[k]=r||s;
+    }catch(e){ out[k]=s; }
+  }
+  try{ tr.destroy&&tr.destroy(); }catch(e){}
+  MT[code]=out; store.set('kr-mt-'+code,out); hideToast();
+  return true;
 }
 function openLang(){ $('langSheet').hidden=false; $('langFind').value=''; renderLangList(''); }
 function closeLang(){ $('langSheet').hidden=true; }
@@ -1580,7 +1909,7 @@ function renderTakes(){
   if(!takes.length){ box.innerHTML=`<p class="empty">${ic('tape')}<span>${esc(t('takesEmpty'))}</span></p>`; return; }
   for(const tk of takes){
     const ty=tk.blob.type, ext=ty.includes('mp4')?'m4a':ty.includes('ogg')?'ogg':'webm';
-    const stamp=tk.at.toLocaleTimeString(L,{hour:'2-digit',minute:'2-digit'});
+    let stamp; try{ stamp=tk.at.toLocaleTimeString(uiLocale(),{hour:'2-digit',minute:'2-digit'}); }catch(e){ stamp=tk.at.toLocaleTimeString(); }
     const playing=tp&&tp.t===tk, ov=canOverlay(tk);
     const el=document.createElement('div'); el.className='take'+(playing?' playing':''); el.dataset.n=tk.n;
     el.innerHTML=`
@@ -1774,7 +2103,7 @@ import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transfo
 env.allowLocalModels = false;
 let asr = null, loaded = '';
 self.onmessage = async (e) => {
-  const { model, device, dtype, audio, language } = e.data;
+  const { model, device, dtype, audio, language, probe } = e.data;
   try {
     const key = model + '|' + device + '|' + JSON.stringify(dtype);
     if (!asr || loaded !== key) {
@@ -1782,6 +2111,14 @@ self.onmessage = async (e) => {
       asr = await pipeline('automatic-speech-recognition', model, { device, dtype,
         progress_callback: (p) => { if (p.status === 'progress') self.postMessage({ type: 'progress', file: p.file, loaded: p.loaded, total: p.total }); } });
       loaded = key;
+    }
+    if (probe) {
+      /* 言語判定：言語を固定せずに短い区間だけ聞かせ、モデルが選んだ言語を返す */
+      self.postMessage({ type: 'phase', phase: 'detect' });
+      const p = await asr(probe, { task: 'transcribe', return_timestamps: true, return_language: true, chunk_length_s: 30 });
+      const ch = (p.chunks || []).find(c => c.language) || {};
+      self.postMessage({ type: 'detected', language: ch.language || p.language || '', text: p.text || '' });
+      return;
     }
     self.postMessage({ type: 'phase', phase: 'run' });
     const opts = { task: 'transcribe', return_timestamps: true, chunk_length_s: 30, stride_length_s: 5 };
@@ -1839,6 +2176,45 @@ async function to16kMono(buf){
   const r=await new Promise(res=>{ off.oncomplete=e=>res(e.renderedBuffer); const p=off.startRendering(); if(p&&p.then) p.then(res); });
   return r.getChannelData(0).slice();
 }
+/* 声が一番はっきりしている30秒を切り出す（言語判定用） */
+function loudestWindow(a,sec=30){
+  const W=16000, n=Math.floor(a.length/W), win=Math.min(sec,n);
+  if(n<=win) return a;
+  const e=new Float32Array(n); for(let i=0;i<n;i++){ let s=0; for(let j=i*W;j<(i+1)*W;j+=8) s+=a[j]*a[j]; e[i]=s; }
+  let sum=0; for(let i=0;i<win;i++) sum+=e[i];
+  let best=sum, bi=0; for(let i=win;i<n;i++){ sum+=e[i]-e[i-win]; if(sum>best){ best=sum; bi=i-win+1; } }
+  return a.slice(bi*W,(bi+win)*W);
+}
+/* Whisper の言語名（"japanese" など）→ コード */
+const WNAME={}; for(const c of WHISPER){ const n=langName(c==='jw'?'jv':c,'en'); if(n) WNAME[n.toLowerCase()]=c; }
+Object.assign(WNAME,{castilian:'es',flemish:'nl',haitian:'ht',letzeburgesch:'lb',moldavian:'ro',moldovan:'ro',pushto:'ps',panjabi:'pa',sinhalese:'si',valencian:'ca',mandarin:'zh',cantonese:'yue',burmese:'my',myanmar:'my'});
+function toWhisperCode(x){ x=String(x||'').trim().toLowerCase().replace(/[<|>]/g,''); if(!x) return ''; if(WHISPER.includes(x)) return x; return WNAME[x]||''; }
+/* 聞き取った文字の種類から言語を推定（ひらがな→日本語、ハングル→韓国語 など） */
+function scriptLang(text){
+  const c=re=>(text.match(re)||[]).length;
+  const tot=c(/[\p{L}]/gu)||1;
+  const kana=c(/[぀-ヿ]/g), hang=c(/[가-힯ᄀ-ᇿ]/g), han=c(/[一-鿿]/g);
+  if(kana/tot>.08) return 'ja';
+  if(hang/tot>.3) return 'ko';
+  if(han/tot>.5) return 'zh';
+  const map=[[/[Ѐ-ӿ]/g,'ru'],[/[؀-ۿ]/g,'ar'],[/[ऀ-ॿ]/g,'hi'],[/[฀-๿]/g,'th'],[/[֐-׿]/g,'he'],[/[Ͱ-Ͽ]/g,'el'],[/[က-႟]/g,'my'],[/[ঀ-৿]/g,'bn'],[/[஀-௿]/g,'ta'],[/[Ⴀ-ჿ]/g,'ka']];
+  for(const [re,l] of map) if(c(re)/tot>.5) return l;
+  if(c(/[A-Za-zÀ-ɏ]/g)/tot>.6) return 'latin';
+  return '';
+}
+const NONLATIN=new Set(['ja','ko','zh','yue','ru','uk','be','bg','mk','sr','kk','ky','tg','mn','ar','fa','ur','ps','sd','hi','mr','ne','sa','th','he','yi','el','my','bn','as','ta','te','kn','ml','si','km','lo','ka','hy','am','bo','gu','pa','tt','ba']);
+/* モデルの答えと文字の種類を突き合わせて、言語を決める */
+function decideLang(modelLang,text){
+  const m=toWhisperCode(modelLang), s=scriptLang(text||'');
+  if(s==='latin') return (m&&!NONLATIN.has(m))?m:'';   // ラテン文字なのに日本語等と言われたら採用しない
+  if(s==='ru') return (m&&['ru','uk','be','bg','mk','sr','kk','ky','tg','mn','tt','ba'].includes(m))?m:'ru';
+  if(s==='ar') return (m&&['ar','fa','ur','ps','sd'].includes(m))?m:'ar';
+  if(s==='hi') return (m&&['hi','mr','ne','sa'].includes(m))?m:'hi';
+  if(s==='zh') return (m==='yue'||m==='zh')?m:'zh';
+  if(s) return s;
+  return m;
+}
+const langLabel=c=>{ const n=langName(c==='jw'?'jv':c,uiLocale()); return (n||c)+' ('+c.toUpperCase()+')'; };
 function rms(a,s,e){ const i0=Math.max(0,Math.floor(s*16000)), i1=Math.min(a.length,Math.ceil(e*16000)); let sum=0; for(let i=i0;i<i1;i++) sum+=a[i]*a[i]; return i1>i0?Math.sqrt(sum/(i1-i0)):0; }
 const HALLU=/ご視聴ありがとうございました|チャンネル登録|高評価|字幕|thank(s)? for watching|subscribe|お疲れ様でした|ご覧いただき/i;
 function segmentsToLines(segs,audio,shift){
@@ -1901,8 +2277,12 @@ $('asrStart').addEventListener('click',async()=>{
       const r=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{Authorization:'Bearer '+key},body:fd,signal:asrAbort.signal});
       const j=await r.json().catch(()=>({}));
       if(!r.ok) asrSay(r.status===401?t('groq401'):r.status===429?t('groq429'):t('groqErr',{s:r.status}),'err');
-      else { const segs=(j.segments||[]).filter(s=>!(s.no_speech_prob>0.6)).map(s=>({start:s.start,end:s.end,text:s.text}));
-        asrSay(''); applyAsr(segmentsToLines(segs,audio,shift),t('aiLabel')+' · Groq '+model); }
+      else {
+        const segs=(j.segments||[]).filter(s=>!(s.no_speech_prob>0.6)).map(s=>({start:s.start,end:s.end,text:s.text}));
+        const got=lang||decideLang(j.language,j.text||segs.map(s=>s.text).join(' '));
+        asrSay(got?t('asrDetected',{x:langLabel(got)}):'','ok');
+        applyAsr(segmentsToLines(segs,audio,shift),t('aiLabel')+' · '+(got?got.toUpperCase()+' · ':'')+'Groq '+model);
+      }
     }catch(e){ if(e.name!=='AbortError') asrSay(t('groqConn'),'err'); }
     asrProgress(null); asrDone(); return;
   }
@@ -1914,20 +2294,32 @@ $('asrStart').addEventListener('click',async()=>{
   const dtype=device==='webgpu'?{encoder_model:big&&g.f16?'fp16':'fp32',decoder_model_merged:'q4'}:'q8';
   try{ asrWorker=new Worker(URL.createObjectURL(new Blob([ASR_WORKER],{type:'text/javascript'})),{type:'module'}); }
   catch(e){ asrSay(t('noWorker'),'err'); asrProgress(null); asrDone(); return; }
-  const files={};
+  const files={}; let useLang=lang;
   asrWorker.onmessage=e=>{
     const m=e.data;
-    if(m.type==='phase'){ if(m.phase==='load'){ asrSay(t('modelPrep')); asrProgress(0); } else { asrSay(t('asrRun')); asrProgress(-1); } }
+    if(m.type==='phase'){
+      if(m.phase==='load'){ asrSay(t('modelPrep')); asrProgress(0); }
+      else if(m.phase==='detect'){ asrSay(t('asrDetecting')); asrProgress(-1); }
+      else { asrSay((useLang?t('asrDetected',{x:langLabel(useLang)})+' · ':'')+t('asrRun')); asrProgress(-1); }
+    }
     else if(m.type==='progress'){ files[m.file]={l:m.loaded||0,t:m.total||0}; let l=0,tt=0; for(const k in files){ l+=files[k].l; tt+=files[k].t; }
       if(tt){ asrProgress(l/tt); asrSay(t('modelDl',{a:(l/1048576).toFixed(0),b:(tt/1048576).toFixed(0)})); } }
+    else if(m.type==='detected'){
+      /* 判定した言語に固定して、全体を書き起こす（判定できなければ言語を固定しない） */
+      useLang=decideLang(m.language,m.text);
+      asrWorker.postMessage({model,device,dtype,audio,language:useLang});
+    }
     else if(m.type==='done'){
       const segs=m.chunks.map(c=>({start:c.timestamp&&c.timestamp[0],end:c.timestamp&&c.timestamp[1],text:c.text}));
-      asrSay(''); applyAsr(segmentsToLines(segs,audio,shift),t('aiLabel')+' · '+model.split('/')[1]); asrProgress(null); asrDone();
+      asrSay(useLang?t('asrDetected',{x:langLabel(useLang)}):'','ok');
+      applyAsr(segmentsToLines(segs,audio,shift),t('aiLabel')+' · '+(useLang?useLang.toUpperCase()+' · ':'')+model.split('/')[1]);
+      asrProgress(null); asrDone();
     }
     else if(m.type==='error'){ asrSay(t('asrFail',{m:m.message.slice(0,120)}),'err'); asrProgress(null); asrDone(); killWorker(); }
   };
   asrWorker.onerror=()=>{ asrSay(t('asrLoadFail'),'err'); asrProgress(null); asrDone(); killWorker(); };
-  asrWorker.postMessage({model,device,dtype,audio,language:lang});
+  if(lang) asrWorker.postMessage({model,device,dtype,audio,language:lang});
+  else asrWorker.postMessage({model,device,dtype,probe:loudestWindow(audio)});
 });
 
 /* ===== キーボード ===== */

@@ -54,6 +54,21 @@ input[type=url]{width:100%;font:16px var(--body);color:var(--ink);background:var
 canvas#meter{width:100%;height:24px;display:block;border-radius:6px;background:var(--sky)}
 .yt{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000}
 .yt > *{position:absolute;inset:0;width:100%;height:100%}
+.search{display:flex;gap:8px;min-width:0}
+.search input{flex:1;min-width:0;font:16px var(--body);color:var(--ink);background:var(--sky);border:1px solid var(--line);border-radius:999px;padding:10px 16px}
+.search button{flex:none}
+input[type=text]{width:100%;min-width:0;font:15px var(--mono);color:var(--ink);background:var(--sky);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.results{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.results li button{width:100%;border-radius:10px;padding:6px;gap:10px;justify-content:flex-start;text-align:left;font-size:13px;line-height:1.4;min-width:0}
+.results li button[aria-current="true"]{border-color:var(--accent);background:var(--sky)}
+.results img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:6px;flex:none;background:var(--line)}
+.results .rt{display:grid;gap:2px;min-width:0}
+.results .rt b{font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.results .rt span{color:var(--mute);font-size:12px}
+.keybox{display:grid;gap:8px;background:var(--sky);border-radius:10px;padding:12px}
+.keybox .tip button{min-height:34px;padding:6px 12px;font-size:13px}
+.howto{margin:0;padding-left:1.4em}
+details summary{cursor:pointer}
 .takes{display:grid;gap:10px}
 .take{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:8px}
 .take:first-child{border-top:0;padding-top:0}
@@ -103,14 +118,37 @@ textarea{width:100%;font:16px/1.8 var(--body);color:var(--ink);background:var(--
     </div>
 
     <div class="step" id="ytBox">
-      <label class="status" for="ytUrl">YouTubeの「日曜日」のURLを貼り付け（公式チャンネルの動画がおすすめ）</label>
-      <div class="row" style="flex-wrap:nowrap">
-        <input id="ytUrl" type="url" inputmode="url" placeholder="https://youtu.be/…" autocomplete="off">
-        <button class="primary" id="ytLoad" style="flex:none">読み込む</button>
+      <form class="search" id="searchForm" role="search">
+        <input id="q" type="search" enterkeyhint="search" value="back number 日曜日" aria-label="YouTubeを検索" autocomplete="off">
+        <button class="primary" id="searchBtn" type="submit" aria-label="検索">🔍 検索</button>
+      </form>
+      <span class="status" id="searchStatus"></span>
+      <ul class="results" id="results" hidden></ul>
+
+      <div class="keybox" id="keyBox" hidden>
+        <p class="tip">検索して自動再生するには、YouTubeの<strong>APIキー</strong>（無料）が必要です。一度入れればこの端末に保存されます。</p>
+        <ol class="tip howto">
+          <li><a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Google Cloud の YouTube Data API v3 ページ ↗</a> を開き「有効にする」</li>
+          <li>「認証情報」→「認証情報を作成」→「APIキー」</li>
+          <li>表示されたキーをコピーして下に貼り付け</li>
+        </ol>
+        <div class="row" style="flex-wrap:nowrap">
+          <input id="apiKey" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AIza…" aria-label="YouTube APIキー">
+          <button id="saveKey" style="flex:none">保存</button>
+        </div>
+        <p class="tip">キーなしで使う場合：<a id="ytSearch" href="#" target="_blank" rel="noopener">YouTubeで検索 ↗</a> → 動画の「共有」→「コピー」→ ここに戻って <button id="pasteBtn" type="button">📋 貼り付けて再生</button></p>
       </div>
-      <div class="row">
-        <a class="status" id="ytSearch" href="https://www.youtube.com/results?search_query=back+number+%E6%97%A5%E6%9B%9C%E6%97%A5" target="_blank" rel="noopener">YouTubeで「back number 日曜日」を探す ↗</a>
-      </div>
+
+      <details id="urlDetails">
+        <summary class="status">URLを直接入れる / APIキーの設定</summary>
+        <div class="step" style="margin-top:8px">
+          <div class="row" style="flex-wrap:nowrap">
+            <input id="ytUrl" type="url" inputmode="url" placeholder="https://youtu.be/…" autocomplete="off" aria-label="YouTubeのURL">
+            <button id="ytLoad" style="flex:none">読み込む</button>
+          </div>
+          <button id="showKey" type="button" style="justify-self:start">APIキーを設定・変更</button>
+        </div>
+      </details>
       <div class="yt" id="ytWrap" hidden><div id="ytPlayer"></div></div>
       <span class="status" id="ytStatus"></span>
     </div>
@@ -290,22 +328,34 @@ function loadYtApi(){
 const YT_LS='nichiyoubi-yt-v1';
 $('ytLoad').addEventListener('click', loadYt);
 $('ytUrl').addEventListener('keydown',e=>{ if(e.key==='Enter') loadYt(); });
-async function loadYt(){
+function loadYt(){
   const id=parseYt($('ytUrl').value);
   if(!id){ $('ytStatus').textContent='YouTubeのURLを認識できませんでした。動画ページのURLを貼ってください。'; $('ytStatus').className='status err'; return; }
+  openYt(id,false);
+}
+let ytAutoplay=false;
+async function openYt(id, autoplay){
+  if(recorder) return;
+  $('ytUrl').value='https://youtu.be/'+id;
   $('ytStatus').textContent='読み込み中…'; $('ytStatus').className='status';
-  try{ localStorage.setItem(YT_LS,$('ytUrl').value.trim()); }catch(e){}
+  try{ localStorage.setItem(YT_LS,$('ytUrl').value); }catch(e){}
   try{ await loadYtApi(); }catch(e){
     $('ytStatus').textContent='YouTubeを読み込めませんでした。ネット接続と、このページをhttps://で開いているかを確認してください。'; $('ytStatus').className='status err'; return;
   }
   $('ytWrap').hidden=false;
-  ytSrc.ok=false;
-  if(ytSrc.player){ ytSrc.player.cueVideoById(id); return; }
+  ytAutoplay=autoplay;
+  if(ytSrc.player && ytSrc.ok){
+    $('seek').value=0;
+    if(autoplay) ytSrc.player.loadVideoById(id); else ytSrc.player.cueVideoById(id);
+    setTimeout(()=>afterYtCue(),300);
+    return;
+  }
+  if(ytSrc.player) return;
   ytSrc.player=new YT.Player('ytPlayer',{
     videoId:id,
     playerVars:{playsinline:1,rel:0,modestbranding:1,controls:1},
     events:{
-      onReady(){ ytSrc.ok=true; ytSrc.setVol(+$('trackVol').value); afterYtCue(); },
+      onReady(){ ytSrc.ok=true; ytSrc.setVol(+$('trackVol').value); afterYtCue(); if(ytAutoplay) ytSrc.player.playVideo(); },
       onStateChange(e){
         ytSrc.state=e.data;
         if(e.data===5 || (e.data===-1 && !ytSrc.ok)) afterYtCue();
@@ -327,6 +377,83 @@ function afterYtCue(){
   tryDur(0);
 }
 try{ const u=localStorage.getItem(YT_LS); if(u) $('ytUrl').value=u; }catch(e){}
+
+/* 🔍 検索：一番上の結果を自動で読み込んで再生 */
+const KEY_LS='nichiyoubi-ytkey-v1';
+let apiKey=''; try{ apiKey=localStorage.getItem(KEY_LS)||''; }catch(e){}
+$('apiKey').value=apiKey;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const unesc=s=>{ const t=document.createElement('textarea'); t.innerHTML=s; return t.value; };
+function ytSearchUrl(){ return 'https://www.youtube.com/results?search_query='+encodeURIComponent($('q').value.trim()||'back number 日曜日'); }
+$('q').addEventListener('input',()=>{ $('ytSearch').href=ytSearchUrl(); });
+$('ytSearch').href=ytSearchUrl();
+function showKeyBox(msg){
+  $('keyBox').hidden=false;
+  if(msg){ $('searchStatus').textContent=msg; $('searchStatus').className='status'; }
+}
+$('showKey').addEventListener('click',()=>{ $('keyBox').hidden=!$('keyBox').hidden; });
+$('saveKey').addEventListener('click',()=>{
+  apiKey=$('apiKey').value.trim();
+  try{ localStorage.setItem(KEY_LS,apiKey); }catch(e){}
+  if(apiKey){ $('keyBox').hidden=true; doSearch(); }
+});
+
+$('searchForm').addEventListener('submit',e=>{ e.preventDefault(); doSearch(); });
+async function doSearch(){
+  const q=$('q').value.trim(); if(!q) return;
+  $('q').blur();
+  if(!apiKey){ showKeyBox('APIキーを設定すると、検索だけで一番上の動画が再生されます。'); return; }
+  $('searchStatus').textContent='検索中…'; $('searchStatus').className='status';
+  $('searchBtn').disabled=true;
+  try{
+    const url='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=5&regionCode=JP&relevanceLanguage=ja&q='+encodeURIComponent(q)+'&key='+encodeURIComponent(apiKey);
+    const r=await fetch(url); const j=await r.json();
+    if(!r.ok){
+      const reason=j?.error?.errors?.[0]?.reason||'';
+      if(/keyInvalid|badRequest/.test(reason)||r.status===400){ showKeyBox('APIキーが正しくないようです。もう一度コピーして貼り直してください。'); }
+      else if(/quota/i.test(reason)){ $('searchStatus').textContent='今日の検索回数の上限に達しました（翌日リセット）。URLを直接入れて使ってください。'; $('searchStatus').className='status err'; }
+      else if(r.status===403){ showKeyBox('このキーではYouTube Data API v3が使えません。Google Cloudで「有効にする」を押したか確認してください。'); }
+      else { $('searchStatus').textContent='検索できませんでした（'+r.status+'）。'; $('searchStatus').className='status err'; }
+      return;
+    }
+    const items=(j.items||[]).filter(it=>it.id&&it.id.videoId);
+    if(!items.length){ $('searchStatus').textContent='見つかりませんでした。言葉を変えて検索してください。'; $('searchStatus').className='status'; $('results').hidden=true; return; }
+    renderResults(items,0);
+    const top=items[0];
+    $('searchStatus').textContent='▶ 一番上の「'+unesc(top.snippet.title)+'」を再生します'; $('searchStatus').className='status ok';
+    openYt(top.id.videoId,true);
+  }catch(err){
+    $('searchStatus').textContent='検索できませんでした。ネット接続を確認してください。'; $('searchStatus').className='status err';
+  }finally{ $('searchBtn').disabled=false; }
+}
+function renderResults(items,cur){
+  const ul=$('results'); ul.innerHTML=''; ul.hidden=false;
+  items.forEach((it,i)=>{
+    const sn=it.snippet, th=(sn.thumbnails.medium||sn.thumbnails.default||{}).url||'';
+    const li=document.createElement('li');
+    li.innerHTML=`<button type="button" aria-current="${i===cur}"><img src="${esc(th)}" alt="" loading="lazy"><span class="rt"><b>${esc(unesc(sn.title))}</b><span>${esc(unesc(sn.channelTitle))}</span></span></button>`;
+    li.querySelector('button').addEventListener('click',()=>{
+      if(recorder) return;
+      ul.querySelectorAll('button').forEach(b=>b.setAttribute('aria-current','false'));
+      li.querySelector('button').setAttribute('aria-current','true');
+      $('searchStatus').textContent='▶ 「'+unesc(sn.title)+'」を再生します'; $('searchStatus').className='status ok';
+      openYt(it.id.videoId,true);
+    });
+    ul.appendChild(li);
+  });
+}
+
+/* キーなし用：コピーしたURLを貼り付けて再生 */
+$('pasteBtn').addEventListener('click',async()=>{
+  let text='';
+  try{ text=await navigator.clipboard.readText(); }catch(e){}
+  const id=text&&parseYt(text);
+  if(id){ $('searchStatus').textContent='▶ コピーした動画を再生します'; $('searchStatus').className='status ok'; openYt(id,true); }
+  else { $('urlDetails').open=true; $('ytUrl').focus();
+    $('searchStatus').textContent='クリップボードからURLを読めませんでした。下の欄に長押しで貼り付けて「読み込む」を押してください。'; $('searchStatus').className='status'; }
+});
+/* YouTubeから戻ってきたとき、キー未設定なら貼り付けボタンを案内 */
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && !apiKey && !$('keyBox').hidden) $('pasteBtn').focus(); });
 
 /* ファイル */
 $('songFile').addEventListener('change', async e=>{

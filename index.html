@@ -134,6 +134,16 @@ input[type=range]:disabled{opacity:.5}
 .lyrics li.cur{color:var(--ink);font-weight:700;background:linear-gradient(90deg,rgba(255,61,127,.18),transparent)}
 .lyrics li.cur .lt{color:var(--hot);opacity:1}
 
+.lrc-results{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:280px;overflow-y:auto}
+.lrc-results button{width:100%;justify-content:space-between;text-align:left;border-radius:12px;padding:10px 12px;background:var(--bg);gap:10px}
+.lrc-results .t{display:grid;line-height:1.35;min-width:0}
+.lrc-results .t b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrc-results .t span{font-size:12px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{flex:none;font:500 11px var(--mono);border-radius:999px;padding:4px 8px;border:1px solid var(--line);color:var(--mute)}
+.badge.sync{border:0;background:var(--grad);color:#1a0b14}
+.lrc-results button[aria-current="true"]{border-color:var(--hot)}
+.lyr-src{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--mute);min-width:0}
+.lyr-src span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* takes */
 .takes{display:grid;gap:12px}
 .take{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:10px}
@@ -321,16 +331,29 @@ input[type=range]:disabled{opacity:.5}
       <h2><span class="n">04</span>歌詞</h2>
       <div class="row">
         <button id="syncBtn" disabled>⏱ タイミング</button>
-        <button id="editLyricsBtn" hidden>編集</button>
+        <button id="editLyricsBtn" hidden>別の歌詞</button>
       </div>
     </div>
     <div class="stack" id="lyricsEdit">
-      <a class="btn" id="lyricsFind" href="https://www.google.com/" target="_blank" rel="noopener" hidden>🔍 「<span id="lyricsFindQ"></span>」の歌詞を探す ↗</a>
+      <form class="search" id="lrcForm" role="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="lrcQ" type="search" enterkeyhint="search" placeholder="曲名 アーティスト名で歌詞を検索" aria-label="歌詞を検索" autocomplete="off">
+        <button class="primary" id="lrcBtn" type="submit">歌詞検索</button>
+      </form>
+      <span class="status" id="lrcStatus" hidden></span>
+      <ul class="lrc-results" id="lrcResults" hidden></ul>
+      <details id="pasteDetails">
+        <summary>自分で歌詞を貼り付ける</summary>
+        <div class="stack" style="margin-top:8px">
       <textarea class="field" id="lyricsInput" rows="6" placeholder="歌詞を貼り付け（1行ずつ表示されます）&#10;[00:12.30] のような時間付き歌詞（LRC）なら自動で同期します"></textarea>
       <div class="row"><button class="primary" id="saveLyricsBtn">歌詞をセット</button>
         <span class="status">この端末のブラウザ内にだけ保存されます</span></div>
+        </div>
+      </details>
+      <p class="tip">歌詞データ：<a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a></p>
     </div>
     <div class="stack" id="lyricsView" hidden>
+      <div class="lyr-src"><span id="lyrSrc"></span></div>
       <ol class="lyrics" id="lyricsList"></ol>
       <div class="row" id="syncBar" hidden>
         <button class="primary" id="nextLineBtn">次の行へ ▶</button>
@@ -481,9 +504,16 @@ function showNow(){
   $('now').hidden=!nowTitle; $('nowTitle').textContent=nowTitle;
   $('fullTitle').textContent=nowTitle||'カラオケ録音オリジナル';
   document.title=nowTitle?nowTitle+' | カラオケ録音オリジナル':'カラオケ録音オリジナル';
-  const q=($('q').value.trim()||nowTitle||'').replace(/【.*?】|\(.*?\)|（.*?）|MV|Music Video|Official/gi,'').trim();
-  $('lyricsFind').hidden=!q; $('lyricsFindQ').textContent=q;
-  $('lyricsFind').href='https://www.google.com/search?q='+encodeURIComponent(q+' 歌詞');
+  $('lrcQ').value=cleanTitle(nowTitle||$('q').value);
+}
+/* 動画タイトルから曲名・アーティストだけを残す */
+function cleanTitle(s){
+  return String(s||'')
+    .replace(/【[^】]*】|\[[^\]]*\]|\([^)]*\)|（[^）]*）|「|」|『|』/g,' ')
+    .replace(/official\s*(music\s*)?video|music\s*video|lyric(s)?\s*video|\bMV\b|\bPV\b|official|audio|full|歌詞付き|歌詞|フル|公式/gi,' ')
+    .replace(/THE FIRST TAKE|first take/gi,' ')
+    .replace(/[-–—~〜:：\/|｜／]+/g,' ')
+    .replace(/\s+/g,' ').trim();
 }
 function refreshDuration(){
   const d=src().duration();
@@ -538,7 +568,7 @@ function waitYt(n=0){
   const d=ytSrc.duration();
   if(d>0){
     try{ const t=ytSrc.player.getVideoData().title; if(t&&!ytSrc.title){ ytSrc.title=t; nowTitle=t; showNow(); store.set('kr-yt',{id:ytSrc.id,title:t}); } }catch(e){}
-    say($('ytStatus'),''); refreshDuration(); updateButtons();
+    say($('ytStatus'),''); refreshDuration(); updateButtons(); autoLyrics();
   } else if(n<40) setTimeout(()=>waitYt(n+1),250);
 }
 
@@ -607,7 +637,7 @@ $('songFile').addEventListener('change',async e=>{
   try{ ensureCtx(); stopTake(); fileSrc.stop();
     fileSrc.buf=await decodeAB(await f.arrayBuffer()); fileSrc.name=f.name.replace(/\.[^.]+$/,'');
     nowTitle=fileSrc.name; srcKey='file:'+fileSrc.name; showNow();
-    say($('songStatus'),'✓ '+f.name,'ok'); $('seek').value=0; refreshDuration(); updateButtons();
+    say($('songStatus'),'✓ '+f.name,'ok'); $('seek').value=0; refreshDuration(); updateButtons(); autoLyrics();
   }catch(err){ say($('songStatus'),'読み込めませんでした（配信アプリの保護された曲は使えません）','err'); }
 });
 
@@ -800,9 +830,10 @@ function renderTakes(){
 
 /* ---------- 歌詞 ---------- */
 let lines=[], times=[], curLine=-1, syncing=false, syncIdx=0;
-(function(){ const s=store.get('kr-lyrics',null); if(s&&s.lines){ lines=s.lines; times=s.times||[]; } })();
+let lyrKey='', lyrLabel='';
+(function(){ const s=store.get('kr-lyrics',null); if(s&&s.lines){ lines=s.lines; times=s.times||[]; lyrKey=s.key||''; lyrLabel=s.label||''; } })();
 let lyrOff=store.get('kr-lyroff',0);
-const saveLyrics=()=>store.set('kr-lyrics',{lines,times});
+const saveLyrics=()=>store.set('kr-lyrics',{lines,times,key:lyrKey,label:lyrLabel});
 const hasTimes=()=>times.some(t=>t!=null);
 function seekToLine(i){
   if(syncing||times[i]==null||recorder) return;
@@ -812,6 +843,7 @@ function seekToLine(i){
 function showLyrics(){
   const has=lines.length>0;
   $('lyricsEdit').hidden=has; $('lyricsView').hidden=!has; $('editLyricsBtn').hidden=!has;
+  $('lyrSrc').textContent=has?((hasTimes()?'自動同期中 ・ ':'タイミング未設定 ・ ')+(lyrLabel||'歌詞')):'';
   const ol=$('lyricsList'), fl=$('fullList'); ol.innerHTML=''; fl.innerHTML='';
   lines.forEach((t,i)=>{
     const li=document.createElement('li'); if(!t.trim()) li.classList.add('blank');
@@ -846,6 +878,76 @@ function parseLrc(text){
   }
   return out.sort((a,b)=>a.t-b.t);
 }
+/* ---------- LRCLIB 歌詞検索 ---------- */
+let lrcItems=[], lrcSeq=0;
+async function lrclibSearch(params){
+  const r=await fetch('https://lrclib.net/api/search?'+new URLSearchParams(params));
+  if(!r.ok) throw new Error('http '+r.status);
+  const j=await r.json(); return Array.isArray(j)?j:[];
+}
+function scoreLrc(it){
+  const d=src().duration();
+  let s=0;
+  if(it.syncedLyrics) s+=100;
+  else if(it.plainLyrics) s+=20;
+  if(it.instrumental) s-=200;
+  if(d>0&&it.duration) s-=Math.min(60,Math.abs(it.duration-d))*2;
+  return s;
+}
+async function searchLrc(q,auto){
+  q=(q||'').trim(); if(!q){ $('lrcQ').focus(); return; }
+  const seq=++lrcSeq;
+  say($('lrcStatus'),'歌詞を検索中…'); $('lrcBtn').disabled=true;
+  try{
+    let items=await lrclibSearch({q});
+    if(!items.length){
+      const words=q.split(' ').filter(Boolean);
+      if(words.length>2) items=await lrclibSearch({track_name:words.slice(-2).join(' '),artist_name:words.slice(0,-2).join(' ')});
+      if(!items.length&&words.length>1) items=await lrclibSearch({track_name:words[words.length-1]});
+    }
+    if(seq!==lrcSeq) return;
+    items=items.filter(it=>it.syncedLyrics||it.plainLyrics).sort((a,b)=>scoreLrc(b)-scoreLrc(a));
+    lrcItems=items;
+    if(!items.length){ say($('lrcStatus'),'歌詞が見つかりませんでした。曲名とアーティスト名を変えて検索するか、自分で貼り付けてください。'); $('lrcResults').hidden=true; return; }
+    renderLrcResults();
+    if(auto) applyLrc(items[0]);
+    else say($('lrcStatus'),items.length+'件見つかりました。使う歌詞をタップしてください。');
+  }catch(e){
+    if(seq===lrcSeq) say($('lrcStatus'),'歌詞サービスに接続できませんでした。少し待ってから「歌詞検索」を押してください。','err');
+  }finally{ if(seq===lrcSeq) $('lrcBtn').disabled=false; }
+}
+function renderLrcResults(){
+  const ul=$('lrcResults'); ul.innerHTML=''; ul.hidden=false;
+  lrcItems.slice(0,10).forEach(it=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<button type="button"><span class="t"><b>${esc(it.trackName||'')}</b><span>${esc(it.artistName||'')}${it.albumName?' ・ '+esc(it.albumName):''}${it.duration?' ・ '+fmt(it.duration):''}</span></span><span class="badge ${it.syncedLyrics?'sync':''}">${it.syncedLyrics?'自動同期':'歌詞のみ'}</span></button>`;
+    li.querySelector('button').addEventListener('click',()=>applyLrc(it));
+    ul.appendChild(li);
+  });
+}
+function applyLrc(it){
+  if(syncing) endSync();
+  if(it.syncedLyrics){
+    const lrc=parseLrc(it.syncedLyrics.replace(/\r/g,''));
+    lines=lrc.map(x=>x.s); times=lrc.map(x=>x.s?x.t:null);
+  } else {
+    lines=it.plainLyrics.replace(/\r/g,'').split('\n'); times=[];
+    while(lines.length&&!lines[lines.length-1].trim()) lines.pop();
+  }
+  lyrKey=srcKey; lyrLabel=(it.trackName||'')+(it.artistName?' / '+it.artistName:'');
+  saveLyrics(); showLyrics();
+  $('lrcResults').hidden=true; say($('lrcStatus'),'');
+  if(hasTimes()&&src().playing()){ const k=lineAt(src().pos()); if(k>=0) setLine(k); }
+}
+$('lrcForm').addEventListener('submit',e=>{ e.preventDefault(); $('lrcQ').blur(); searchLrc($('lrcQ').value,false); });
+/* 曲を読み込んだら、その曲の歌詞がまだ無ければ自動で探す */
+function autoLyrics(){
+  if(!srcKey||lyrKey===srcKey) return;
+  const q=cleanTitle(nowTitle||$('q').value); if(!q) return;
+  lines=[]; times=[]; lyrKey=''; showLyrics();
+  $('lrcQ').value=q; searchLrc(q,true);
+}
+
 $('saveLyricsBtn').addEventListener('click',()=>{
   const text=$('lyricsInput').value.replace(/\r/g,''), lrc=parseLrc(text);
   if(lrc.length>=3){ lines=lrc.map(x=>x.s); times=lrc.map(x=>x.s?x.t:null); }
@@ -857,9 +959,14 @@ $('saveLyricsBtn').addEventListener('click',()=>{
     if(raw.join('\n')!==lines.join('\n')) times=[];
     lines=raw;
   }
+  lyrKey=srcKey; lyrLabel='貼り付けた歌詞';
   saveLyrics(); showLyrics(); if(hasTimes()) openFull();
 });
-$('editLyricsBtn').addEventListener('click',()=>{ $('lyricsInput').value=lines.join('\n'); lines=[]; showLyrics(); $('lyricsInput').focus(); });
+$('editLyricsBtn').addEventListener('click',()=>{
+  lines=[]; times=[]; showLyrics();
+  if(lrcItems.length) renderLrcResults();
+  $('lrcQ').focus();
+});
 $('syncBtn').addEventListener('click',()=>{
   if(recorder) return; ensureCtx(); stopTake();
   syncing=true; times=new Array(lines.length).fill(null); syncIdx=nextNonBlank(0);

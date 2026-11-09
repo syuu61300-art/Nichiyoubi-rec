@@ -189,8 +189,9 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .calib.hit{animation:pop .35s cubic-bezier(.3,.7,.2,1)}
 /* 前奏中の待機表示：3つの点が歌い出しに向けて順に灯る */
 .lyrwrap{position:relative}
-.intro{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;justify-content:center;gap:12px;z-index:2;pointer-events:none}
-.full .intro{top:auto;bottom:auto;position:relative;transform:none;height:0;overflow:visible;z-index:2;max-width:760px;width:100%;margin:0 auto;justify-content:flex-start}
+/* 待機の点は1行目のすぐ上に入る（歌詞の上に重ならない） */
+.intro{display:flex;gap:12px;margin:0 0 12px;pointer-events:none}
+.lyrics .intro{justify-content:center;gap:8px;margin:0 0 6px}
 .intro i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.18);transition:background .3s,transform .3s}
 .intro i.on{background:#fff;transform:scale(1.15);box-shadow:0 0 14px rgba(255,255,255,.35)}
 .intro.sm i{width:8px;height:8px}
@@ -334,7 +335,18 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .full-list li{font-size:clamp(24px,6.6vw,38px);font-weight:700;line-height:1.38;letter-spacing:.01em;padding:9px 2px;cursor:pointer;color:rgba(255,255,255,.28);transition:color .25s;text-wrap:balance}
 .full-list li.blank{min-height:.5em;padding:0}
 .full-list li.past{color:rgba(255,255,255,.5)}
-.full-list li.cur{color:transparent;background:linear-gradient(90deg,#fff 0 var(--p,0%),rgba(255,255,255,.42) var(--p,0%) 100%);-webkit-background-clip:text;background-clip:text}
+/* 今の行は単語（日本語は1文字）ごとに塗る。歌っている間だけ進み、途切れたら単語の切れ目で止まる */
+.full-list li.cur{color:rgba(255,255,255,.42)}
+.full-list li .w{transition:none}
+.full-list li.cur .w{color:transparent;background:linear-gradient(90deg,#fff 0 var(--w,0%),rgba(255,255,255,.42) var(--w,0%) 100%);-webkit-background-clip:text;background-clip:text}
+.full-list li.past .w{color:inherit}
+.full-list li .sub,.lyrics li .sub{display:block;font-weight:500;letter-spacing:0}
+.full-list li .sub{font-size:.52em;margin-top:6px;color:rgba(255,255,255,.5)}
+.full-list li.cur .sub{color:rgba(255,255,255,.78)}
+.lyrics li .sub{font-size:12px;color:var(--dim);margin-top:2px}
+.autostate{font:500 11px var(--mono);letter-spacing:.08em;color:var(--dim)}
+.autostate.live{color:var(--ok)}
+.autobadge{font:500 10px var(--mono);letter-spacing:.1em;color:#0b0b0d;background:var(--ok);border-radius:4px;padding:2px 6px}
 .full-empty{text-align:center;color:rgba(255,255,255,.7);margin:auto;font-size:14px;max-width:30em}
 .full-bottom{max-width:760px;width:100%;margin:0 auto;display:grid;gap:10px;padding-block:6px 14px}
 .full-off{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;color:rgba(255,255,255,.65)}
@@ -552,13 +564,19 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
         <button class="iconbtn" id="editLyricsBtn" data-i18n-aria="another"><svg class="i"><use href="#i-lines"/></svg></button>
         <button class="iconbtn" id="fullBtn2" data-i18n-aria="lyrics"><svg class="i"><use href="#i-expand"/></svg></button>
       </div>
-      <div class="lyrwrap"><div class="intro sm" id="introP" hidden aria-hidden="true"><i></i><i></i><i></i></div><ol class="lyrics" id="lyricsList"></ol></div>
+      <div class="lyrwrap"><ol class="lyrics" id="lyricsList"></ol></div>
       <div class="row" id="syncBar" hidden>
         <button class="solid" id="nextLineBtn"><span data-i18n="next"></span></button>
         <button id="syncDoneBtn"><span data-i18n="done"></span></button>
         <span class="status" data-i18n="syncHint"></span>
       </div>
       <div class="lyroff"><span data-i18n="offLabel"></span><button id="offMinus2">−0.1</button><output id="offVal2">0.0</output><button id="offPlus2">+0.1</button><button class="calib" id="calibP" data-i18n-aria="calibHint"><svg class="i sm"><use href="#i-metro"/></svg><span data-i18n="calib"></span></button></div>
+      <div class="ch autorow" id="autoRow">
+        <span class="ico"><svg class="i sm"><use href="#i-wave"/></svg></span>
+        <span class="nm"><b data-i18n="autoSync"></b><small data-i18n="autoSyncSub"></small></span>
+        <button class="switch" role="switch" aria-checked="true" id="swAuto" data-i18n-aria="autoSync"></button>
+        <div class="sl" style="justify-content:space-between"><span class="autostate" id="autoState">—</span><span class="tip" id="autoNote" hidden data-i18n="autoNoSrc"></span></div>
+      </div>
       <p class="tip" id="lyricsHint" data-i18n="lineHint" style="text-align:center"></p>
     </div>
 
@@ -730,13 +748,12 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
     <div class="full-title"><img id="fullArt" alt="" hidden><span class="tx"><small>NOW SINGING</small><b id="fullTitle">—</b></span></div>
     <button class="iconbtn ghost" id="fullSwap" data-i18n-aria="another" title=""><svg class="i"><use href="#i-lines"/></svg></button>
   </div>
-  <div class="intro" id="introF" hidden aria-hidden="true"><i></i><i></i><i></i></div>
   <ol class="full-list" id="fullList"></ol>
   <p class="full-empty" id="fullEmpty" hidden data-i18n="fullEmpty"></p>
   <div class="full-bottom">
     <div class="full-off">
       <span data-i18n="offLabel"></span>
-      <button id="offMinus">−0.1</button><output id="offVal">0.0</output><button id="offPlus">+0.1</button><button class="calib" id="calibF" data-i18n-aria="calibHint"><svg class="i sm"><use href="#i-metro"/></svg><span data-i18n="calib"></span></button>
+      <button id="offMinus">−0.1</button><output id="offVal">0.0</output><button id="offPlus">+0.1</button><span class="autobadge" id="autoBadge" hidden>AUTO</span><button class="calib" id="calibF" data-i18n-aria="calibHint"><svg class="i sm"><use href="#i-metro"/></svg><span data-i18n="calib"></span></button>
     </div>
     <div class="bar"><span class="time" id="fNow" style="color:rgba(255,255,255,.7)">0:00</span><input id="fSeek" type="range" min="0" max="0" step="0.1" value="0" aria-label="Position"><span class="time" id="fDur" style="color:rgba(255,255,255,.7)">0:00</span></div>
     <div class="full-ctrl">
@@ -1609,6 +1626,32 @@ my:["အက်ကို","ကာရာအိုကေ မိုက်ကဲ့�
 };
 for(const l in E6) K6.forEach((k,i)=>{ I18N[l][k]=E6[l][i]; });
 
+/* 自動同期 */
+const K7=['autoSync','autoSyncSub','autoNoSrc'];
+const E7={
+en:["Auto sync","Listens to the song every 0.01 s and keeps the lyrics and their pace with the singing.","For YouTube, auto sync needs the companion userscript."],
+ja:["自動同期","0.01秒ごとに曲を聞き取り、歌詞の位置と進む速さを歌声に合わせます。","YouTubeで自動同期を使うには、付属のユーザースクリプトが必要です。"],
+ko:["자동 동기화","0.01초마다 곡을 들어 가사 위치와 진행 속도를 노래에 맞춥니다.","YouTube에서 자동 동기화를 쓰려면 함께 제공되는 유저스크립트가 필요합니다."],
+"zh-CN":["自动同步","每 0.01 秒聆听歌曲，让歌词位置和推进速度贴合演唱。","在 YouTube 上使用自动同步需要配套的用户脚本。"],
+"zh-TW":["自動同步","每 0.01 秒聆聽歌曲，讓歌詞位置與推進速度貼合演唱。","在 YouTube 上使用自動同步需要隨附的使用者腳本。"],
+es:["Sincronización automática","Escucha la canción cada 0,01 s y ajusta la posición y el ritmo de la letra al canto.","En YouTube, la sincronización automática necesita el userscript complementario."],
+fr:["Synchro automatique","Écoute le titre toutes les 0,01 s et cale la position et le rythme des paroles sur le chant.","Sur YouTube, la synchro automatique nécessite le userscript associé."],
+de:["Auto-Sync","Hört alle 0,01 s in den Song und hält Position und Tempo des Textes am Gesang.","Für YouTube braucht Auto-Sync das zugehörige Userscript."],
+"pt-BR":["Sincronização automática","Ouve a música a cada 0,01 s e ajusta a posição e o ritmo da letra ao canto.","No YouTube, a sincronização automática precisa do userscript complementar."],
+it:["Sincronizzazione automatica","Ascolta il brano ogni 0,01 s e allinea posizione e ritmo del testo al canto.","Su YouTube la sincronizzazione automatica richiede lo userscript abbinato."],
+id:["Sinkron otomatis","Mendengarkan lagu setiap 0,01 dtk dan menyelaraskan posisi serta laju lirik dengan nyanyian.","Di YouTube, sinkron otomatis memerlukan userscript pendamping."],
+th:["ซิงก์อัตโนมัติ","ฟังเพลงทุก 0.01 วินาที แล้วปรับตำแหน่งและความเร็วของเนื้อเพลงให้ตรงกับเสียงร้อง","บน YouTube ต้องใช้ยูสเซอร์สคริปต์ที่มาคู่กันจึงจะซิงก์อัตโนมัติได้"],
+vi:["Tự đồng bộ","Nghe bài hát mỗi 0,01 giây và khớp vị trí, tốc độ lời với giọng hát.","Trên YouTube, tự đồng bộ cần userscript đi kèm."],
+ru:["Автосинхронизация","Слушает песню каждые 0,01 с и подстраивает положение и темп текста под пение.","Для YouTube автосинхронизации нужен сопутствующий юзерскрипт."],
+pl:["Autosynchronizacja","Słucha utworu co 0,01 s i dopasowuje pozycję oraz tempo tekstu do śpiewu.","Na YouTube autosynchronizacja wymaga dołączonego userscriptu."],
+tr:["Otomatik eşitleme","Şarkıyı her 0,01 sn'de dinler, sözlerin konumunu ve hızını söyleyişe uydurur.","YouTube'da otomatik eşitleme için eşlik eden kullanıcı betiği gerekir."],
+hi:["ऑटो सिंक","हर 0.01 सेकंड गाना सुनकर बोलों की जगह और रफ़्तार गायन से मिलाता है।","YouTube पर ऑटो सिंक के लिए साथ वाली यूज़रस्क्रिप्ट ज़रूरी है।"],
+ur:["آٹو سنک","ہر 0.01 سیکنڈ گانا سن کر بولوں کی جگہ اور رفتار گائیکی سے ملاتا ہے۔","YouTube پر آٹو سنک کے لیے ساتھ والی یوزر اسکرپٹ ضروری ہے۔"],
+ar:["مزامنة تلقائية","يستمع إلى الأغنية كل 0.01 ثانية ويطابق موضع الكلمات وسرعتها مع الغناء.","تحتاج المزامنة التلقائية على YouTube إلى سكربت المستخدم المرافق."],
+my:["အလိုအလျောက် ချိန်ကိုက်","0.01 စက္ကန့်တိုင်း သီချင်းကို နားထောင်ပြီး စာသားနေရာနှင့် အမြန်နှုန်းကို အဆိုနှင့် ကိုက်ညီစေသည်။","YouTube တွင် အလိုအလျောက် ချိန်ကိုက်ရန် တွဲဖက်ယူဆာစခရစ် လိုအပ်သည်။"]
+};
+for(const l in E7) K7.forEach((k,i)=>{ I18N[l][k]=E7[l][i]; });
+
 /* ISO 639-2 の言語一覧（いただいたリストより。語族の総称「(Other)」と mis/mul/und/zxx は除く） */
 const ISO_RAW="aar:Afar;abk:Abkhaz;ace:Achinese;ach:Acoli;ada:Adangme;ady:Adygei;afh:Afrihili;afr:Afrikaans;ain:Ainu;aka:Akan;akk:Akkadian;alb:Albanian;ale:Aleut;amh:Amharic;anp:Angika;ara:Arabic;arg:Aragonese;arc:Aramaic;arp:Arapaho;arw:Arawak;arm:Armenian;rup:Aromanian;asm:Assamese;ava:Avaric;ave:Avestan;awa:Awadhi;aym:Aymara;aze:Azerbaijani;ast:Asturian;ban:Balinese;bal:Baluchi;bam:Bambara;bas:Basa;bak:Bashkir;baq:Basque;btk:Batak;bej:Beja;bel:Belarusian;bem:Bemba;ben:Bengali;bho:Bhojpuri;bik:Bikol;byn:Bilin;bin:Edo;bis:Bislama;zbl:Blissymbolics;bos:Bosnian;bra:Braj;bre:Breton;bug:Bugis;bul:Bulgarian;bua:Buriat;bur:Burmese;cad:Caddo;car:Carib;cat:Catalan;ceb:Cebuano;chg:Chagatai;cha:Chamorro;che:Chechen;chr:Cherokee;chy:Cheyenne;chb:Chibcha;chi:Chinese;chn:Chinook jargon;chp:Chipewyan;cho:Choctaw;chu:Church Slavic;chv:Chuvash;cop:Coptic;cor:Cornish;cos:Corsican;cre:Cree;mus:Creek;crh:Crimean Tatar;hrv:Croatian;cze:Czech;dak:Dakota;dan:Danish;dar:Dargwa;day:Dayak;del:Delaware;din:Dinka;div:Divehi;doi:Dogri;dgr:Dogrib;dua:Duala;dut:Dutch;dum:Middle Dutch;dyu:Dyula;dzo:Dzongkha;frs:East Frisian;efi:Efik;egy:Egyptian;eka:Ekajuk;elx:Elamite;eng:English;enm:Middle English;ang:Old English;myv:Erzya;epo:Esperanto;est:Estonian;gez:Ge'ez;ewe:Ewe;ewo:Ewondo;fan:Fang;fat:Fanti;fao:Faroese;fij:Fijian;fil:Filipino;fin:Finnish;fon:Fon;fre:French;frm:Middle French;fro:Old French;fry:Frisian;fur:Friulian;ful:Fula;gaa:Ga;glg:Galician;lug:Ganda;gay:Gayo;gba:Gbaya;geo:Georgian;ger:German;gmh:Middle High German;goh:Old High German;gil:Gilbertese;gon:Gondi;gor:Gorontalo;got:Gothic;grb:Grebo;grc:Ancient Greek;gre:Greek;grn:Guarani;guj:Gujarati;gwi:Gwich'in;hai:Haida;hat:Haitian Creole;hau:Hausa;haw:Hawaiian;heb:Hebrew;her:Herero;hil:Hiligaynon;hin:Hindi;hmo:Hiri Motu;hit:Hittite;hmn:Hmong;hun:Hungarian;hup:Hupa;iba:Iban;ice:Icelandic;ido:Ido;ibo:Igbo;ilo:Iloko;smn:Inari Sami;ind:Indonesian;inh:Ingush;ina:Interlingua;ile:Interlingue;iku:Inuktitut;ipk:Inupiaq;gle:Irish;mga:Middle Irish;sga:Old Irish;ita:Italian;jpn:Japanese;jav:Javanese;jrb:Judeo-Arabic;jpr:Judeo-Persian;kbd:Kabardian;kab:Kabyle;kac:Kachin;kal:Kalaallisut;xal:Oirat;kam:Kamba;kan:Kannada;kau:Kanuri;kaa:Kara-Kalpak;krc:Karachay-Balkar;krl:Karelian;kas:Kashmiri;csb:Kashubian;kaw:Kawi;kaz:Kazakh;kha:Khasi;khm:Khmer;kho:Khotanese;kik:Kikuyu;kmb:Kimbundu;kin:Kinyarwanda;tlh:Klingon;kom:Komi;kon:Kongo;kok:Konkani;kor:Korean;kpe:Kpelle;kua:Kuanyama;kum:Kumyk;kur:Kurdish;kru:Kurukh;kos:Kosraean;kut:Kootenai;kir:Kyrgyz;lad:Ladino;lah:Lahnda;lam:Lamba;lao:Lao;lat:Latin;lav:Latvian;ltz:Luxembourgish;lez:Lezgian;lim:Limburgish;lin:Lingala;lit:Lithuanian;jbo:Lojban;nds:Low German;dsb:Lower Sorbian;loz:Lozi;lub:Luba-Katanga;lua:Luba-Lulua;lui:Luiseño;smj:Lule Sami;lun:Lunda;luo:Luo;lus:Mizo;mac:Macedonian;mad:Madurese;mag:Magahi;mai:Maithili;mak:Makasar;mlg:Malagasy;may:Malay;mal:Malayalam;mlt:Maltese;mnc:Manchu;mdr:Mandar;man:Mandingo;mni:Manipuri;glv:Manx;mao:Maori;arn:Mapuche;mar:Marathi;chm:Mari;mah:Marshallese;mwr:Marwari;mas:Maasai;men:Mende;mic:Micmac;min:Minangkabau;mwl:Mirandese;moh:Mohawk;mdf:Moksha;lol:Mongo;mon:Mongolian;mos:Moore;nah:Nahuatl;nau:Nauru;nav:Navajo;nbl:South Ndebele;nde:North Ndebele;ndo:Ndonga;nap:Neapolitan;nep:Nepali;new:Newari;nwc:Old Newari;nia:Nias;niu:Niuean;nqo:N'Ko;nog:Nogai;frr:North Frisian;sme:Northern Sami;nso:Northern Sotho;nor:Norwegian;nob:Norwegian Bokmål;nno:Norwegian Nynorsk;nym:Nyamwezi;nya:Nyanja;nyn:Nyankole;nyo:Nyoro;nzi:Nzima;oci:Occitan;oji:Ojibwa;non:Old Norse;peo:Old Persian;ori:Odia;orm:Oromo;osa:Osage;oss:Ossetic;pal:Pahlavi;pau:Palauan;pli:Pali;pam:Pampanga;pag:Pangasinan;pan:Punjabi;pap:Papiamento;per:Persian;phn:Phoenician;pol:Polish;pon:Pohnpeian;por:Portuguese;pro:Old Provençal;pus:Pashto;que:Quechua;roh:Romansh;raj:Rajasthani;rap:Rapanui;rar:Rarotongan;rum:Romanian;rom:Romani;run:Rundi;rus:Russian;syc:Classical Syriac;sam:Samaritan Aramaic;smo:Samoan;sad:Sandawe;sag:Sango;san:Sanskrit;sat:Santali;srd:Sardinian;sas:Sasak;sco:Scots;gla:Scottish Gaelic;sel:Selkup;srp:Serbian;srr:Serer;shn:Shan;sna:Shona;iii:Sichuan Yi;scn:Sicilian;sid:Sidamo;bla:Siksika;snd:Sindhi;sin:Sinhala;sms:Skolt Sami;den:Slave;slo:Slovak;slv:Slovenian;sog:Sogdian;som:Somali;son:Songhai;snk:Soninke;sot:Southern Sotho;alt:Southern Altai;sma:Southern Sami;spa:Spanish;srn:Sranan Tongo;suk:Sukuma;sux:Sumerian;sun:Sundanese;sus:Susu;swa:Swahili;ssw:Swati;swe:Swedish;gsw:Swiss German;syr:Syriac;tgl:Tagalog;tah:Tahitian;tgk:Tajik;tmh:Tamashek;tam:Tamil;tat:Tatar;tel:Telugu;tem:Temne;ter:Tereno;tet:Tetum;tha:Thai;tib:Tibetan;tig:Tigre;tir:Tigrinya;tiv:Tiv;tli:Tlingit;tpi:Tok Pisin;tkl:Tokelau;tog:Nyasa Tonga;ton:Tongan;chk:Chuukese;tsi:Tsimshian;tso:Tsonga;tsn:Tswana;tum:Tumbuka;tur:Turkish;ota:Ottoman Turkish;tuk:Turkmen;tvl:Tuvalu;tyv:Tuvinian;twi:Twi;udm:Udmurt;uga:Ugaritic;uig:Uyghur;ukr:Ukrainian;umb:Umbundu;hsb:Upper Sorbian;urd:Urdu;uzb:Uzbek;vai:Vai;ven:Venda;vie:Vietnamese;vol:Volapük;vot:Votic;wal:Wolaytta;wln:Walloon;war:Waray;was:Washo;wel:Welsh;wol:Wolof;xho:Xhosa;sah:Yakut;yao:Yao;yap:Yapese;yid:Yiddish;yor:Yoruba;zap:Zapotec;zza:Zaza;zen:Zenaga;zha:Zhuang;zul:Zulu;zun:Zuni";
 const ISO=ISO_RAW.split(';').map(s=>{ const i=s.indexOf(':'); return {c:s.slice(0,i),en:s.slice(i+1)}; });
@@ -2066,7 +2109,7 @@ async function openYt(id,autoplay,title){
   /* 「前へ」で戻れるように、今の動画を履歴に積む */
   if(ytSrc.id&&ytSrc.id!==id&&!openYt.fromHistory){ ytHist.push({id:ytSrc.id,title:ytSrc.title}); if(ytHist.length>50) ytHist.shift(); }
   openYt.fromHistory=false;
-  ytSrc.id=id; ytSrc.title=title||''; nowTitle=ytSrc.title; srcKey='yt:'+id; showNow();
+  ytSrc.id=id; ytSrc.title=title||''; nowTitle=ytSrc.title; srcKey='yt:'+id; resetAuto(); showNow();
   if(queue){ const qi=queue.items.findIndex(x=>x.id.videoId===id); if(qi>=0){ queue.idx=qi; markResult(qi); } }
   $('ytUrl').value='https://youtu.be/'+id; store.set('kr-yt',{id,title:ytSrc.title});
   say($('ytStatus'),t('loading'));
@@ -2215,7 +2258,7 @@ $('songFile').addEventListener('change',async e=>{
   say($('songStatus'),t('loading'));
   try{ ensureCtx(); stopTake(); fileSrc.stop();
     fileSrc.buf=await decodeAB(await f.arrayBuffer()); fileSrc.name=f.name.replace(/\.[^.]+$/,''); fileSrc.peaks=computePeaks(fileSrc.buf,160);
-    nowTitle=fileSrc.name; srcKey='file:'+fileSrc.name; showNow();
+    nowTitle=fileSrc.name; srcKey='file:'+fileSrc.name; resetAuto(); vadLocal=null; showNow();
     say($('songStatus'),f.name,'ok'); $('seek').value=0; refreshDuration(); updateButtons(); refreshAsrSrc(); autoLyrics();
   }catch(err){ say($('songStatus'),t('fileFail'),'err'); }
 });
@@ -2530,29 +2573,51 @@ function renderTakes(){
 }
 
 /* ===== 歌詞 ===== */
-let lines=[], times=[], curLine=-1, syncing=false, syncIdx=0, lyrKey='', lyrLabel='';
-(function(){ const s=store.get('kr-lyrics',null); if(s&&s.lines){ lines=s.lines; times=s.times||[]; lyrKey=s.key||''; lyrLabel=s.label||''; } })();
+let lines=[], times=[], subs=[], lyrSig='', curLine=-1, syncing=false, syncIdx=0, lyrKey='', lyrLabel='';
+(function(){ const s=store.get('kr-lyrics',null); if(s&&s.lines){ lines=s.lines; times=s.times||[]; subs=s.subs||[]; lyrKey=s.key||''; lyrLabel=s.label||''; lyrSig=sigOf(); } })();
+function sigOf(){ return lines.length+'|'+lines.join('\u0001')+'|'+times.join(','); }
 let lyrOff=store.get('kr-lyroff',0);
-const saveLyrics=()=>store.set('kr-lyrics',{lines,times,key:lyrKey,label:lyrLabel});
+const saveLyrics=()=>{ mergeDup(); store.set('kr-lyrics',{lines,times,subs,key:lyrKey,label:lyrLabel}); };
+/* 同じ時刻の行（原文と訳など）は1行にまとめ、2行目は小さく添える。同時に光って重なるのを防ぐ */
+function mergeDup(){
+  if(sigOf()===lyrSig&&subs.length===lines.length) return;
+  if(subs.length!==lines.length) subs=lines.map(()=> '');
+  const L=[],T=[],S=[];
+  for(let i=0;i<lines.length;i++){
+    const j=L.length-1;
+    if(j>=0&&times[i]!=null&&T[j]!=null&&Math.abs(times[i]-T[j])<0.06&&lines[i].trim()&&L[j].trim()){ S[j]=(S[j]?S[j]+' / ':'')+lines[i]; continue; }
+    L.push(lines[i]); T.push(times[i]); S.push(subs[i]||'');
+  }
+  lines=L; times=T; subs=S; lyrSig=sigOf(); tokCache=[];
+}
 const hasTimes=()=>times.some(x=>x!=null);
 function seekToLine(i){
   if(syncing||times[i]==null||recorder) return;
   if(tp) stopTake();
-  const p=Math.max(0,times[i]-lyrOff); $('seek').value=$('fSeek').value=p; $('timeNow').textContent=$('fNow').textContent=fmt(p); src().seek(p);
+  const p=Math.max(0,times[i]-effOff()); $('seek').value=$('fSeek').value=p; $('timeNow').textContent=$('fNow').textContent=fmt(p); src().seek(p);
 }
 function showLyrics(){
   const has=lines.length>0;
   $('lyricsEdit').hidden=has; $('lyricsView').hidden=!has;
   $('lyrSrc').innerHTML=has?`<b>${esc(hasTimes()?t('synced'):t('noTiming'))}</b> · ${esc(lyrLabel||t('lyrics'))}`:'';
+  mergeDup();
   const ol=$('lyricsList'), fl=$('fullList'); ol.innerHTML=''; fl.innerHTML='';
+  const f0=firstTimed();
+  const dots=(id,sm)=>{ const d=document.createElement('div'); d.className='intro'+(sm?' sm':''); d.id=id; d.hidden=true; d.setAttribute('aria-hidden','true'); d.append(document.createElement('i'),document.createElement('i'),document.createElement('i')); return d; };
   lines.forEach((s,i)=>{
     const li=document.createElement('li'); if(!s.trim()) li.classList.add('blank');
+    if(i===f0) li.appendChild(dots('introP',true));
     const ts=document.createElement('span'); ts.className='lt'; ts.textContent=times[i]!=null?fmt(times[i]):'';
     const tx=document.createElement('span'); tx.textContent=s; li.append(ts,tx);
+    if(subs[i]){ const sb=document.createElement('span'); sb.className='sub'; sb.textContent=subs[i]; li.appendChild(sb); }
     li.addEventListener('click',()=>{ seekToLine(i); setLine(i); }); ol.appendChild(li);
-    const fi=document.createElement('li'); if(!s.trim()) fi.classList.add('blank'); fi.textContent=s;
+    const fi=document.createElement('li'); if(!s.trim()) fi.classList.add('blank');
+    if(i===f0) fi.appendChild(dots('introF',false));
+    const tk=tokenize(s); fi._tk=tk; fi._w=tk.map(x=>{ if(x.sp) return fi.appendChild(document.createTextNode(x.t)); const sp=document.createElement('span'); sp.className='w'; sp.textContent=x.t; return fi.appendChild(sp); });
+    if(subs[i]){ const sb=document.createElement('span'); sb.className='sub'; sb.textContent=subs[i]; fi.appendChild(sb); }
     fi.addEventListener('click',()=>{ seekToLine(i); setLine(i); }); fl.appendChild(fi);
   });
+  eng.k=-1;
   $('fullEmpty').hidden=hasTimes()||!has;
   curLine=-1; updateButtons();
 }
@@ -2601,9 +2666,132 @@ function lineFill(k,p){
   const dur=Math.max(.8,Math.min(gap*.94-.1,Math.max(1.4,beats(lines[k])*.38)));
   return Math.max(0,Math.min(1,(p+lyrOff-t0)/dur));
 }
-function lineAt(p){ p+=lyrOff; let k=-1; for(let i=0;i<lines.length;i++) if(times[i]!=null&&times[i]<=p) k=i; return k; }
+function lineAt(p){ p+=effOff(); let k=-1; for(let i=0;i<lines.length;i++) if(times[i]!=null&&times[i]<=p) k=i; return k; }
 function firstTimed(){ for(let k=0;k<times.length;k++) if(times[k]!=null) return k; return -1; }
 function nextTimed(i){ for(let k=i+1;k<lines.length;k++) if(times[k]!=null) return times[k]; return null; }
+/* ===================== 自動同期エンジン（0.01秒ごと） =====================
+   1) 聞き取る：曲の音から「歌っているか」「歌い出したか」を0.01秒ごとに判定
+      ・音源ファイル … このページの中で判定
+      ・YouTube … 付属のユーザースクリプトが動画の中で判定して送ってくる
+   2) ずれを直す：歌い出しを一番近い行の開始と比べ、測定が揃ったら補正値へ少しずつ寄せる
+   3) 塗る：単語（日本語は1文字）ごとに、歌っている間だけ進め、途切れたら単語の切れ目で止める */
+let autoOn=store.get('kr-autosync',true), autoAdj=0, autoTarget=0, autoEst=[];
+let tokCache=[];
+const effOff=()=>lyrOff+(autoOn?autoAdj:0);
+const vad={a:0,s:0,t:-1,at:0,src:''};
+const eng={k:-1,b:0,total:1,silent:0,hold:0,crossed:-1};
+function resetAuto(){ autoAdj=autoTarget=0; autoEst=[]; eng.k=-1; }
+
+/* 行を「単語」に分ける。空白で区切り、空白の無い日本語・中国語・韓国語は1文字ずつ（小さい文字や記号は前の文字にくっつける） */
+function tokenize(s){
+  const out=[];
+  for(const part of String(s||'').split(/(\s+)/)){
+    if(!part) continue;
+    if(/^\s+$/.test(part)){ out.push({t:part,w:0,sp:true}); continue; }
+    if(/[぀-ヿ一-鿿가-힯]/.test(part)&&!/[A-Za-z]/.test(part)){
+      for(const ch of [...part]){
+        if(/[ゃゅょャュョぁぃぅぇぉァィゥェォゎっッー、。，．！？!?,.・…「」『』（）()]/.test(ch)&&out.length&&!out[out.length-1].sp){ out[out.length-1].t+=ch; if(/[ー]/.test(ch)) out[out.length-1].w+=.6; }
+        else out.push({t:ch,w:1});
+      }
+    } else out.push({t:part,w:beats(part)});
+  }
+  return out;
+}
+
+/* ---- 歌声の検出（音源ファイル用。ユーザースクリプトと同じ考え方） ---- */
+let vadLocal=null;
+function makeLocalVad(){
+  if(vadLocal||!ctx||!trackGain) return;
+  try{
+    const sp=ctx.createChannelSplitter(2); trackGain.connect(sp);
+    const mk=ch=>{ const hp=ctx.createBiquadFilter(), lp=ctx.createBiquadFilter(), an=ctx.createAnalyser();
+      hp.type='highpass'; hp.frequency.value=280; lp.type='lowpass'; lp.frequency.value=3400; an.fftSize=512; sp.connect(hp,ch); hp.connect(lp); lp.connect(an); return an; };
+    vadLocal={L:mk(0),R:mk(1),bl:new Float32Array(512),br:new Float32Array(512),floor:-9,on:false,offFor:1,onFor:0};
+  }catch(e){ vadLocal=null; }
+}
+function vadStep(v){
+  v.L.getFloatTimeDomainData(v.bl); v.R.getFloatTimeDomainData(v.br);
+  let em=0,es=0,el=0,er=0;
+  for(let i=0;i<v.bl.length;i++){ const l=v.bl[i], r=v.br[i], m=(l+r)*.5, d=(l-r)*.5; em+=m*m; es+=d*d; el+=l*l; er+=r*r; }
+  em/=v.bl.length; es/=v.bl.length;
+  const mono=er<el*1e-4||el<er*1e-4, ratio=mono?99:em/(es+1e-10), le=Math.log(em+1e-10);
+  if(le<v.floor) v.floor=le; else v.floor+=(le-v.floor)*.0025;
+  const score=le-v.floor;
+  const want=v.on?(score>.9&&ratio>1.25):(score>1.6&&ratio>1.8);
+  let onset=0;
+  if(want){ v.onFor+=.01; if(!v.on&&v.onFor>=.04){ if(v.offFor>=.35) onset=1; v.on=true; v.offFor=0; } }
+  else { v.onFor=0; if(v.on){ v.offFor+=.01; if(v.offFor>=.08) v.on=false; } else v.offFor+=.01; }
+  return {a:v.on?1:0,o:onset,s:score};
+}
+function onVad(f,mediaT,from){
+  vad.a=f.a; vad.s=f.s; vad.t=mediaT; vad.at=performance.now(); vad.src=from;
+  if(f.o) onOnset(mediaT-.04);   // 歌い出しの確定に使った40ミリ秒を戻す
+}
+/* 歌い出しを見つけたら、一番近い行の開始とのずれを記録。2回以上そろったら、その値へ寄せていく */
+function onOnset(mt){
+  if(!autoOn||syncing||!hasTimes()) return;
+  const q=mt+effOff(); let best=-1, bd=1e9;
+  for(let i=0;i<times.length;i++){ if(times[i]==null) continue; const d=times[i]-q; if(Math.abs(d)<Math.abs(bd)){ bd=d; best=i; } }
+  if(best<0) return;
+  const win=autoEst.length?2.2:8;                // 最初は大きくずれていても拾う
+  if(Math.abs(bd)>win) return;
+  autoEst.push(times[best]-mt-lyrOff); if(autoEst.length>6) autoEst.shift();
+  if(autoEst.length>=2){
+    const v=autoEst.slice(-4).slice().sort((a,b)=>a-b), med=v[v.length>>1];
+    if(v.filter(x=>Math.abs(x-med)<.45).length>=2) autoTarget=Math.max(-12,Math.min(12,med));
+  }
+}
+/* YouTube（ユーザースクリプト）からの検出結果 */
+window.addEventListener('message',e=>{
+  if(!/^https:\/\/(www\.|m\.)?youtube(-nocookie)?\.com$/.test(e.origin)) return;
+  const d=e.data; if(!d||typeof d!=='object'||d.type!=='kr-vad'||mode!=='yt'||!autoOn) return;
+  onVad({a:d.a?1:0,o:d.o?1:0,s:+d.s||0},+d.t||0,'yt');
+});
+
+function wordAt(tk,b){ let acc=0; for(let i=0;i<tk.length;i++){ const x=tk[i]; if(!x.w) continue; if(b<acc+x.w-1e-6) return {i,frac:(b-acc)/x.w,start:acc,end:acc+x.w}; acc+=x.w; } return {i:tk.length,frac:1,start:acc,end:acc}; }
+function paintWords(li,b){
+  let acc=0;
+  li._tk.forEach((x,i)=>{ const sp=li._w[i]; if(!sp||x.sp) return; const f=Math.max(0,Math.min(1,(b-acc)/x.w)); acc+=x.w;
+    const v=(f*100).toFixed(1)+'%'; if(sp._v!==v){ sp._v=v; sp.style.setProperty('--w',v); } });
+}
+function syncStep(){
+  const now=performance.now(), dt=Math.min(.05,Math.max(0,(now-(syncStep.last||now))/1000)); syncStep.last=now;
+  const s=src(), playing=s.ready()&&s.playing();
+  if(autoOn&&playing&&mode==='file'){ makeLocalVad(); if(vadLocal) onVad(vadStep(vadLocal),fileSrc.pos(),'file'); }
+  /* 補正値は急に飛ばさず、1秒あたり最大2秒ずつ寄せる */
+  if(autoOn){ const d=autoTarget-autoAdj; autoAdj+=Math.max(-.02,Math.min(.02,d)); }
+  if(!playing||syncing||!hasTimes()||$('full').hidden) return;
+  const p=s.pos(), off=effOff(), k=lineAt(p); if(k<0) return;
+  const li=$('fullList').children[k]; if(!li||!li._tk) return;
+  if(eng.k!==k){ eng.k=k; eng.b=0; eng.total=li._tk.reduce((a,x)=>a+x.w,0)||1; eng.silent=0; eng.hold=0; eng.crossed=-1; }
+  const t0=times[k], nt=nextTimed(k), gap=nt!=null?nt-t0:6, into=p+off-t0, left=(t0+gap)-(p+off);
+  const D=Math.max(.9,Math.min(gap*.92-.1,Math.max(1.3,eng.total*.36)));
+  const base=eng.total/D, remaining=eng.total-eng.b;
+  const need=left>.12?remaining/(left-.1):remaining/.02;      // 次の行に間に合わせるための最低速度
+  let speed=Math.max(base,need);
+  const fresh=vad.at&&now-vad.at<250;
+  if(fresh){
+    if(!vad.a){
+      eng.silent+=dt;
+      const w=wordAt(li._tk,eng.b);
+      /* 声が途切れた：言いかけの単語は言い切るまで進め、切れ目で止まる。次の行が迫っていれば止まらない */
+      speed=(w.frac>.5&&w.frac<1)?base*1.6:(left<.35?need:0);
+    } else {
+      if(eng.silent>.25){ const w=wordAt(li._tk,eng.b); if(w.frac>.05&&w.frac<1) eng.b=w.end; }   // 再開時は次の単語の頭から
+      eng.silent=0; speed=Math.max(base*1.05,need);
+    }
+  } else {
+    /* 聞き取りが無いとき：単語の切れ目（空白）で余裕があれば一瞬だけ間を置く */
+    const w=wordAt(li._tk,eng.b), nx=li._tk[w.i-1];
+    if(eng.hold>0){ eng.hold-=dt; speed=0; }
+    else if(w.i!==eng.crossed&&w.frac<.04&&w.i>0){ eng.crossed=w.i; const prevSp=li._tk.slice(0,w.i).reverse().find(x=>x.sp||x.w); if(prevSp&&prevSp.sp&&left-remaining/base>.35){ eng.hold=.12; speed=0; } }
+  }
+  if(into<0) speed=0;
+  eng.b=Math.min(eng.total,eng.b+speed*dt);
+  if(left<.05) eng.b=eng.total;
+  paintWords(li,eng.b);
+}
+setInterval(syncStep,10);
 function nextNonBlank(i){ while(i<lines.length&&!lines[i].trim()) i++; return i; }
 function parseLrc(text){
   const tag=/\[(\d{1,3}):(\d{1,2}(?:[.:]\d{1,3})?)\]/g, out=[];
@@ -2671,7 +2859,7 @@ function applyLrc(it){
   if(syncing) endSync();
   if(it.syncedLyrics){ const lrc=parseLrc(it.syncedLyrics.replace(/\r/g,'')); lines=lrc.map(x=>x.s); times=lrc.map(x=>x.s?x.t:null); }
   else { lines=it.plainLyrics.replace(/\r/g,'').split('\n'); times=[]; while(lines.length&&!lines[lines.length-1].trim()) lines.pop(); }
-  lyrKey=srcKey; lyrLabel=(it.trackName||'')+(it.artistName?' / '+it.artistName:'');
+  lyrKey=srcKey; lyrLabel=(it.trackName||'')+(it.artistName?' / '+it.artistName:''); resetAuto();
   saveLyrics(); showLyrics(); $('lrcResults').hidden=true; say($('lrcStatus'),'');
 }
 $('lrcForm').addEventListener('submit',e=>{ e.preventDefault(); $('lrcQ').blur(); searchLrc($('lrcQ').value,false); });
@@ -2739,14 +2927,24 @@ $('fullClose').addEventListener('click',closeFull);
 $('fullSwap').addEventListener('click',()=>{ closeFull(); setTab('lyr'); if(lines.length) $('editLyricsBtn').click(); setTimeout(()=>$('lrcQ').focus({preventScroll:true}),400); });
 function showOff(){ const s=(lyrOff>0?'+':'')+lyrOff.toFixed(1)+t('sec'); $('offVal').textContent=$('offVal2').textContent=s; store.set('kr-lyroff',lyrOff); }
 const nudge=d=>{ lyrOff=Math.round((lyrOff+d)*10)/10; showOff(); };
+$('swAuto').setAttribute('aria-checked',autoOn);
+$('swAuto').addEventListener('click',()=>{ autoOn=!autoOn; store.set('kr-autosync',autoOn); $('swAuto').setAttribute('aria-checked',autoOn); if(!autoOn) resetAuto(); showOff(); });
+/* 自動同期の状態：聞き取り中か、どれだけ補正しているか */
+setInterval(()=>{
+  const live=autoOn&&vad.at&&performance.now()-vad.at<400;
+  const st=$('autoState'); st.classList.toggle('live',!!live);
+  st.textContent=!autoOn?'OFF':live?('● LIVE '+(autoAdj>=0?'+':'')+autoAdj.toFixed(2)+t('sec')):'—';
+  $('autoNote').hidden=!(autoOn&&mode==='yt'&&!live&&!ytEqLinked);
+  $('autoBadge').hidden=!live; if(live) $('autoBadge').textContent='AUTO '+(autoAdj>=0?'+':'')+autoAdj.toFixed(1)+t('sec');
+},120);
 /* 歌い出しの瞬間に1回タップ → いちばん近い行の開始時刻に合わせて、ズレ補正を自動で決める */
 function calibrate(btn){
   if(!hasTimes()) return;
   const s=src(); if(!s.ready()) return;
   const p=s.playing()?s.pos():+$('seek').value;
-  let best=-1, bd=1e9; for(let i=0;i<times.length;i++){ if(times[i]==null) continue; const d=Math.abs(times[i]-(p+lyrOff)); if(d<bd){ bd=d; best=i; } }
+  let best=-1, bd=1e9; for(let i=0;i<times.length;i++){ if(times[i]==null) continue; const d=Math.abs(times[i]-(p+effOff())); if(d<bd){ bd=d; best=i; } }
   if(best<0) return;
-  lyrOff=Math.max(-30,Math.min(30,Math.round((times[best]-p)*10)/10)); showOff();
+  lyrOff=Math.max(-30,Math.min(30,Math.round((times[best]-p)*10)/10)); resetAuto(); showOff();
   curLine=-2; setLine(best,false); bump(btn,'hit');
   toast(t('calibDone',{x:(lyrOff>0?'+':'')+lyrOff.toFixed(1)+t('sec')}),null,null,2500);
 }
@@ -3172,9 +3370,9 @@ paintRange($('seek')); paintRange($('fSeek'));
     if(mode==='file') drawArtWave(p/(fileSrc.duration()||1));
   }
   /* 前奏中：3つの点が歌い出しに向けて順に灯る */
-  { const f=firstTimed(), show=playing&&!syncing&&f>=0&&p+lyrOff<times[f]-.15;
-    for(const id of ['introF','introP']){ const el=$(id); if(el.hidden!==!show) el.hidden=!show;
-      if(show){ const pr=Math.max(0,(p+lyrOff)/Math.max(.1,times[f])), rem=times[f]-(p+lyrOff);
+  { const f=firstTimed(), eo=effOff(), show=playing&&!syncing&&f>=0&&p+eo<times[f]-.15;
+    for(const id of ['introF','introP']){ const el=$(id); if(!el) continue; if(el.hidden!==!show) el.hidden=!show;
+      if(show){ const pr=Math.max(0,(p+eo)/Math.max(.1,times[f])), rem=times[f]-(p+eo);
         const n=rem<1.2?3:rem<2.4?2:rem<3.6?1:Math.min(3,Math.floor(pr*3)); [...el.children].forEach((d,j)=>d.classList.toggle('on',j<n)); el.classList.toggle('breathe',rem>3.6); } } }
   if(playing&&!syncing&&hasTimes()&&lineAt(p)<0&&curLine!==-1) setLine(-1);
   if(curTab==='eq'&&ctx&&(playing||micStream)&&!document.hidden) drawCurve();
@@ -3182,8 +3380,6 @@ paintRange($('seek')); paintRange($('fSeek'));
     const k=lineAt(p);
     if(k>=0){
       setLine(k);
-      const fi=$('fullList').children[k], nt=nextTimed(k);
-      if(fi&&!$('full').hidden) fi.style.setProperty('--p',(lineFill(k,p)*100).toFixed(1)+'%');
     }
   }
   if(recorder) $('recLabel').textContent='REC '+fmt((performance.now()-recT0)/1000);

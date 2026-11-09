@@ -253,10 +253,13 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .bar{display:flex;align-items:center;gap:10px}
 .time{font:500 11.5px var(--mono);font-variant-numeric:tabular-nums;color:var(--mute);flex:none;min-width:2.8em}
 .bar .time:last-child{text-align:right}
-.ctrls{display:grid;grid-template-columns:1fr auto auto auto 1fr;align-items:center;gap:14px}
+.ctrls{display:grid;grid-template-columns:1fr auto auto auto auto auto 1fr;align-items:center;gap:4px}
+@media (max-width:389px){.skip{width:38px!important;height:38px!important}.pbtn{width:44px;height:44px}.recbtn{width:58px;height:58px}.recbtn::before{width:42px;height:42px}}
+@media (min-width:420px){.ctrls{gap:12px}}
 .ctrls .l{justify-self:start} .ctrls .r{justify-self:end}
 .pbtn{width:48px;height:48px;border-radius:50%;padding:0}
-.skip{width:44px;height:44px;border-radius:50%;padding:0;background:transparent;border-color:transparent;color:var(--ink)}
+.skip{width:42px;height:42px;border-radius:50%;padding:0;background:transparent;border-color:transparent;color:var(--ink)}
+#prevV .i,#nextV .i{width:22px;height:22px}
 .skip:hover:not(:disabled){background:var(--s2);border-color:var(--line)}
 .skip .i{width:26px;height:26px;stroke-width:1.6}
 .recwrap{display:grid;justify-items:center;gap:2px}
@@ -334,6 +337,42 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(128px + env(safe-area-inset-bottom,0px));z-index:15;display:flex;align-items:center;gap:10px;
   background:var(--s3);border:1px solid var(--line2);border-radius:12px;padding:6px 6px 6px 14px;font-size:13px;max-width:calc(100% - 24px);box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .toast button{min-height:32px;font-size:12.5px}
+/* ===== 動き（押した瞬間の手ごたえ・出入り） ===== */
+.skip .i,.pbtn .i{transition:transform .3s cubic-bezier(.3,.7,.2,1)}
+.skip.spin-l .i{animation:spinL .42s cubic-bezier(.3,.7,.2,1)}
+.skip.spin-r .i{animation:spinR .42s cubic-bezier(.3,.7,.2,1)}
+@keyframes spinL{40%{transform:rotate(-38deg) scale(.92)}}
+@keyframes spinR{40%{transform:rotate(38deg) scale(.92)}}
+#nextV.nudge .i{animation:nudgeR .38s cubic-bezier(.3,.7,.2,1)}
+#prevV.nudge .i{animation:nudgeL .38s cubic-bezier(.3,.7,.2,1)}
+@keyframes nudgeR{35%{transform:translateX(4px);opacity:.4}36%{transform:translateX(-4px)}}
+@keyframes nudgeL{35%{transform:translateX(-4px);opacity:.4}36%{transform:translateX(4px)}}
+.pbtn.pop .i,.tplay.pop .i{animation:pop .28s cubic-bezier(.3,.7,.2,1)}
+@keyframes pop{0%{transform:scale(.6);opacity:.2}100%{transform:scale(1)}}
+.recbtn{position:relative}
+.recbtn::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--rec);opacity:0;pointer-events:none}
+.recbtn.burst::after{animation:burst .7s ease-out}
+@keyframes burst{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.55)}}
+.count b{display:inline-block}
+.count b.pop{animation:cnt .9s cubic-bezier(.2,.7,.2,1)}
+@keyframes cnt{0%{transform:scale(1.6);opacity:0}25%{transform:scale(1);opacity:1}85%{opacity:1}100%{transform:scale(.85);opacity:.2}}
+.toast:not([hidden]){animation:toastIn .3s cubic-bezier(.3,.7,.2,1)}
+@keyframes toastIn{from{transform:translate(-50%,14px);opacity:0}}
+.results li,.lrc-results li,.take{animation:fadeUp .36s cubic-bezier(.3,.7,.2,1) both;animation-delay:calc(var(--d,0) * 40ms)}
+@keyframes fadeUp{from{transform:translateY(8px);opacity:0}}
+.sheet:not([hidden]){animation:fadeIn .2s ease}
+.sheet:not([hidden]) .sheet-panel{animation:sheetUp .34s cubic-bezier(.3,.7,.2,1)}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}}
+.full:not([hidden]){animation:fullIn .42s cubic-bezier(.3,.7,.2,1)}
+@keyframes fullIn{from{opacity:0;transform:translateY(24px) scale(.985)}}
+.fader .cap{transition:transform .12s}
+.fader .track:active .cap{transform:translate(-50%,-50%) scale(1.12)}
+.micbtn.on .i{animation:pop .3s cubic-bezier(.3,.7,.2,1)}
+.tabs .badge.bump{animation:pop .35s cubic-bezier(.3,.7,.2,1)}
+.screen #art .i{transition:transform .5s}
+.deck.playing #art .i{animation:float 3s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-4px)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -368,6 +407,8 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M6 4v5M6 13v7M12 4v10M12 18v2M18 4v2M18 10v10"/><rect x="4" y="9" width="4" height="4" rx="1"/><rect x="10" y="14" width="4" height="4" rx="1"/><rect x="16" y="6" width="4" height="4" rx="1"/></symbol>
   <symbol id="i-back10" viewBox="0 0 24 24"><path d="M4.6 12a7.4 7.4 0 1 0 2.2-5.3"/><path d="M6.6 3.2v3.7h3.7"/><text x="12.2" y="15" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="6.4" font-weight="600" fill="currentColor" stroke="none">10</text></symbol>
   <symbol id="i-fwd10" viewBox="0 0 24 24"><path d="M19.4 12a7.4 7.4 0 1 1-2.2-5.3"/><path d="M17.4 3.2v3.7h-3.7"/><text x="11.8" y="15" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="6.4" font-weight="600" fill="currentColor" stroke="none">10</text></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6.2 5.5v13"/><path d="M18.2 6.3c0-.7-.8-1.1-1.4-.7l-8.3 5.6c-.5.4-.5 1.2 0 1.6l8.3 5.6c.6.4 1.4 0 1.4-.7z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M17.8 5.5v13"/><path d="M5.8 6.3c0-.7.8-1.1 1.4-.7l8.3 5.6c.5.4.5 1.2 0 1.6l-8.3 5.6c-.6.4-1.4 0-1.4-.7z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 12c1.6 0 1.6-5 3.2-5s1.6 10 3.2 10 1.6-10 3.2-10 1.6 10 3.2 10 1.6-5 3.2-5"/><path d="M21 12h0"/></symbol>
   <symbol id="i-tape" viewBox="0 0 24 24"><rect x="2.8" y="5.5" width="18.4" height="13" rx="2.4"/><circle cx="8.3" cy="11.3" r="2.2"/><circle cx="15.7" cy="11.3" r="2.2"/><path d="M8.3 13.5h7.4M7 18.5l1.6-2.6h6.8l1.6 2.6"/></symbol>
 </svg>
@@ -623,12 +664,14 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
     </div>
     <div class="ctrls">
       <div class="l"><button class="pbtn" id="playBtn" disabled data-i18n-aria="play"><svg class="i lg" id="playIco"><use href="#i-play"/></svg></button></div>
+      <button class="skip" id="prevV" disabled data-i18n-aria="prevV"><svg class="i"><use href="#i-prev"/></svg></button>
       <button class="skip" id="back10" disabled data-i18n-aria="back10"><svg class="i"><use href="#i-back10"/></svg></button>
       <div class="recwrap">
         <button class="recbtn" id="recBtn" disabled aria-label="REC"></button>
         <span class="reclabel mono" id="recLabel">REC</span>
       </div>
       <button class="skip" id="fwd10" disabled data-i18n-aria="fwd10"><svg class="i"><use href="#i-fwd10"/></svg></button>
+      <button class="skip" id="nextV" disabled data-i18n-aria="nextV"><svg class="i"><use href="#i-next"/></svg></button>
       <div class="r"><button class="pbtn" id="fullBtn" disabled data-i18n-aria="lyrics"><svg class="i"><use href="#i-lines"/></svg></button></div>
     </div>
   </div>
@@ -1420,6 +1463,32 @@ my:["အီကွာလိုက်ဇာ","ကြိုတင်ချိန်
 };
 for(const l in E2) K2.forEach((k,i)=>{ I18N[l][k]=E2[l][i]; });
 
+/* 前へ・次の動画 */
+const K3=['prevV','nextV','noNext','nextNeedKey'];
+const E3={
+en:["Previous","Next video","No more videos to play next.","Next video needs a search with a YouTube API key."],
+ja:["前へ","次の動画","次に流せる動画がありません。","次の動画には、APIキーを使った検索が必要です。"],
+ko:["이전","다음 영상","다음에 재생할 영상이 없습니다.","다음 영상을 재생하려면 API 키로 검색해야 합니다."],
+"zh-CN":["上一个","下一个视频","没有可以接着播放的视频。","要播放下一个视频，需要用 API 密钥搜索。"],
+"zh-TW":["上一個","下一部影片","沒有可以接著播放的影片。","要播放下一部影片，需要用 API 金鑰搜尋。"],
+es:["Anterior","Siguiente vídeo","No hay más vídeos para reproducir.","El siguiente vídeo necesita una búsqueda con clave de API de YouTube."],
+fr:["Précédent","Vidéo suivante","Plus aucune vidéo à lire ensuite.","La vidéo suivante nécessite une recherche avec une clé API YouTube."],
+de:["Zurück","Nächstes Video","Keine weiteren Videos zum Abspielen.","Für das nächste Video ist eine Suche mit YouTube-API-Schlüssel nötig."],
+"pt-BR":["Anterior","Próximo vídeo","Não há mais vídeos para tocar.","O próximo vídeo precisa de uma busca com chave de API do YouTube."],
+it:["Precedente","Video successivo","Non ci sono altri video da riprodurre.","Il video successivo richiede una ricerca con chiave API di YouTube."],
+id:["Sebelumnya","Video berikutnya","Tidak ada video lagi untuk diputar.","Video berikutnya memerlukan pencarian dengan kunci API YouTube."],
+th:["ก่อนหน้า","วิดีโอถัดไป","ไม่มีวิดีโอให้เล่นต่อแล้ว","ต้องค้นหาด้วยคีย์ API ของ YouTube จึงจะเล่นวิดีโอถัดไปได้"],
+vi:["Trước","Video tiếp theo","Không còn video để phát tiếp.","Cần tìm kiếm bằng khóa API YouTube để phát video tiếp theo."],
+ru:["Назад","Следующее видео","Больше нет видео для воспроизведения.","Для следующего видео нужен поиск с API-ключом YouTube."],
+pl:["Poprzedni","Następny film","Nie ma więcej filmów do odtworzenia.","Następny film wymaga wyszukiwania z kluczem API YouTube."],
+tr:["Önceki","Sonraki video","Sırada oynatılacak video kalmadı.","Sonraki video için YouTube API anahtarıyla arama gerekir."],
+hi:["पिछला","अगला वीडियो","आगे चलाने के लिए और वीडियो नहीं हैं।","अगले वीडियो के लिए YouTube API कुंजी से खोज ज़रूरी है।"],
+ur:["پچھلا","اگلی ویڈیو","آگے چلانے کے لیے مزید ویڈیوز نہیں۔","اگلی ویڈیو کے لیے YouTube API کلید سے تلاش ضروری ہے۔"],
+ar:["السابق","الفيديو التالي","لا توجد فيديوهات أخرى للتشغيل.","يتطلب الفيديو التالي بحثًا باستخدام مفتاح YouTube API."],
+my:["ယခင်","နောက်ဗီဒီယို","ဆက်ဖွင့်ရန် ဗီဒီယို မကျန်တော့ပါ။","နောက်ဗီဒီယိုအတွက် YouTube API ကီးဖြင့် ရှာရန် လိုသည်။"]
+};
+for(const l in E3) K3.forEach((k,i)=>{ I18N[l][k]=E3[l][i]; });
+
 /* ISO 639-2 の言語一覧（いただいたリストより。語族の総称「(Other)」と mis/mul/und/zxx は除く） */
 const ISO_RAW="aar:Afar;abk:Abkhaz;ace:Achinese;ach:Acoli;ada:Adangme;ady:Adygei;afh:Afrihili;afr:Afrikaans;ain:Ainu;aka:Akan;akk:Akkadian;alb:Albanian;ale:Aleut;amh:Amharic;anp:Angika;ara:Arabic;arg:Aragonese;arc:Aramaic;arp:Arapaho;arw:Arawak;arm:Armenian;rup:Aromanian;asm:Assamese;ava:Avaric;ave:Avestan;awa:Awadhi;aym:Aymara;aze:Azerbaijani;ast:Asturian;ban:Balinese;bal:Baluchi;bam:Bambara;bas:Basa;bak:Bashkir;baq:Basque;btk:Batak;bej:Beja;bel:Belarusian;bem:Bemba;ben:Bengali;bho:Bhojpuri;bik:Bikol;byn:Bilin;bin:Edo;bis:Bislama;zbl:Blissymbolics;bos:Bosnian;bra:Braj;bre:Breton;bug:Bugis;bul:Bulgarian;bua:Buriat;bur:Burmese;cad:Caddo;car:Carib;cat:Catalan;ceb:Cebuano;chg:Chagatai;cha:Chamorro;che:Chechen;chr:Cherokee;chy:Cheyenne;chb:Chibcha;chi:Chinese;chn:Chinook jargon;chp:Chipewyan;cho:Choctaw;chu:Church Slavic;chv:Chuvash;cop:Coptic;cor:Cornish;cos:Corsican;cre:Cree;mus:Creek;crh:Crimean Tatar;hrv:Croatian;cze:Czech;dak:Dakota;dan:Danish;dar:Dargwa;day:Dayak;del:Delaware;din:Dinka;div:Divehi;doi:Dogri;dgr:Dogrib;dua:Duala;dut:Dutch;dum:Middle Dutch;dyu:Dyula;dzo:Dzongkha;frs:East Frisian;efi:Efik;egy:Egyptian;eka:Ekajuk;elx:Elamite;eng:English;enm:Middle English;ang:Old English;myv:Erzya;epo:Esperanto;est:Estonian;gez:Ge'ez;ewe:Ewe;ewo:Ewondo;fan:Fang;fat:Fanti;fao:Faroese;fij:Fijian;fil:Filipino;fin:Finnish;fon:Fon;fre:French;frm:Middle French;fro:Old French;fry:Frisian;fur:Friulian;ful:Fula;gaa:Ga;glg:Galician;lug:Ganda;gay:Gayo;gba:Gbaya;geo:Georgian;ger:German;gmh:Middle High German;goh:Old High German;gil:Gilbertese;gon:Gondi;gor:Gorontalo;got:Gothic;grb:Grebo;grc:Ancient Greek;gre:Greek;grn:Guarani;guj:Gujarati;gwi:Gwich'in;hai:Haida;hat:Haitian Creole;hau:Hausa;haw:Hawaiian;heb:Hebrew;her:Herero;hil:Hiligaynon;hin:Hindi;hmo:Hiri Motu;hit:Hittite;hmn:Hmong;hun:Hungarian;hup:Hupa;iba:Iban;ice:Icelandic;ido:Ido;ibo:Igbo;ilo:Iloko;smn:Inari Sami;ind:Indonesian;inh:Ingush;ina:Interlingua;ile:Interlingue;iku:Inuktitut;ipk:Inupiaq;gle:Irish;mga:Middle Irish;sga:Old Irish;ita:Italian;jpn:Japanese;jav:Javanese;jrb:Judeo-Arabic;jpr:Judeo-Persian;kbd:Kabardian;kab:Kabyle;kac:Kachin;kal:Kalaallisut;xal:Oirat;kam:Kamba;kan:Kannada;kau:Kanuri;kaa:Kara-Kalpak;krc:Karachay-Balkar;krl:Karelian;kas:Kashmiri;csb:Kashubian;kaw:Kawi;kaz:Kazakh;kha:Khasi;khm:Khmer;kho:Khotanese;kik:Kikuyu;kmb:Kimbundu;kin:Kinyarwanda;tlh:Klingon;kom:Komi;kon:Kongo;kok:Konkani;kor:Korean;kpe:Kpelle;kua:Kuanyama;kum:Kumyk;kur:Kurdish;kru:Kurukh;kos:Kosraean;kut:Kootenai;kir:Kyrgyz;lad:Ladino;lah:Lahnda;lam:Lamba;lao:Lao;lat:Latin;lav:Latvian;ltz:Luxembourgish;lez:Lezgian;lim:Limburgish;lin:Lingala;lit:Lithuanian;jbo:Lojban;nds:Low German;dsb:Lower Sorbian;loz:Lozi;lub:Luba-Katanga;lua:Luba-Lulua;lui:Luiseño;smj:Lule Sami;lun:Lunda;luo:Luo;lus:Mizo;mac:Macedonian;mad:Madurese;mag:Magahi;mai:Maithili;mak:Makasar;mlg:Malagasy;may:Malay;mal:Malayalam;mlt:Maltese;mnc:Manchu;mdr:Mandar;man:Mandingo;mni:Manipuri;glv:Manx;mao:Maori;arn:Mapuche;mar:Marathi;chm:Mari;mah:Marshallese;mwr:Marwari;mas:Maasai;men:Mende;mic:Micmac;min:Minangkabau;mwl:Mirandese;moh:Mohawk;mdf:Moksha;lol:Mongo;mon:Mongolian;mos:Moore;nah:Nahuatl;nau:Nauru;nav:Navajo;nbl:South Ndebele;nde:North Ndebele;ndo:Ndonga;nap:Neapolitan;nep:Nepali;new:Newari;nwc:Old Newari;nia:Nias;niu:Niuean;nqo:N'Ko;nog:Nogai;frr:North Frisian;sme:Northern Sami;nso:Northern Sotho;nor:Norwegian;nob:Norwegian Bokmål;nno:Norwegian Nynorsk;nym:Nyamwezi;nya:Nyanja;nyn:Nyankole;nyo:Nyoro;nzi:Nzima;oci:Occitan;oji:Ojibwa;non:Old Norse;peo:Old Persian;ori:Odia;orm:Oromo;osa:Osage;oss:Ossetic;pal:Pahlavi;pau:Palauan;pli:Pali;pam:Pampanga;pag:Pangasinan;pan:Punjabi;pap:Papiamento;per:Persian;phn:Phoenician;pol:Polish;pon:Pohnpeian;por:Portuguese;pro:Old Provençal;pus:Pashto;que:Quechua;roh:Romansh;raj:Rajasthani;rap:Rapanui;rar:Rarotongan;rum:Romanian;rom:Romani;run:Rundi;rus:Russian;syc:Classical Syriac;sam:Samaritan Aramaic;smo:Samoan;sad:Sandawe;sag:Sango;san:Sanskrit;sat:Santali;srd:Sardinian;sas:Sasak;sco:Scots;gla:Scottish Gaelic;sel:Selkup;srp:Serbian;srr:Serer;shn:Shan;sna:Shona;iii:Sichuan Yi;scn:Sicilian;sid:Sidamo;bla:Siksika;snd:Sindhi;sin:Sinhala;sms:Skolt Sami;den:Slave;slo:Slovak;slv:Slovenian;sog:Sogdian;som:Somali;son:Songhai;snk:Soninke;sot:Southern Sotho;alt:Southern Altai;sma:Southern Sami;spa:Spanish;srn:Sranan Tongo;suk:Sukuma;sux:Sumerian;sun:Sundanese;sus:Susu;swa:Swahili;ssw:Swati;swe:Swedish;gsw:Swiss German;syr:Syriac;tgl:Tagalog;tah:Tahitian;tgk:Tajik;tmh:Tamashek;tam:Tamil;tat:Tatar;tel:Telugu;tem:Temne;ter:Tereno;tet:Tetum;tha:Thai;tib:Tibetan;tig:Tigre;tir:Tigrinya;tiv:Tiv;tli:Tlingit;tpi:Tok Pisin;tkl:Tokelau;tog:Nyasa Tonga;ton:Tongan;chk:Chuukese;tsi:Tsimshian;tso:Tsonga;tsn:Tswana;tum:Tumbuka;tur:Turkish;ota:Ottoman Turkish;tuk:Turkmen;tvl:Tuvalu;tyv:Tuvinian;twi:Twi;udm:Udmurt;uga:Ugaritic;uig:Uyghur;ukr:Ukrainian;umb:Umbundu;hsb:Upper Sorbian;urd:Urdu;uzb:Uzbek;vai:Vai;ven:Venda;vie:Vietnamese;vol:Volapük;vot:Votic;wal:Wolaytta;wln:Walloon;war:Waray;was:Washo;wel:Welsh;wol:Wolof;xho:Xhosa;sah:Yakut;yao:Yao;yap:Yapese;yid:Yiddish;yor:Yoruba;zap:Zapotec;zza:Zaza;zen:Zenaga;zha:Zhuang;zul:Zulu;zun:Zuni";
 const ISO=ISO_RAW.split(';').map(s=>{ const i=s.indexOf(':'); return {c:s.slice(0,i),en:s.slice(i+1)}; });
@@ -1561,6 +1630,9 @@ $('langClose').addEventListener('click',closeLang);
 $('langSheet').addEventListener('click',e=>{ if(e.target===$('langSheet')) closeLang(); });
 $('langFind').addEventListener('input',e=>renderLangList(e.target.value));
 if(!window.isSecureContext||!navigator.mediaDevices) $('secureWarn').hidden=false;
+
+/* 一瞬のアニメーションを付け直す（連打しても毎回動く） */
+function bump(el,cls){ if(!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); clearTimeout(el['_b'+cls]); el['_b'+cls]=setTimeout(()=>el.classList.remove(cls),900); }
 
 /* ===== トースト ===== */
 let toastTimer=null;
@@ -1721,7 +1793,9 @@ const ytSrc={
     return this._t+(now-this._p)/1000*this.rate();
   },
   play(p){ if(!this.ok) return; this.player.seekTo(p,true); this.player.playVideo(); },
-  stop(){ if(this.ok) this.player.pauseVideo(); },
+  /* 自分で止めたときは印を付け、遅れて届く「停止」の知らせで別の再生を止めないようにする */
+  selfPause:0,
+  stop(){ if(this.ok){ this.selfPause=performance.now(); this.player.pauseVideo(); } },
   seek(p){ if(this.ok){ this.player.seekTo(p,true); this._raw=null; this._t=p; this._p=performance.now(); } },
   setVol(v){ if(!this.ok) return; try{ this.player.setVolume(Math.round(Math.min(1,v)*100)); v>0?this.player.unMute():this.player.mute(); }catch(e){} }
 };
@@ -1837,7 +1911,11 @@ $('ytUrl').addEventListener('keydown',e=>{ if(e.key==='Enter') $('ytLoad').click
 async function openYt(id,autoplay,title){
   if(recorder) return;
   stopTake();
+  /* 「前へ」で戻れるように、今の動画を履歴に積む */
+  if(ytSrc.id&&ytSrc.id!==id&&!openYt.fromHistory){ ytHist.push({id:ytSrc.id,title:ytSrc.title}); if(ytHist.length>50) ytHist.shift(); }
+  openYt.fromHistory=false;
   ytSrc.id=id; ytSrc.title=title||''; nowTitle=ytSrc.title; srcKey='yt:'+id; showNow();
+  if(queue){ const qi=queue.items.findIndex(x=>x.id.videoId===id); if(qi>=0){ queue.idx=qi; markResult(qi); } }
   $('ytUrl').value='https://youtu.be/'+id; store.set('kr-yt',{id,title:ytSrc.title});
   say($('ytStatus'),t('loading'));
   try{ await loadYtApi(); }catch(e){ say($('ytStatus'),t('ytFail'),'err'); return; }
@@ -1851,7 +1929,7 @@ async function openYt(id,autoplay,title){
         ytSrc.state=e.data;
         if(e.data===1) ytStarted();
         if(e.data===0) onEnded();
-        if(e.data===2){ if(recorder) stopRec(); if(tp) stopTake(); }
+        if(e.data===2&&performance.now()-ytSrc.selfPause>1200){ if(recorder) stopRec(); if(tp) stopTake(); }
         syncPlayBtn(); updateOnAir();
       },
       onError(e){ say($('ytStatus'),(e.data===101||e.data===150)?t('ytBlocked'):t('ytErr'),'err'); }
@@ -1880,7 +1958,7 @@ async function doSearch(){
   if(!apiKey){ $('ytSearch').href=ytSearchHref(); showKeyBox(''); return; }
   say($('searchStatus'),t('searching')); $('searchBtn').disabled=true;
   try{
-    const url='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=6&q='+encodeURIComponent(q)+'&key='+encodeURIComponent(apiKey);
+    const url='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=10&q='+encodeURIComponent(q)+'&key='+encodeURIComponent(apiKey);
     const r=await fetch(url), j=await r.json();
     if(!r.ok){
       const reason=(j&&j.error&&j.error.errors&&j.error.errors[0]&&j.error.errors[0].reason)||'';
@@ -1893,26 +1971,70 @@ async function doSearch(){
     const items=(j.items||[]).filter(it=>it.id&&it.id.videoId);
     if(!items.length){ say($('searchStatus'),t('noResults')); $('results').hidden=true; return; }
     say($('searchStatus'),'');
+    queue={q,items,token:j.nextPageToken||'',idx:0,tried:new Set([q])};
     renderResults(items);
     openYt(items[0].id.videoId,true,unesc(items[0].snippet.title));
   }catch(e){ say($('searchStatus'),t('searchFail'),'err'); }
   finally{ $('searchBtn').disabled=false; }
 }
-function renderResults(items){
-  const ul=$('results'); ul.innerHTML=''; ul.hidden=false;
-  items.forEach((it,i)=>{
-    const sn=it.snippet, th=(sn.thumbnails.medium||sn.thumbnails.default||{}).url||'';
-    const li=document.createElement('li');
-    li.innerHTML=`<button type="button" aria-current="${i===0}"><img src="${esc(th)}" alt="" loading="lazy"><span class="t"><b>${esc(unesc(sn.title))}</b><span>${esc(unesc(sn.channelTitle))}</span></span></button>`;
-    li.firstChild.addEventListener('click',()=>{
-      if(recorder) return;
-      ul.querySelectorAll('button').forEach(b=>b.setAttribute('aria-current','false'));
-      li.firstChild.setAttribute('aria-current','true');
-      openYt(it.id.videoId,true,unesc(sn.title));
-    });
+function renderResults(items,append){
+  const ul=$('results'); if(!append) ul.innerHTML=''; ul.hidden=false;
+  const base=append?ul.children.length:0;
+  items.forEach((it,k)=>{
+    const i=base+k, sn=it.snippet, th=(sn.thumbnails.medium||sn.thumbnails.default||{}).url||'';
+    const li=document.createElement('li'); li.style.setProperty('--d',k);
+    li.innerHTML=`<button type="button" aria-current="${!append&&i===0}"><img src="${esc(th)}" alt="" loading="lazy"><span class="t"><b>${esc(unesc(sn.title))}</b><span>${esc(unesc(sn.channelTitle))}</span></span></button>`;
+    li.firstChild.addEventListener('click',()=>{ if(recorder) return; openYt(it.id.videoId,true,unesc(sn.title)); });
     ul.appendChild(li);
   });
 }
+function markResult(i){ const bs=$('results').querySelectorAll('button'); bs.forEach((b,k)=>b.setAttribute('aria-current',k===i)); }
+
+/* ===== 前へ・次の動画 ===== */
+let queue=null; const ytHist=[];
+async function ytPage(q,token){
+  const url='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=10&q='+encodeURIComponent(q)+(token?'&pageToken='+encodeURIComponent(token):'')+'&key='+encodeURIComponent(apiKey);
+  const r=await fetch(url), j=await r.json();
+  if(!r.ok) throw new Error(r.status);
+  return {items:(j.items||[]).filter(it=>it.id&&it.id.videoId),token:j.nextPageToken||''};
+}
+async function nextVideo(){
+  if(recorder||mode!=='yt') return;
+  if(!apiKey){ toast(t('nextNeedKey')); return; }
+  $('nextV').disabled=true;
+  try{
+    const seen=new Set([ytSrc.id,...ytHist.map(h=>h.id)]);
+    /* 1) 検索結果の続き → 2) 同じ検索の次のページ → 3) 今の曲のアーティストで探し直す */
+    if(!queue){ const q=cleanTitle(nowTitle||$('q').value)||$('q').value.trim(); if(!q){ toast(t('noNext')); return; } queue={q,items:[],token:'',idx:-1,tried:new Set()}; }
+    for(let guard=0;guard<4;guard++){
+      for(let i=queue.idx+1;i<queue.items.length;i++){ const it=queue.items[i]; if(!seen.has(it.id.videoId)){ queue.idx=i; openYt(it.id.videoId,true,unesc(it.snippet.title)); return; } }
+      let page=null;
+      if(queue.token) page=await ytPage(queue.q,queue.token);
+      else {
+        const art=(cleanTitle(nowTitle).split(' ')[0]||'').trim();
+        const q2=[art,queue.q].find(x=>x&&!queue.tried.has(x));
+        if(!q2) break;
+        queue.tried.add(q2); queue.q=q2; page=await ytPage(q2,'');
+      }
+      queue.token=page.token;
+      const add=page.items.filter(it=>!queue.items.some(x=>x.id.videoId===it.id.videoId));
+      queue.items.push(...add); renderResults(add,true);
+      if(!page.items.length&&!queue.token) continue;
+    }
+    toast(t('noNext'));
+  }catch(e){ toast(t('searchFail')); }
+  finally{ updateButtons(); }
+}
+function prevVideo(){
+  if(recorder) return;
+  if(tp){ playTake(tp.t,tp.withSong,0); return; }
+  const s=src(), cur=s.ready()?(s.playing()?s.pos():+$('seek').value):0;
+  /* 3秒以上進んでいれば頭へ、頭付近なら前の動画へ */
+  if(cur>3||mode!=='yt'||!ytHist.length){ skip(-cur); return; }
+  const h=ytHist.pop(); openYt.fromHistory=true; openYt(h.id,true,h.title);
+}
+$('prevV').addEventListener('click',()=>{ bump($('prevV'),'nudge'); prevVideo(); });
+$('nextV').addEventListener('click',()=>{ bump($('nextV'),'nudge'); nextVideo(); });
 $('pasteBtn').addEventListener('click',async()=>{
   let text=''; try{ text=await navigator.clipboard.readText(); }catch(e){}
   const id=parseYt(text);
@@ -2011,6 +2133,8 @@ function updateButtons(){
   $('playBtn').disabled=!r||busy; $('fPlay').disabled=!r||busy;
   $('seek').disabled=$('fSeek').disabled=busy||!r;
   $('back10').disabled=$('fwd10').disabled=busy||!(r||tp);
+  $('prevV').disabled=busy||!(r||tp);
+  $('nextV').disabled=busy||mode!=='yt'||!ytSrc.id;
   $('syncBtn').disabled=!r||!lines.length||busy;
   $('fullBtn').disabled=!lines.length;
   $('modeYt').disabled=$('modeFile').disabled=busy;
@@ -2019,7 +2143,9 @@ function updateButtons(){
 function syncPlayBtn(){
   const p=(src().playing()&&!recorder)||!!tp;
   const use=p?'#i-pause':'#i-play';
+  if($('playIco').firstElementChild.getAttribute('href')!==use){ bump($('playBtn'),'pop'); bump($('fPlay'),'pop'); }
   $('playIco').firstElementChild.setAttribute('href',use); $('fPlayIco').firstElementChild.setAttribute('href',use);
+  document.querySelector('.deck').classList.toggle('playing',src().ready()&&src().playing());
   $('playBtn').setAttribute('aria-label',p?t('stop'):t('play'));
   updateOnAir();
 }
@@ -2029,7 +2155,12 @@ function updateOnAir(){
   else if(src().ready()&&src().playing()){ o.className='onair live'; o.textContent='PLAY'; }
   else { o.className='onair'; o.textContent='STANDBY'; }
 }
-function onEnded(){ if(syncing) endSync(); if(recorder) stopRec(); if(tp) stopTake(); syncPlayBtn(); }
+function onEnded(){
+  const wasRec=!!recorder, wasTake=!!tp;
+  if(syncing) endSync(); if(recorder) stopRec(); if(tp) stopTake(); syncPlayBtn();
+  /* 普通に聴いていて曲が終わったら、検索結果の次の動画へ（録音・テイク再生の後は止まったまま） */
+  if(!wasRec&&!wasTake&&mode==='yt'&&queue&&apiKey) setTimeout(()=>{ if(!recorder&&!tp&&!ytSrc.playing()) nextVideo(); },1200);
+}
 function togglePlay(){
   ensureCtx();
   if(tp){ stopTake(); return; }
@@ -2063,7 +2194,7 @@ $('fRec').addEventListener('click',()=>recorder?stopRec():startRec());
 $('count').addEventListener('click',()=>{ if(counting) counting.cancel=true; });
 async function countIn(c){
   $('count').hidden=false; $('recBtn').classList.add('arm');
-  for(let n=3;n>=1;n--){ if(c.cancel) break; $('countNum').textContent=n; beep(n===1?1320:880); await sleep(1000); }
+  for(let n=3;n>=1;n--){ if(c.cancel) break; $('countNum').textContent=n; bump($('countNum'),'pop'); beep(n===1?1320:880); await sleep(1000); }
   $('count').hidden=true; $('recBtn').classList.remove('arm');
   return !c.cancel;
 }
@@ -2079,7 +2210,7 @@ async function startRec(){
   const meta={startPos:+$('seek').value, mode, srcKey, title:nowTitle};
   r.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
   r.onstop=()=>addTake(new Blob(chunks,{type:r.mimeType||mime||'audio/mp4'}),meta);
-  r.start(1000); recT0=performance.now();
+  r.start(1000); recT0=performance.now(); bump($('recBtn'),'burst'); bump($('fRec'),'burst');
   src().play(meta.startPos);
   $('recBtn').classList.add('on'); $('fRec').classList.add('on'); $('recLabel').classList.add('on');
   syncPlayBtn(); updateButtons();
@@ -2109,21 +2240,26 @@ function startVoice(tk,when,into){
 }
 /* from = テイクの何秒目から再生するか（波形タップ・10秒送りで使う） */
 function playTake(tk,withSong,from=0){
-  ensureCtx(); stopTake();
-  if(!tk.voiceBuf) return;
+  ensureCtx();
+  if(!tk.voiceBuf){ stopTake(); return; }
   from=Math.max(0,Math.min(tk.voiceBuf.duration-0.05,from));
   const offS=mix.off/1000;
   const ov=withSong&&canOverlay(tk);
-  tp={t:tk,node:null,waitYt:false,vt0:0,withSong:ov};
+  /* 曲を重ねる場合は曲を止めずに位置だけ移す（止める→再生だと YouTube が新しい再生まで止めてしまう） */
+  stopTake(ov);
+  if(!ov&&src().playing()) src().stop();
+  tp={t:tk,node:null,waitYt:false,vt0:0,withSong:ov,t0:performance.now()};
   if(ov){
     src().play(tk.startPos+from);
     if(tk.mode==='file'){ const into=from+offS, when=fileSrc.t0+(into<0?-into:0); tp.node=startVoice(tk,when,Math.max(0,into)); }
-    else tp.waitYt=true;
+    else { tp.waitYt=true; tp.ytFrom=tk.startPos+from; }
   } else tp.node=startVoice(tk,ctx.currentTime+0.02,from);
   renderTakes(); syncPlayBtn(); updateButtons();
 }
 function ytStarted(){
   if(!tp||!tp.waitYt) return;
+  /* シーク直後の古い位置で鳴らさないよう、移動先に届いてから声を重ねる */
+  if(Math.abs(ytSrc.pos()-tp.ytFrom)>1.5&&performance.now()-tp.t0<2500) return;
   tp.waitYt=false;
   const into=mix.off/1000+(ytSrc.pos()-tp.t.startPos);
   tp.node=startVoice(tp.t,ctx.currentTime+(into<0?-into:0),Math.max(0,into));
@@ -2141,14 +2277,14 @@ function skip(d){
   if(mode==='file') drawArtWave(p/(dur||1));
   if(hasTimes()){ const k=lineAt(p); if(k>=0) setLine(k,true); }
 }
-$('back10').addEventListener('click',()=>skip(-10));
-$('fwd10').addEventListener('click',()=>skip(10));
-function stopTake(){
+$('back10').addEventListener('click',()=>{ bump($('back10'),'spin-l'); skip(-10); });
+$('fwd10').addEventListener('click',()=>{ bump($('fwd10'),'spin-r'); skip(10); });
+function stopTake(keepSong){
   if(!tp) return;
   const p=tp; tp=null;
-  if(p.node){ try{p.node.stop()}catch(e){} }
-  if(src().playing()) src().stop();
-  renderTakes(); syncPlayBtn(); updateButtons();
+  if(p.node){ try{p.node.onended=null; p.node.stop()}catch(e){} }
+  if(!keepSong&&src().playing()) src().stop();
+  if(!keepSong){ renderTakes(); syncPlayBtn(); updateButtons(); }
 }
 function deleteTake(tk){
   if(tp&&tp.t===tk) stopTake();
@@ -2186,7 +2322,9 @@ function toWav(buf){
 }
 function renderTakes(){
   const box=$('takes'); if(!box) return; box.innerHTML='';
-  $('takeCount').textContent=takes.length;
+  if(+$('takeCount').textContent!==takes.length){ $('takeCount').textContent=takes.length; bump($('takeCount'),'bump'); }
+  /* 一度表示したテイクは、再描画のたびに動かさない */
+  renderTakes.seen=renderTakes.seen||new WeakSet(); setTimeout(()=>takes.forEach(x=>renderTakes.seen.add(x)),0);
   refreshAsrSrc();
   if(!takes.length){ box.innerHTML=`<p class="empty">${ic('tape')}<span>${esc(t('takesEmpty'))}</span></p>`; return; }
   for(const tk of takes){
@@ -2194,6 +2332,7 @@ function renderTakes(){
     let stamp; try{ stamp=tk.at.toLocaleTimeString(uiLocale(),{hour:'2-digit',minute:'2-digit'}); }catch(e){ stamp=tk.at.toLocaleTimeString(); }
     const playing=tp&&tp.t===tk, ov=canOverlay(tk);
     const el=document.createElement('div'); el.className='take'+(playing?' playing':''); el.dataset.n=tk.n;
+    if(renderTakes.seen&&renderTakes.seen.has(tk)) el.style.animation='none'; else el.style.setProperty('--d',takes.indexOf(tk));
     el.innerHTML=`
       <div class="take-h">
         <button class="tplay" data-a="play" aria-label="${esc(playing?t('stop'):t('play'))}">${ic(playing?'stop':'play')}</button>
@@ -2714,6 +2853,8 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='l'||e.key==='L'){ if(!$('full').hidden) closeFull(); else if(lines.length) openFull(); }
   else if(e.key==='ArrowLeft'){ e.preventDefault(); skip(-10); }
   else if(e.key==='ArrowRight'){ e.preventDefault(); skip(10); }
+  else if(e.key==='n'||e.key==='N'){ if(!$('nextV').disabled) nextVideo(); }
+  else if(e.key==='p'||e.key==='P'){ if(!$('prevV').disabled) prevVideo(); }
 });
 
 /* ===== 起動 ===== */
@@ -2744,6 +2885,8 @@ paintRange($('seek')); paintRange($('fSeek'));
     }
   }
   if(recorder) $('recLabel').textContent='REC '+fmt((performance.now()-recT0)/1000);
+  /* YouTube がすでに再生中で「再生開始」の知らせが来ない場合も、ここで声を重ねる */
+  if(tp&&tp.waitYt&&ytSrc.state===1&&performance.now()-tp.t0>200) ytStarted();
   if(tp&&tp.node&&tp.t.voiceBuf){
     const w=document.querySelector(`.take[data-n="${tp.t.n}"] .wave`);
     if(w){ const pr=Math.max(0,Math.min(100,takePos()/tp.t.voiceBuf.duration*100)); w.querySelector('.ph').style.left=pr+'%'; w.querySelector('.prog').style.width=pr+'%'; }

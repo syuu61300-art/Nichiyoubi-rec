@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>日曜日 歌ってみた録音</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column; source → mic → transport → lyrics → takes, read top to bottom on a phone */
+:root{
+  --sky:#e9f0f6; --paper:#fbfdff; --ink:#1d2a36; --mute:#5f6f7e; --line:#d3dde6;
+  --accent:#2f6fa8; --accent-ink:#ffffff; --rec:#d6453d; --ok:#2e8a5c;
+  --display:"Zen Maru Gothic","Hiragino Maru Gothic ProN",system-ui,sans-serif;
+  --body:"M PLUS 1p","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:"DM Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --sky:#121a22; --paper:#18222c; --ink:#e4ecf3; --mute:#93a3b2; --line:#2b3946;
+  --accent:#7fb3e3; --accent-ink:#0f1820; --rec:#f07068; --ok:#6cc79a; color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--sky);color:var(--ink);font:15px/1.7 var(--body);-webkit-text-size-adjust:100%;
+  padding-top:calc(24px + env(safe-area-inset-top,0px));padding-bottom:calc(120px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:640px;margin:0 auto;display:grid;gap:18px}
+header h1{font:700 clamp(26px,7vw,40px)/1.2 var(--display);margin:0;letter-spacing:.02em;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--mute)}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px;min-width:0}
+.step{display:grid;gap:8px;min-width:0}
+.label{font:500 12px/1 var(--body);letter-spacing:.12em;color:var(--mute)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button,.filebtn{font:500 15px/1 var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);
+  border-radius:999px;padding:12px 18px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none;position:relative}
+button:hover:not(:disabled),.filebtn:hover{border-color:var(--accent)}
+button:focus-visible,.filebtn:focus-within,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.filebtn input{position:absolute;opacity:0;width:1px;height:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--sky)}
+.seg button{border:0;background:transparent;min-height:38px;padding:8px 16px}
+.seg button[aria-pressed="true"]{background:var(--paper);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.status{font-size:13px;color:var(--mute);min-width:0;overflow-wrap:anywhere}
+.status.ok{color:var(--ok)} .status.err{color:var(--rec)}
+.time{font:500 13px var(--mono);font-variant-numeric:tabular-nums;color:var(--mute)}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:28px}
+input[type=url]{width:100%;font:16px var(--body);color:var(--ink);background:var(--sky);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.sliders label{display:grid;gap:2px;font-size:13px;color:var(--mute)}
+.sliders output{font:12px var(--mono);color:var(--ink)}
+canvas#meter{width:100%;height:24px;display:block;border-radius:6px;background:var(--sky)}
+.yt{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000}
+.yt > *{position:absolute;inset:0;width:100%;height:100%}
+.takes{display:grid;gap:10px}
+.take{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:8px}
+.take:first-child{border-top:0;padding-top:0}
+.take h3{margin:0;font:700 15px var(--display);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.take audio{width:100%}
+.empty{color:var(--mute);font-size:14px;margin:0}
+.tip{font-size:13px;color:var(--mute);margin:0}
+.tip a{color:var(--accent)}
+.warn{background:var(--sky);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink)}
+textarea{width:100%;font:16px/1.8 var(--body);color:var(--ink);background:var(--sky);border:1px solid var(--line);border-radius:10px;padding:12px;resize:vertical}
+.lyrics{list-style:none;margin:0;padding:8px 0;max-height:min(340px,45vh);overflow-y:auto;display:grid;gap:2px;-webkit-overflow-scrolling:touch}
+.lyrics li{font:500 17px/1.7 var(--display);color:var(--mute);padding:6px 12px;border-radius:8px;cursor:pointer;display:flex;gap:12px;align-items:baseline}
+.lyrics li .lt{font:11px var(--mono);font-variant-numeric:tabular-nums;opacity:.7;min-width:3.2em;flex:none}
+.lyrics li.blank{min-height:1em;padding-block:2px}
+.lyrics li.cur{color:var(--ink);background:var(--sky);font-size:20px}
+.lyrics li.cur .lt{color:var(--accent);opacity:1}
+/* bottom transport bar: thumb-reachable on phones */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--paper);border-top:1px solid var(--line);
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.dock .inner{max-width:640px;margin:0 auto;display:grid;gap:6px}
+.dock .bar{display:flex;gap:10px;align-items:center}
+.dock .bar .time{flex:none}
+.recbtn{background:var(--rec);color:#fff;border-color:var(--rec);font-size:16px;padding:12px 22px;flex:1;justify-content:center}
+.recbtn .dot{width:10px;height:10px;border-radius:50%;background:#fff}
+.recbtn.on .dot{border-radius:2px}
+.recbtn.on{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.75}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>日曜日 歌ってみた録音</h1>
+    <p>back number「日曜日」を流しながら、自分の歌声を録音します。</p>
+  </header>
+
+  <p class="warn" id="secureWarn" hidden>このページは今マイクを使えない開き方になっています。iPhoneで使うには、HTTPS（https://〜）で公開されたページとして開いてください。</p>
+
+  <section class="panel">
+    <div class="row" style="justify-content:space-between">
+      <span class="label">1　曲を流す方法</span>
+      <div class="seg" role="group" aria-label="曲の再生方法">
+        <button id="modeYt" aria-pressed="true">YouTube</button>
+        <button id="modeFile" aria-pressed="false">音源ファイル</button>
+      </div>
+    </div>
+
+    <div class="step" id="ytBox">
+      <label class="status" for="ytUrl">YouTubeの「日曜日」のURLを貼り付け（公式チャンネルの動画がおすすめ）</label>
+      <div class="row" style="flex-wrap:nowrap">
+        <input id="ytUrl" type="url" inputmode="url" placeholder="https://youtu.be/…" autocomplete="off">
+        <button class="primary" id="ytLoad" style="flex:none">読み込む</button>
+      </div>
+      <div class="row">
+        <a class="status" id="ytSearch" href="https://www.youtube.com/results?search_query=back+number+%E6%97%A5%E6%9B%9C%E6%97%A5" target="_blank" rel="noopener">YouTubeで「back number 日曜日」を探す ↗</a>
+      </div>
+      <div class="yt" id="ytWrap" hidden><div id="ytPlayer"></div></div>
+      <span class="status" id="ytStatus"></span>
+    </div>
+
+    <div class="step" id="fileBox" hidden>
+      <div class="row">
+        <label class="filebtn" for="songFile">曲ファイルを選択<input id="songFile" type="file" accept="audio/*,.mp3,.m4a,.wav,.aac"></label>
+        <span class="status" id="songStatus">mp3 / m4a / wav など。iPhoneは「ファイル」アプリ内の音源を選べます</span>
+      </div>
+      <p class="tip">音源ファイルなら、曲と声を重ねた「ミックス」も作れます。</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <span class="label">2　マイク</span>
+    <div class="row">
+      <button id="micBtn">マイクを許可する</button>
+      <span class="status" id="micStatus">イヤホン・ヘッドホン推奨（スピーカーだと曲が声に混ざります）</span>
+    </div>
+    <canvas id="meter" width="600" height="24" aria-label="マイク入力レベル"></canvas>
+  </section>
+
+  <section class="panel" id="lyricsPanel">
+    <div class="row" style="justify-content:space-between">
+      <span class="label">歌詞</span>
+      <div class="row">
+        <button id="syncBtn" disabled>タイミングを付ける</button>
+        <button id="editLyricsBtn" hidden>編集</button>
+      </div>
+    </div>
+    <div id="lyricsEdit" class="step">
+      <textarea id="lyricsInput" rows="7" placeholder="歌詞をここに貼り付けてください（1行ずつ表示されます）"></textarea>
+      <div class="row"><button class="primary" id="saveLyricsBtn">歌詞をセット</button>
+      <span class="status">歌詞サイトからコピーして貼り付け。この端末のブラウザ内にだけ保存されます。</span></div>
+    </div>
+    <div id="lyricsView" hidden>
+      <ol class="lyrics" id="lyricsList"></ol>
+      <div class="row" id="syncBar" hidden>
+        <button class="primary" id="nextLineBtn">次の行へ</button>
+        <button id="syncDoneBtn">終了</button>
+        <span class="status">歌い出しに合わせてタップ（PCはスペースキー）すると、その行の時間を記録します。</span>
+      </div>
+      <p class="tip" id="lyricsHint">行をタップするとその位置へ移動します。</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <span class="label">音量</span>
+    <div class="sliders">
+      <label for="trackVol">曲の音量<input id="trackVol" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+      <label for="monitorVol">自分の声を返す（イヤホン時のみ）<input id="monitorVol" type="range" min="0" max="1" step="0.01" value="0"></label>
+    </div>
+    <p class="tip" id="volTip">iPhoneのYouTube再生では、曲の音量は本体の音量ボタンで調整してください。</p>
+  </section>
+
+  <section class="panel">
+    <span class="label">テイク</span>
+    <div class="sliders" id="mixSliders">
+      <label for="mixVoice">ミックスの声 <output id="mixVoiceOut">1.00</output><input id="mixVoice" type="range" min="0" max="2" step="0.05" value="1"></label>
+      <label for="mixTrack">ミックスの曲 <output id="mixTrackOut">0.60</output><input id="mixTrack" type="range" min="0" max="1.5" step="0.05" value="0.6"></label>
+      <label for="offset">声のズレ補正 <output id="offsetOut">0 ms</output><input id="offset" type="range" min="-100" max="400" step="5" value="0"></label>
+    </div>
+    <div class="takes" id="takes"><p class="empty">まだ録音はありません。</p></div>
+  </section>
+
+  <p class="tip">歌詞は<a href="https://www.uta-net.com/search/?Keyword=%E6%97%A5%E6%9B%9C%E6%97%A5&Aselect=2" target="_blank" rel="noopener">うたネット</a>などで確認して貼り付けてください。録音はこの端末の中だけで処理され、どこにも送信されません。</p>
+</div>
+
+<div class="dock">
+  <div class="inner">
+    <div class="bar">
+      <span class="time" id="timeNow">0:00</span>
+      <input id="seek" type="range" min="0" max="0" step="0.1" value="0" aria-label="再生位置">
+      <span class="time" id="timeDur">0:00</span>
+    </div>
+    <div class="bar">
+      <button id="playBtn" disabled>▶ 再生</button>
+      <button class="recbtn" id="recBtn" disabled><span class="dot"></span><span id="recLabel">曲を流して録音</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = s => { s=Math.max(0,s||0); return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'); };
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+if(!window.isSecureContext || !navigator.mediaDevices) $('secureWarn').hidden=false;
+if(!isIOS) $('volTip').hidden=true;
+
+let ctx, micStream, analyser, monitorGain, voiceDest, trackGain;
+let recorder=null, recStartPos=0;
+const takes=[];
+
+function ensureCtx(){
+  if(!ctx){
+    ctx = new (window.AudioContext||window.webkitAudioContext)();
+    trackGain = ctx.createGain(); trackGain.gain.value=+$('trackVol').value; trackGain.connect(ctx.destination);
+  }
+  if(ctx.state!=='running') ctx.resume();
+  return ctx;
+}
+
+/* ---------- 音源：ファイル / YouTube を同じ形で扱う ---------- */
+let mode='yt';
+const fileSrc = {
+  buf:null, node:null, t0:0, p0:0,
+  ready(){ return !!this.buf; },
+  duration(){ return this.buf ? this.buf.duration : 0; },
+  playing(){ return !!this.node; },
+  pos(){ return this.node ? this.p0 + Math.max(0, ctx.currentTime-this.t0) : +$('seek').value; },
+  play(p){
+    this.stop(); ensureCtx();
+    const n=ctx.createBufferSource(); n.buffer=this.buf; n.connect(trackGain);
+    n.onended=()=>{ if(this.node===n){ this.node=null; onEnded(); } };
+    this.t0=ctx.currentTime+0.05; this.p0=p; n.start(this.t0,p); this.node=n;
+  },
+  stop(){ if(this.node){ const n=this.node; this.node=null; try{n.stop()}catch(e){} } },
+  seek(p){ if(this.node) this.play(p); },
+  setVol(v){ if(trackGain) trackGain.gain.value=v; }
+};
+const ytSrc = {
+  player:null, ok:false, state:-1,
+  ready(){ return this.ok; },
+  duration(){ return this.ok ? this.player.getDuration() : 0; },
+  playing(){ return this.ok && (this.state===1 || this.state===3); },
+  pos(){ return this.ok ? this.player.getCurrentTime() : 0; },
+  play(p){ if(!this.ok) return; this.player.seekTo(p,true); this.player.playVideo(); },
+  stop(){ if(this.ok) this.player.pauseVideo(); },
+  seek(p){ if(this.ok) this.player.seekTo(p,true); },
+  setVol(v){ if(this.ok) this.player.setVolume(Math.round(v*100)); }
+};
+const src = () => mode==='yt' ? ytSrc : fileSrc;
+
+function setMode(m){
+  if(recorder) return;
+  fileSrc.stop(); ytSrc.stop();
+  mode=m;
+  $('modeYt').setAttribute('aria-pressed', m==='yt'); $('modeFile').setAttribute('aria-pressed', m==='file');
+  $('ytBox').hidden = m!=='yt'; $('fileBox').hidden = m!=='file';
+  $('mixSliders').hidden = m!=='file';
+  $('volTip').hidden = !(isIOS && m==='yt');
+  refreshDuration(); updateButtons();
+}
+$('modeYt').addEventListener('click',()=>setMode('yt'));
+$('modeFile').addEventListener('click',()=>setMode('file'));
+
+function refreshDuration(){
+  const d=src().duration();
+  $('seek').max = d ? d.toFixed(1) : 0;
+  $('timeDur').textContent=fmt(d);
+  if(+$('seek').value>d) $('seek').value=0;
+  $('timeNow').textContent=fmt(+$('seek').value);
+}
+
+/* YouTube */
+function parseYt(u){
+  u=u.trim();
+  if(/^[\w-]{11}$/.test(u)) return u;
+  try{
+    const x=new URL(u);
+    if(x.hostname.includes('youtu.be')) return x.pathname.slice(1,12);
+    if(x.searchParams.get('v')) return x.searchParams.get('v');
+    const m=x.pathname.match(/\/(embed|shorts|live)\/([\w-]{11})/); if(m) return m[2];
+  }catch(e){}
+  return null;
+}
+let ytApi=null;
+function loadYtApi(){
+  if(ytApi) return ytApi;
+  ytApi=new Promise((res,rej)=>{
+    window.onYouTubeIframeAPIReady=res;
+    const s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; s.onerror=rej;
+    document.head.appendChild(s);
+  });
+  return ytApi;
+}
+const YT_LS='nichiyoubi-yt-v1';
+$('ytLoad').addEventListener('click', loadYt);
+$('ytUrl').addEventListener('keydown',e=>{ if(e.key==='Enter') loadYt(); });
+async function loadYt(){
+  const id=parseYt($('ytUrl').value);
+  if(!id){ $('ytStatus').textContent='YouTubeのURLを認識できませんでした。動画ページのURLを貼ってください。'; $('ytStatus').className='status err'; return; }
+  $('ytStatus').textContent='読み込み中…'; $('ytStatus').className='status';
+  try{ localStorage.setItem(YT_LS,$('ytUrl').value.trim()); }catch(e){}
+  try{ await loadYtApi(); }catch(e){
+    $('ytStatus').textContent='YouTubeを読み込めませんでした。ネット接続と、このページをhttps://で開いているかを確認してください。'; $('ytStatus').className='status err'; return;
+  }
+  $('ytWrap').hidden=false;
+  ytSrc.ok=false;
+  if(ytSrc.player){ ytSrc.player.cueVideoById(id); return; }
+  ytSrc.player=new YT.Player('ytPlayer',{
+    videoId:id,
+    playerVars:{playsinline:1,rel:0,modestbranding:1,controls:1},
+    events:{
+      onReady(){ ytSrc.ok=true; ytSrc.setVol(+$('trackVol').value); afterYtCue(); },
+      onStateChange(e){
+        ytSrc.state=e.data;
+        if(e.data===5 || (e.data===-1 && !ytSrc.ok)) afterYtCue();
+        if(e.data===0) onEnded();
+        if(e.data===2 && recorder) { /* 一時停止されたら録音も止める */ stopRec(); }
+        syncPlayBtn();
+      },
+      onError(e){
+        const msg = (e.data===101||e.data===150) ? 'この動画は外部ページでの再生が許可されていません。別の動画（公式チャンネルのもの等）を試してください。' : 'この動画は再生できませんでした。';
+        $('ytStatus').textContent=msg; $('ytStatus').className='status err';
+      }
+    }
+  });
+}
+function afterYtCue(){
+  ytSrc.ok=true;
+  const tryDur=(n)=>{ const d=ytSrc.duration(); if(d>0||n>20){ refreshDuration(); updateButtons();
+      $('ytStatus').textContent='✓ 読み込みました'; $('ytStatus').className='status ok'; } else setTimeout(()=>tryDur(n+1),250); };
+  tryDur(0);
+}
+try{ const u=localStorage.getItem(YT_LS); if(u) $('ytUrl').value=u; }catch(e){}
+
+/* ファイル */
+$('songFile').addEventListener('change', async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  $('songStatus').textContent='読み込み中…'; $('songStatus').className='status';
+  try{
+    ensureCtx();
+    const ab=await f.arrayBuffer();
+    fileSrc.buf = await new Promise((res,rej)=>{ const p=ctx.decodeAudioData(ab,res,rej); if(p&&p.catch) p.catch(rej); });
+    $('songStatus').textContent='✓ '+f.name; $('songStatus').className='status ok';
+    $('seek').value=0; refreshDuration(); updateButtons();
+  }catch(err){
+    $('songStatus').textContent='このファイルは読み込めませんでした（配信アプリの曲など保護された音源は使えません）。'; $('songStatus').className='status err';
+  }
+});
+
+/* ---------- マイク ---------- */
+$('micBtn').addEventListener('click', async ()=>{
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    $('micStatus').textContent='この開き方ではマイクが使えません。https://で公開したページを開いてください。'; $('micStatus').className='status err'; return;
+  }
+  try{
+    ensureCtx();
+    micStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    const micSrc=ctx.createMediaStreamSource(micStream);
+    analyser=ctx.createAnalyser(); analyser.fftSize=1024;
+    monitorGain=ctx.createGain(); monitorGain.gain.value=+$('monitorVol').value;
+    voiceDest=ctx.createMediaStreamDestination();
+    micSrc.connect(analyser); micSrc.connect(monitorGain).connect(ctx.destination); micSrc.connect(voiceDest);
+    $('micStatus').textContent='✓ マイク準備OK'; $('micStatus').className='status ok';
+    $('micBtn').disabled=true; drawMeter(); updateButtons();
+  }catch(err){
+    $('micStatus').textContent = isIOS ? 'マイクを使えませんでした。設定 › Safari › マイク で許可してから、もう一度押してください。'
+      : 'マイクを使えませんでした。アドレスバー横からマイクを許可して、もう一度押してください。';
+    $('micStatus').className='status err';
+  }
+});
+function drawMeter(){
+  const c=$('meter'), g=c.getContext('2d'), data=new Float32Array(analyser.fftSize);
+  const css=getComputedStyle(document.documentElement);
+  (function loop(){
+    analyser.getFloatTimeDomainData(data);
+    let peak=0; for(let i=0;i<data.length;i++){ const v=Math.abs(data[i]); if(v>peak) peak=v; }
+    g.clearRect(0,0,c.width,c.height);
+    g.fillStyle = peak>0.9 ? css.getPropertyValue('--rec') : css.getPropertyValue('--accent');
+    g.fillRect(0,0,c.width*Math.min(1,peak*1.2),c.height);
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ---------- 再生・録音 ---------- */
+function updateButtons(){
+  const busy=!!recorder, r=src().ready();
+  $('recBtn').disabled = !(r && micStream);
+  $('playBtn').disabled = !r || busy;
+  $('seek').disabled = busy || !r;
+  $('syncBtn').disabled = !r || !lines.length || busy;
+  $('modeYt').disabled = $('modeFile').disabled = busy;
+}
+function syncPlayBtn(){ $('playBtn').textContent = (src().playing() && !recorder) ? '■ 停止' : '▶ 再生'; }
+function onEnded(){ if(syncing) endSync(); if(recorder) stopRec(); syncPlayBtn(); }
+
+$('playBtn').addEventListener('click',()=>{
+  ensureCtx();
+  if(src().playing()) src().stop(); else src().play(+$('seek').value);
+  setTimeout(syncPlayBtn,60);
+});
+$('seek').addEventListener('input',()=>{ $('timeNow').textContent=fmt(+$('seek').value); });
+$('seek').addEventListener('change',()=>{ src().seek(+$('seek').value); });
+
+$('recBtn').addEventListener('click',()=> recorder ? stopRec() : startRec());
+function startRec(){
+  ensureCtx();
+  const chunks=[];
+  const mime=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m))||'';
+  let r;
+  try{ r=new MediaRecorder(voiceDest.stream, mime?{mimeType:mime}:{}); }
+  catch(e){ $('micStatus').textContent='このブラウザでは録音できませんでした。iOS 14.3以降のSafariか、最新のChromeをお使いください。'; $('micStatus').className='status err'; return; }
+  recorder=r;
+  r.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  r.onstop=()=> addTake(new Blob(chunks,{type:r.mimeType||mime||'audio/mp4'}), recStartPos, mode);
+  recStartPos=+$('seek').value;
+  r.start(1000);
+  src().play(recStartPos);
+  $('recBtn').classList.add('on'); $('recLabel').textContent='録音を止める';
+  syncPlayBtn(); updateButtons();
+}
+function stopRec(){
+  if(!recorder) return;
+  const r=recorder; recorder=null;
+  src().stop();
+  try{ r.stop(); }catch(e){}
+  $('recBtn').classList.remove('on'); $('recLabel').textContent='曲を流して録音';
+  syncPlayBtn(); updateButtons();
+}
+$('trackVol').addEventListener('input',e=>{ fileSrc.setVol(+e.target.value); ytSrc.setVol(+e.target.value); });
+$('monitorVol').addEventListener('input',e=>{ if(monitorGain) monitorGain.gain.value=+e.target.value; });
+for(const [id,out,f] of [['mixVoice','mixVoiceOut',v=>(+v).toFixed(2)],['mixTrack','mixTrackOut',v=>(+v).toFixed(2)],['offset','offsetOut',v=>v+' ms']])
+  $(id).addEventListener('input',e=>$(out).textContent=f(e.target.value));
+
+/* ---------- テイク ---------- */
+function decode(blob){
+  return blob.arrayBuffer().then(ab=>new Promise((res,rej)=>{ const p=ctx.decodeAudioData(ab,res,rej); if(p&&p.catch) p.catch(rej); }));
+}
+async function addTake(blob,startPos,takeMode){
+  const t={n:takes.length+1, blob, startPos, mode:takeMode, voiceUrl:URL.createObjectURL(blob), mixUrl:null, voiceBuf:null, at:new Date()};
+  takes.unshift(t);
+  try{ t.voiceBuf=await decode(blob); }catch(e){}
+  if(t.voiceBuf && takeMode==='file' && fileSrc.buf) await renderMix(t);
+  renderTakes();
+}
+async function renderMix(take){
+  const sb=fileSrc.buf, sr=sb.sampleRate, vb=take.voiceBuf, offS=+$('offset').value/1000;
+  const dur=Math.max(0.1, vb.duration-Math.max(0,offS));
+  const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  const off=new OAC(2, Math.ceil(dur*sr), sr);
+  const t=off.createBufferSource(); t.buffer=sb;
+  const tg=off.createGain(); tg.gain.value=+$('mixTrack').value; t.connect(tg); tg.connect(off.destination);
+  const v=off.createBufferSource(); v.buffer=vb;
+  const vg=off.createGain(); vg.gain.value=+$('mixVoice').value; v.connect(vg); vg.connect(off.destination);
+  t.start(0,take.startPos);
+  if(offS>=0) v.start(0,offS); else v.start(-offS,0);
+  const out=await new Promise(res=>{ off.oncomplete=e=>res(e.renderedBuffer); const p=off.startRendering(); if(p&&p.then) p.then(res); });
+  if(take.mixUrl) URL.revokeObjectURL(take.mixUrl);
+  take.mixUrl=URL.createObjectURL(toWav(out));
+}
+function toWav(buf){
+  const ch=buf.numberOfChannels,len=buf.length,rate=buf.sampleRate;
+  const ab=new ArrayBuffer(44+len*ch*2),dv=new DataView(ab);
+  const w=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i))};
+  w(0,'RIFF');dv.setUint32(4,36+len*ch*2,true);w(8,'WAVE');w(12,'fmt ');
+  dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,ch,true);dv.setUint32(24,rate,true);
+  dv.setUint32(28,rate*ch*2,true);dv.setUint16(32,ch*2,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,len*ch*2,true);
+  const chans=[...Array(ch)].map((_,i)=>buf.getChannelData(i));
+  let peak=0; for(const c of chans) for(let i=0;i<len;i++){ const a=Math.abs(c[i]); if(a>peak) peak=a; }
+  const norm=peak>0.99?0.99/peak:1;
+  let o=44; for(let i=0;i<len;i++) for(let c=0;c<ch;c++){ const s=Math.max(-1,Math.min(1,chans[c][i]*norm)); dv.setInt16(o,s<0?s*0x8000:s*0x7FFF,true); o+=2; }
+  return new Blob([ab],{type:'audio/wav'});
+}
+function renderTakes(){
+  const box=$('takes'); box.innerHTML='';
+  if(!takes.length){ box.innerHTML='<p class="empty">まだ録音はありません。</p>'; return; }
+  for(const t of takes){
+    const ty=t.blob.type, ext=ty.includes('mp4')?'m4a':ty.includes('ogg')?'ogg':'webm';
+    const stamp=t.at.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    const el=document.createElement('div'); el.className='take';
+    el.innerHTML=`
+      <h3><span>テイク ${t.n}</span><span class="time">${stamp} ・ ${fmt(t.startPos)}〜 ・ ${t.voiceBuf?fmt(t.voiceBuf.duration):''}</span></h3>
+      ${t.mixUrl?`<span class="label">ミックス（曲＋声）</span><audio controls playsinline src="${t.mixUrl}"></audio>`:''}
+      <span class="label">声だけ</span>
+      <audio controls playsinline src="${t.voiceUrl}"></audio>
+      ${t.mode==='yt'?'<p class="tip">YouTubeで流したテイクは声だけ保存されます（YouTubeの音は録音に取り込めません）。</p>':''}
+      <div class="row">
+        ${t.mixUrl?`<a class="filebtn" href="${t.mixUrl}" download="nichiyoubi_take${t.n}_mix.wav">ミックスを保存</a>`:''}
+        <a class="filebtn" href="${t.voiceUrl}" download="nichiyoubi_take${t.n}_voice.${ext}">声を保存</a>
+        ${t.mode==='file'&&t.voiceBuf?`<button data-remix="${t.n}">ミックスを作り直す</button>`:''}
+      </div>`;
+    box.appendChild(el);
+  }
+  box.querySelectorAll('[data-remix]').forEach(b=>b.addEventListener('click',async()=>{
+    const t=takes.find(x=>x.n==b.dataset.remix); if(!t||!fileSrc.buf) return;
+    b.disabled=true; b.textContent='作成中…'; await renderMix(t); renderTakes();
+  }));
+}
+
+/* ---------- 歌詞 ---------- */
+let lines=[], times=[], curLine=-1, syncing=false, syncIdx=0;
+const LS='nichiyoubi-lyrics-v1';
+try{ const s=JSON.parse(localStorage.getItem(LS)||'null'); if(s&&s.lines){ lines=s.lines; times=s.times||[]; } }catch(e){}
+function saveLyrics(){ try{ localStorage.setItem(LS,JSON.stringify({lines,times})); }catch(e){} }
+function showLyrics(){
+  const has=lines.length>0;
+  $('lyricsEdit').hidden=has; $('lyricsView').hidden=!has; $('editLyricsBtn').hidden=!has;
+  const ol=$('lyricsList'); ol.innerHTML='';
+  lines.forEach((t,i)=>{
+    const li=document.createElement('li'); if(!t.trim()) li.classList.add('blank');
+    const ts=document.createElement('span'); ts.className='lt'; ts.textContent=times[i]!=null?fmt(times[i]):'';
+    const tx=document.createElement('span'); tx.textContent=t;
+    li.append(ts,tx);
+    li.addEventListener('click',()=>{
+      if(syncing) return;
+      if(times[i]!=null && !recorder){ $('seek').value=times[i]; $('timeNow').textContent=fmt(times[i]); src().seek(times[i]); }
+      setLine(i);
+    });
+    ol.appendChild(li);
+  });
+  curLine=-1; updateButtons();
+}
+function setLine(i){
+  if(i===curLine) return;
+  const items=$('lyricsList').children;
+  if(items[curLine]) items[curLine].classList.remove('cur');
+  curLine=i;
+  if(items[i]){ items[i].classList.add('cur'); const ol=$('lyricsList'); ol.scrollTo({top:items[i].offsetTop-ol.offsetTop-ol.clientHeight/3,behavior:'smooth'}); }
+}
+const hasTimes=()=>times.some(t=>t!=null);
+function lineAt(p){ let k=-1; for(let i=0;i<lines.length;i++) if(times[i]!=null&&times[i]<=p) k=i; return k; }
+function nextNonBlank(i){ while(i<lines.length&&!lines[i].trim()) i++; return i; }
+$('saveLyricsBtn').addEventListener('click',()=>{
+  const raw=$('lyricsInput').value.replace(/\r/g,'').split('\n');
+  while(raw.length&&!raw[raw.length-1].trim()) raw.pop();
+  while(raw.length&&!raw[0].trim()) raw.shift();
+  if(!raw.length) return;
+  if(raw.join('\n')!==lines.join('\n')) times=[];
+  lines=raw; saveLyrics(); showLyrics();
+});
+$('editLyricsBtn').addEventListener('click',()=>{ $('lyricsInput').value=lines.join('\n'); lines=[]; showLyrics(); $('lyricsInput').focus(); });
+$('syncBtn').addEventListener('click',()=>{
+  if(recorder) return; ensureCtx();
+  syncing=true; times=new Array(lines.length).fill(null); syncIdx=nextNonBlank(0);
+  showLyrics(); $('syncBar').hidden=false; $('lyricsHint').hidden=true;
+  $('seek').value=0; src().play(0); setTimeout(syncPlayBtn,60);
+  setLine(syncIdx); $('lyricsPanel').scrollIntoView({behavior:'smooth',block:'start'});
+});
+function markNext(){
+  if(syncIdx>=lines.length) return;
+  times[syncIdx]=src().pos();
+  $('lyricsList').children[syncIdx].querySelector('.lt').textContent=fmt(times[syncIdx]);
+  syncIdx=nextNonBlank(syncIdx+1);
+  if(syncIdx<lines.length) setLine(syncIdx); else endSync();
+}
+function endSync(){ syncing=false; $('syncBar').hidden=true; $('lyricsHint').hidden=false; saveLyrics(); updateButtons(); }
+$('nextLineBtn').addEventListener('click',markNext);
+$('syncDoneBtn').addEventListener('click',()=>{ endSync(); src().stop(); setTimeout(syncPlayBtn,60); });
+document.addEventListener('keydown',e=>{
+  if(e.code!=='Space'||!lines.length) return;
+  const a=document.activeElement; if(a && /TEXTAREA|INPUT|BUTTON|A/.test(a.tagName) && a.type!=='range') return;
+  e.preventDefault();
+  if(syncing) markNext(); else setLine(nextNonBlank(curLine+1));
+});
+showLyrics();
+
+/* ---------- 毎フレーム更新 ---------- */
+(function tick(){
+  const s=src();
+  if(s.ready() && s.playing()){
+    const p=s.pos(); $('seek').value=p; $('timeNow').textContent=fmt(p);
+    if(!syncing && hasTimes()){ const k=lineAt(p); if(k>=0) setLine(k); }
+  }
+  requestAnimationFrame(tick);
+})();
+setMode('yt');
+</script>
+</body>
+</html>

@@ -105,10 +105,26 @@ canvas#meter{flex:1;height:10px;min-width:0;display:block}
 .clip.on{color:#fff;background:var(--rec);border-color:var(--rec)}
 
 /* tabs */
-.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:3px;
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;display:flex;gap:2px;padding:3px;direction:ltr;overflow-x:auto;scrollbar-width:none;
   background:rgba(15,15,17,.88);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:12px}
-.tabs button{border:0;background:transparent;min-height:38px;border-radius:9px;color:var(--mute);font-size:13px;gap:6px;padding:0 6px}
-.tabs button[aria-selected="true"]{background:var(--s3);color:var(--ink)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{position:relative;z-index:1;flex:1 0 auto;border:0;background:transparent;min-height:38px;border-radius:9px;color:var(--mute);font-size:12.5px;gap:6px;padding:0 10px;white-space:nowrap}
+.tabs button:hover:not(:disabled){background:transparent}
+.tabs button[aria-selected="true"]{color:var(--ink)}
+/* 選択中の四角（スワイプに合わせて動く）と、PCでカーソルを追う四角 */
+.tabs .pill{position:absolute;top:3px;left:0;height:calc(100% - 6px);border-radius:9px;background:var(--s3);border:1px solid var(--line2);z-index:0;pointer-events:none;
+  transition:transform .32s cubic-bezier(.3,.7,.2,1),width .32s cubic-bezier(.3,.7,.2,1)}
+.tabs .pill.dragging{transition:none}
+.tabs .ghost{background:transparent;border:1px solid rgba(255,255,255,.18);opacity:0;transition:transform .22s cubic-bezier(.3,.7,.2,1),width .22s cubic-bezier(.3,.7,.2,1),opacity .18s}
+@media (hover:hover){.tabs:hover .ghost{opacity:1}}
+/* 横スワイプで切り替わるページ */
+.pager{display:flex;align-items:flex-start;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;direction:ltr;
+  transition:height .28s ease;min-width:0;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.pager::-webkit-scrollbar{display:none}
+.pager>.panel{flex:0 0 100%;min-width:0;max-width:100%;scroll-snap-align:start;scroll-snap-stop:always}
+.panel>*{min-width:0}
+.presets{flex:1;min-width:0}
+[dir="rtl"] .pager>.panel{direction:rtl}
 .tabs .dot{width:6px;height:6px;border-radius:50%;background:var(--line2)}
 .tabs .dot.on{background:var(--ok)}
 .tabs .badge{font:500 10.5px var(--mono);min-width:18px;height:18px;border-radius:9px;background:var(--line);color:var(--ink);display:inline-grid;place-items:center;padding:0 5px}
@@ -158,12 +174,19 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .lyrhead{display:flex;align-items:center;gap:6px}
 .lyrhead .src{flex:1;min-width:0;font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lyrhead .src b{font-weight:500;color:var(--ink)}
-.lyrics{list-style:none;margin:0;padding:6px 0;max-height:min(330px,46vh);overflow-y:auto;display:grid;gap:1px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);-webkit-overflow-scrolling:touch}
-.lyrics li{font-size:15px;line-height:1.55;color:var(--mute);padding:5px 12px;cursor:pointer;display:flex;gap:10px;align-items:baseline}
-.lyrics li .lt{font:11px var(--mono);font-variant-numeric:tabular-nums;color:var(--dim);min-width:2.9em;flex:none}
+.lyrics{position:relative;list-style:none;margin:0;padding:120px 0;height:min(320px,44vh);overflow-y:auto;display:grid;align-content:start;gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);-webkit-overflow-scrolling:touch;
+  -webkit-mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent);scrollbar-width:none}
+.lyrics::-webkit-scrollbar{display:none}
+.lyrics li{font-size:15px;line-height:1.5;color:var(--dim);padding:5px 14px;cursor:pointer;text-align:center;transition:color .25s,transform .25s;text-wrap:balance}
+.lyrics li .lt{display:none}
+.lyrics.syncing li{display:flex;gap:10px;align-items:baseline;justify-content:center}
+.lyrics.syncing li .lt{display:inline;font:11px var(--mono);font-variant-numeric:tabular-nums;color:var(--dim);min-width:2.9em}
 .lyrics li.blank{min-height:.7em;padding-block:2px}
-.lyrics li.cur{color:var(--ink);font-weight:700}
-.lyrics li.cur .lt{color:var(--ink)}
+.lyrics li.near{color:var(--mute)}
+.lyrics li.cur{color:var(--ink);font-weight:700;transform:scale(1.04)}
+.lyroff{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;color:var(--mute)}
+.lyroff button{min-height:28px;padding:0 9px;font:500 11px var(--mono)}
+.lyroff output{font:500 11.5px var(--mono);min-width:4.4em;text-align:center;color:var(--ink)}
 .lrc-results{list-style:none;margin:0;padding:0;display:grid;gap:2px;max-height:260px;overflow-y:auto}
 .lrc-results button{width:100%;justify-content:space-between;text-align:left;padding:8px 10px;min-height:0;gap:10px;background:transparent;border-color:transparent}
 .lrc-results button:hover{background:var(--s2)}
@@ -181,6 +204,25 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 @keyframes slide{0%{left:-30%}100%{left:100%}}
 .caution{margin:0;font-size:12px;border-left:2px solid var(--warn);padding:2px 0 2px 10px;color:var(--ink)}
 
+/* equalizer */
+.eqcurve{width:100%;height:96px;display:block;border-radius:var(--r);background:var(--bg);border:1px solid var(--line)}
+.presets{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.presets::-webkit-scrollbar{display:none}
+.presets button{min-height:32px;padding:0 12px;font-size:12.5px;border-radius:999px;flex:none}
+.presets button[aria-pressed="true"]{background:var(--ink);color:#111;border-color:var(--ink)}
+.faders{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:10px 4px 8px;direction:ltr}
+.fader{display:grid;justify-items:center;gap:6px;min-width:0}
+.fader output{font:500 10px var(--mono);font-variant-numeric:tabular-nums;color:var(--mute);height:12px}
+.fader .track{position:relative;width:28px;height:150px;cursor:ns-resize;touch-action:none;outline:none}
+.fader .track::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:3px;transform:translateX(-50%);border-radius:2px;background:#26262c;box-shadow:inset 0 0 0 1px #000}
+.fader .track::after{content:"";position:absolute;left:3px;right:3px;top:50%;height:1px;background:var(--line2)}
+.fader .fill{position:absolute;left:50%;width:3px;transform:translateX(-50%);background:var(--ink);border-radius:2px;opacity:.85}
+.fader .cap{position:absolute;left:50%;width:24px;height:14px;transform:translate(-50%,-50%);border-radius:3px;z-index:1;
+  background:linear-gradient(#f2f2f5,#b9b9c1);box-shadow:0 2px 4px rgba(0,0,0,.6),inset 0 -1px 0 rgba(0,0,0,.25)}
+.fader .cap::after{content:"";position:absolute;left:4px;right:4px;top:50%;height:1.5px;margin-top:-.75px;background:#222}
+.fader .track:focus-visible .cap{outline:2px solid var(--ink);outline-offset:2px}
+.fader small{font:500 9.5px var(--mono);color:var(--dim)}
+.eqnote{margin:0;font-size:12px;border-left:2px solid var(--line2);padding:2px 0 2px 10px;color:var(--mute)}
 /* takes */
 .takes{display:grid;gap:8px}
 .take{border:1px solid var(--line);border-radius:var(--r);padding:10px;display:grid;gap:8px;background:var(--bg)}
@@ -191,9 +233,13 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .take-h .meta{display:grid;line-height:1.35;min-width:0;flex:1}
 .take-h .meta b{font-size:13.5px}
 .take-h .meta span{font:11px var(--mono);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wave{position:relative;height:40px;border-radius:6px;overflow:hidden}
-.wave canvas{width:100%;height:100%;display:block}
-.wave .ph{position:absolute;top:0;bottom:0;width:1.5px;background:var(--ink);left:0;opacity:0}
+.wave{position:relative;height:44px;border-radius:6px;overflow:hidden;cursor:pointer;touch-action:pan-y}
+.wave canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.wave .prog{position:absolute;inset:0 auto 0 0;width:0;overflow:hidden}
+.wave .prog canvas{width:auto;height:100%}
+.wave .ph{position:absolute;top:0;bottom:0;width:1.5px;background:var(--ink);left:0;opacity:0;pointer-events:none}
+.wave .hv{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);left:0;opacity:0;pointer-events:none}
+@media (hover:hover){.wave:hover .hv{opacity:1}}
 .take.playing .wave .ph{opacity:1}
 .acts button,.acts .btn{min-height:34px;padding:0 10px;font-size:12.5px}
 .empty{margin:0;color:var(--mute);font-size:13px;text-align:center;padding:22px 12px;border:1px dashed var(--line);border-radius:var(--r);display:grid;justify-items:center;gap:8px}
@@ -207,9 +253,12 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .bar{display:flex;align-items:center;gap:10px}
 .time{font:500 11.5px var(--mono);font-variant-numeric:tabular-nums;color:var(--mute);flex:none;min-width:2.8em}
 .bar .time:last-child{text-align:right}
-.ctrls{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
-.ctrls .l{justify-self:start;display:flex;gap:6px} .ctrls .r{justify-self:end}
+.ctrls{display:grid;grid-template-columns:1fr auto auto auto 1fr;align-items:center;gap:14px}
+.ctrls .l{justify-self:start} .ctrls .r{justify-self:end}
 .pbtn{width:48px;height:48px;border-radius:50%;padding:0}
+.skip{width:44px;height:44px;border-radius:50%;padding:0;background:transparent;border-color:transparent;color:var(--ink)}
+.skip:hover:not(:disabled){background:var(--s2);border-color:var(--line)}
+.skip .i{width:26px;height:26px;stroke-width:1.6}
 .recwrap{display:grid;justify-items:center;gap:2px}
 .recbtn{width:62px;height:62px;border-radius:50%;padding:0;background:transparent;border:2px solid #d8d8de}
 .recbtn::before{content:"";width:46px;height:46px;border-radius:50%;background:var(--rec);transition:all .18s}
@@ -223,14 +272,31 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 /* overlays */
 .full{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;background:#0b0b0d;overflow:hidden;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.full .bg{position:absolute;inset:-60px;background:center/cover no-repeat;filter:blur(50px) saturate(1.1) brightness(.55);opacity:.7;z-index:0}
-.full > *:not(.bg){position:relative;z-index:1}
+/* 全画面の背景：曲のアートワークから色を取り、光がゆっくり漂う＋フィルムの粒子＋周辺減光 */
+.full{--c0:#120d18;--c1:#7a3b5c;--c2:#2e4a7a;--c3:#b0663a;--c4:#3d6b5e;--pulse:1}
+.full .base{position:absolute;inset:0;background:linear-gradient(160deg,color-mix(in srgb,var(--c1) 22%,#0b0b0d),#0b0b0d 70%);z-index:0}
+.full .aura{position:absolute;inset:-25%;z-index:0;filter:blur(70px) saturate(1.15);opacity:.78;transform:scale(var(--pulse));transition:transform .18s linear}
+.full .aura i{position:absolute;width:62vmax;height:62vmax;border-radius:50%;mix-blend-mode:screen;opacity:.75}
+.full .aura i:nth-child(1){left:-10%;top:-12%;background:radial-gradient(circle,var(--c1),transparent 62%);animation:dr1 26s ease-in-out infinite alternate}
+.full .aura i:nth-child(2){right:-14%;top:8%;background:radial-gradient(circle,var(--c2),transparent 62%);animation:dr2 31s ease-in-out infinite alternate}
+.full .aura i:nth-child(3){left:12%;bottom:-18%;background:radial-gradient(circle,var(--c3),transparent 60%);animation:dr3 37s ease-in-out infinite alternate;opacity:.55}
+.full .aura i:nth-child(4){right:6%;bottom:-6%;width:44vmax;height:44vmax;background:radial-gradient(circle,var(--c4),transparent 60%);animation:dr1 43s ease-in-out infinite alternate-reverse;opacity:.5}
+@keyframes dr1{to{transform:translate(18vmax,14vmax) scale(1.15)}}
+@keyframes dr2{to{transform:translate(-20vmax,12vmax) scale(.9)}}
+@keyframes dr3{to{transform:translate(14vmax,-16vmax) scale(1.2)}}
+.full .grain{position:absolute;inset:0;z-index:0;opacity:.09;mix-blend-mode:overlay;background-size:160px 160px;pointer-events:none;animation:grain 1.2s steps(4) infinite}
+@keyframes grain{25%{background-position:40px -30px}50%{background-position:-25px 45px}75%{background-position:55px 20px}}
+.full .vig{position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(120% 85% at 50% 45%,transparent 45%,rgba(0,0,0,.6) 100%),linear-gradient(transparent 70%,rgba(0,0,0,.45))}
+.full > *:not(.base):not(.aura):not(.grain):not(.vig){position:relative;z-index:1}
 .full-top{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding-block:6px;max-width:760px;width:100%;margin:0 auto}
-.full-title{display:grid;text-align:center;line-height:1.35;min-width:0}
-.full-title small{font:500 9.5px var(--mono);letter-spacing:.22em;color:rgba(255,255,255,.55)}
+.full-title{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0}
+.full-title img{width:38px;height:38px;border-radius:7px;object-fit:cover;box-shadow:0 6px 20px rgba(0,0,0,.45);flex:none}
+.full-title .tx{display:grid;line-height:1.35;min-width:0;text-align:start}
+.full-title small{font:500 9.5px var(--mono);letter-spacing:.22em;color:rgba(255,255,255,.6)}
 .full-title b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.full-list{flex:1;overflow-y:auto;list-style:none;margin:0 auto;padding:30vh 0 42vh;max-width:760px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch;
-  -webkit-mask-image:linear-gradient(transparent,#000 14%,#000 78%,transparent);mask-image:linear-gradient(transparent,#000 14%,#000 78%,transparent)}
+.full-list{position:relative;flex:1;overflow-y:auto;list-style:none;margin:0 auto;padding:44vh 0;max-width:760px;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  -webkit-mask-image:linear-gradient(transparent,#000 18%,#000 74%,transparent);mask-image:linear-gradient(transparent,#000 18%,#000 74%,transparent)}
+@media (prefers-reduced-motion:reduce){.full .aura i,.full .grain{animation:none}}
 .full-list::-webkit-scrollbar{display:none}
 .full-list li{font-size:clamp(24px,6.6vw,38px);font-weight:700;line-height:1.38;letter-spacing:.01em;padding:9px 2px;cursor:pointer;color:rgba(255,255,255,.28);transition:color .25s;text-wrap:balance}
 .full-list li.blank{min-height:.5em;padding:0}
@@ -300,6 +366,9 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
   <symbol id="i-undo" viewBox="0 0 24 24"><path d="M8.8 6.6L4.8 10.6l4 4"/><path d="M4.8 10.6h9.4a5 5 0 0 1 0 10h-2.4"/></symbol>
   <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.2" r="7.4"/><path d="M12 9.6v3.6l2.4 1.5M9.6 2.8h4.8M12 2.8v2.9M18.3 6.3l1.3-1.3"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M6 4v5M6 13v7M12 4v10M12 18v2M18 4v2M18 10v10"/><rect x="4" y="9" width="4" height="4" rx="1"/><rect x="10" y="14" width="4" height="4" rx="1"/><rect x="16" y="6" width="4" height="4" rx="1"/></symbol>
+  <symbol id="i-back10" viewBox="0 0 24 24"><path d="M4.6 12a7.4 7.4 0 1 0 2.2-5.3"/><path d="M6.6 3.2v3.7h3.7"/><text x="12.2" y="15" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="6.4" font-weight="600" fill="currentColor" stroke="none">10</text></symbol>
+  <symbol id="i-fwd10" viewBox="0 0 24 24"><path d="M19.4 12a7.4 7.4 0 1 1-2.2-5.3"/><path d="M17.4 3.2v3.7h-3.7"/><text x="11.8" y="15" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="6.4" font-weight="600" fill="currentColor" stroke="none">10</text></symbol>
+  <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 12c1.6 0 1.6-5 3.2-5s1.6 10 3.2 10 1.6-10 3.2-10 1.6 10 3.2 10 1.6-5 3.2-5"/><path d="M21 12h0"/></symbol>
   <symbol id="i-tape" viewBox="0 0 24 24"><rect x="2.8" y="5.5" width="18.4" height="13" rx="2.4"/><circle cx="8.3" cy="11.3" r="2.2"/><circle cx="15.7" cy="11.3" r="2.2"/><path d="M8.3 13.5h7.4M7 18.5l1.6-2.6h6.8l1.6 2.6"/></symbol>
 </svg>
 
@@ -339,13 +408,17 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
     </div>
   </section>
 
-  <nav class="tabs" role="tablist">
+  <nav class="tabs" role="tablist" id="tabs">
+    <span class="pill" id="tabPill" aria-hidden="true"></span>
+    <span class="pill ghost" id="tabGhost" aria-hidden="true"></span>
     <button role="tab" id="t_song" aria-selected="true"><i class="dot" id="dotSong"></i><span data-i18n="chipSong"></span></button>
     <button role="tab" id="t_lyr" aria-selected="false"><i class="dot" id="dotLyr"></i><span data-i18n="chipLyr"></span></button>
     <button role="tab" id="t_mix" aria-selected="false"><span data-i18n="s3"></span></button>
+    <button role="tab" id="t_eq" aria-selected="false"><span data-i18n="eq"></span></button>
     <button role="tab" id="t_takes" aria-selected="false"><span data-i18n="s5"></span><span class="badge" id="takeCount">0</span></button>
   </nav>
 
+  <div class="pager" id="pager">
   <!-- song -->
   <section class="panel" id="p_song" role="tabpanel">
     <div class="seg" role="group">
@@ -399,7 +472,7 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
   </section>
 
   <!-- lyrics -->
-  <section class="panel" id="p_lyr" role="tabpanel" hidden>
+  <section class="panel" id="p_lyr" role="tabpanel">
     <div class="stack" id="lyricsView" hidden>
       <div class="lyrhead">
         <span class="src" id="lyrSrc"></span>
@@ -413,7 +486,8 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
         <button id="syncDoneBtn"><span data-i18n="done"></span></button>
         <span class="status" data-i18n="syncHint"></span>
       </div>
-      <p class="tip" id="lyricsHint" data-i18n="lineHint"></p>
+      <div class="lyroff"><span data-i18n="offLabel"></span><button id="offMinus2">−0.1</button><output id="offVal2">0.0</output><button id="offPlus2">+0.1</button></div>
+      <p class="tip" id="lyricsHint" data-i18n="lineHint" style="text-align:center"></p>
     </div>
 
     <div class="stack" id="lyricsEdit">
@@ -473,7 +547,7 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
   </section>
 
   <!-- mixer -->
-  <section class="panel" id="p_mix" role="tabpanel" hidden>
+  <section class="panel" id="p_mix" role="tabpanel">
     <div>
       <div class="ch" id="chSong">
         <span class="ico"><svg class="i sm"><use href="#i-note"/></svg></span>
@@ -508,10 +582,33 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
     <p class="tip" id="iosVolTip" hidden data-i18n="iosVol"></p>
   </section>
 
+  <!-- equalizer -->
+  <section class="panel" id="p_eq" role="tabpanel">
+    <div class="seg" role="group">
+      <button id="eqTSong" aria-pressed="false"><svg class="i sm"><use href="#i-note"/></svg><span data-i18n="mixSong"></span></button>
+      <button id="eqTVoice" aria-pressed="true"><svg class="i sm"><use href="#i-voice"/></svg><span data-i18n="mixVoice"></span></button>
+    </div>
+    <canvas class="eqcurve" id="eqCurve" width="640" height="192" aria-hidden="true"></canvas>
+    <div class="row" style="justify-content:space-between;flex-wrap:nowrap;gap:8px">
+      <div class="presets" id="presets" role="group" data-i18n-aria="eqPreset"></div>
+      <button id="eqReset" style="flex:none;min-height:32px;font-size:12.5px"><span data-i18n="reset"></span></button>
+    </div>
+    <div class="faders" id="faders"></div>
+    <div class="ch" id="chRev" style="border-top:0;padding-top:0">
+      <span class="ico"><svg class="i sm"><use href="#i-wave"/></svg></span>
+      <span class="nm"><b data-i18n="reverb"></b><small data-i18n="reverbSub"></small></span>
+      <span></span>
+      <div class="sl"><input type="range" id="revAmt" min="0" max="100" value="15" data-i18n-aria="reverb"><output id="outRev">15%</output></div>
+    </div>
+    <p class="eqnote" id="eqYt" hidden data-i18n="eqYt"></p>
+  </section>
+
   <!-- takes -->
-  <section class="panel" id="p_takes" role="tabpanel" hidden>
+  <section class="panel" id="p_takes" role="tabpanel">
+    <p class="tip" data-i18n="waveHint"></p>
     <div class="takes" id="takes"></div>
   </section>
+  </div>
 
   <footer class="foot"><span data-i18n="privacy"></span><span class="mono" data-i18n="keys"></span></footer>
 </div>
@@ -526,10 +623,12 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
     </div>
     <div class="ctrls">
       <div class="l"><button class="pbtn" id="playBtn" disabled data-i18n-aria="play"><svg class="i lg" id="playIco"><use href="#i-play"/></svg></button></div>
+      <button class="skip" id="back10" disabled data-i18n-aria="back10"><svg class="i"><use href="#i-back10"/></svg></button>
       <div class="recwrap">
         <button class="recbtn" id="recBtn" disabled aria-label="REC"></button>
         <span class="reclabel mono" id="recLabel">REC</span>
       </div>
+      <button class="skip" id="fwd10" disabled data-i18n-aria="fwd10"><svg class="i"><use href="#i-fwd10"/></svg></button>
       <div class="r"><button class="pbtn" id="fullBtn" disabled data-i18n-aria="lyrics"><svg class="i"><use href="#i-lines"/></svg></button></div>
     </div>
   </div>
@@ -537,10 +636,13 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 
 <!-- full-screen lyrics -->
 <div class="full" id="full" hidden role="dialog" data-i18n-aria="lyrics">
-  <div class="bg" id="fullBg"></div>
+  <div class="base"></div>
+  <div class="aura" id="aura"><i></i><i></i><i></i><i></i></div>
+  <div class="grain" id="grain"></div>
+  <div class="vig"></div>
   <div class="full-top">
     <button class="iconbtn ghost" id="fullClose" data-i18n-aria="close"><svg class="i"><use href="#i-chev"/></svg></button>
-    <div class="full-title"><small>NOW SINGING</small><b id="fullTitle">—</b></div>
+    <div class="full-title"><img id="fullArt" alt="" hidden><span class="tx"><small>NOW SINGING</small><b id="fullTitle">—</b></span></div>
     <span></span>
   </div>
   <ol class="full-list" id="fullList"></ol>
@@ -1292,6 +1394,32 @@ const LANGS=[{c:'ja',r:'JP',n:'日本語'},{c:'en',r:'US',n:'English'},{c:'zh-CN
 {c:'pt-BR',r:'BR',n:'Português'},{c:'it',r:'IT',n:'Italiano'},{c:'id',r:'ID',n:'Bahasa Indonesia'},{c:'th',r:'TH',n:'ไทย'},{c:'vi',r:'VN',n:'Tiếng Việt'}];
 const RTL=new Set(['ar','ur','fa','he','ps','sd','yi','ug','dv','ckb','syr','arc']);
 
+/* イコライザー・10秒送り・波形タップ の文言 */
+const K2=['eq','eqPreset','pFlat','pVocal','pBass','pTreble','pWarm','pBright','pLoud','reverb','reverbSub','eqYt','reset','back10','fwd10','waveHint'];
+const E2={
+en:["Equalizer","Preset","Flat","Vocal","Bass boost","Treble boost","Warm","Bright","Loudness","Reverb","Adds space to your voice","The song EQ works with audio files. The page can't change YouTube's sound.","Reset","Back 10 s","Forward 10 s","Tap a waveform to play from that point."],
+ja:["イコライザー","プリセット","フラット","ボーカル","低音強調","高音強調","あたたかい","明るい","ラウドネス","リバーブ","声に響きを加えます","曲のイコライザーは音源ファイルで効きます。YouTubeの音はページから変えられません。","リセット","10秒戻る","10秒進む","波形をタップすると、その位置から再生します。"],
+ko:["이퀄라이저","프리셋","플랫","보컬","저음 강조","고음 강조","따뜻하게","밝게","라우드니스","리버브","목소리에 울림을 더합니다","곡 EQ는 오디오 파일에서 작동합니다. YouTube 소리는 페이지에서 바꿀 수 없습니다.","초기화","10초 뒤로","10초 앞으로","파형을 누르면 그 위치부터 재생합니다."],
+"zh-CN":["均衡器","预设","平直","人声","低音增强","高音增强","温暖","明亮","响度","混响","为人声添加空间感","歌曲均衡器适用于音频文件。网页无法改变 YouTube 的声音。","重置","后退 10 秒","前进 10 秒","点按波形即可从该处播放。"],
+"zh-TW":["等化器","預設","平坦","人聲","低音加強","高音加強","溫暖","明亮","響度","殘響","為人聲加入空間感","歌曲等化器適用於音訊檔。網頁無法改變 YouTube 的聲音。","重設","倒退 10 秒","快轉 10 秒","點一下波形即可從該處播放。"],
+es:["Ecualizador","Preajuste","Plano","Voz","Más graves","Más agudos","Cálido","Brillante","Sonoridad","Reverberación","Da espacio a tu voz","El ecualizador de la canción funciona con archivos de audio. La página no puede cambiar el sonido de YouTube.","Restablecer","Atrás 10 s","Adelante 10 s","Toca una forma de onda para reproducir desde ahí."],
+fr:["Égaliseur","Préréglage","Plat","Voix","Basses renforcées","Aigus renforcés","Chaleureux","Brillant","Loudness","Réverbération","Ajoute de l'espace à votre voix","L'égaliseur du titre fonctionne avec les fichiers audio. La page ne peut pas modifier le son de YouTube.","Réinitialiser","Reculer de 10 s","Avancer de 10 s","Touchez une forme d'onde pour lire à partir de là."],
+de:["Equalizer","Voreinstellung","Neutral","Gesang","Bass betont","Höhen betont","Warm","Brillant","Loudness","Hall","Gibt deiner Stimme Raum","Der Song-EQ wirkt bei Audiodateien. Den YouTube-Ton kann die Seite nicht verändern.","Zurücksetzen","10 s zurück","10 s vor","Tippe auf eine Wellenform, um ab dort abzuspielen."],
+"pt-BR":["Equalizador","Predefinição","Plano","Voz","Mais graves","Mais agudos","Quente","Brilhante","Loudness","Reverb","Dá ambiência à sua voz","O equalizador da música funciona com arquivos de áudio. A página não consegue mudar o som do YouTube.","Redefinir","Voltar 10 s","Avançar 10 s","Toque numa forma de onda para tocar a partir dali."],
+it:["Equalizzatore","Preset","Piatto","Voce","Bassi in risalto","Alti in risalto","Caldo","Brillante","Loudness","Riverbero","Dà spazio alla tua voce","L'equalizzatore del brano funziona con i file audio. La pagina non può modificare l'audio di YouTube.","Ripristina","Indietro 10 s","Avanti 10 s","Tocca una forma d'onda per riprodurre da lì."],
+id:["Ekualiser","Preset","Datar","Vokal","Bass kuat","Treble kuat","Hangat","Cerah","Loudness","Reverb","Memberi ruang pada suara Anda","EQ lagu bekerja dengan file audio. Halaman tidak bisa mengubah suara YouTube.","Atur ulang","Mundur 10 dtk","Maju 10 dtk","Ketuk gelombang suara untuk memutar dari titik itu."],
+th:["อีควอไลเซอร์","พรีเซ็ต","แฟลต","เสียงร้อง","เน้นเสียงทุ้ม","เน้นเสียงแหลม","อบอุ่น","สดใส","ลาวด์เนส","รีเวิร์บ","เพิ่มมิติให้เสียงร้อง","อีคิวของเพลงใช้ได้กับไฟล์เสียง หน้าเว็บเปลี่ยนเสียงของ YouTube ไม่ได้","รีเซ็ต","ย้อน 10 วิ","ข้าม 10 วิ","แตะคลื่นเสียงเพื่อเล่นจากตำแหน่งนั้น"],
+vi:["Bộ cân bằng","Thiết lập sẵn","Phẳng","Giọng hát","Tăng trầm","Tăng cao","Ấm","Sáng","Loudness","Vang","Tạo không gian cho giọng hát","EQ bài hát dùng được với tệp âm thanh. Trang không thể thay đổi âm thanh YouTube.","Đặt lại","Lùi 10 giây","Tiến 10 giây","Chạm vào dạng sóng để phát từ vị trí đó."],
+ru:["Эквалайзер","Пресет","Ровный","Вокал","Больше баса","Больше высоких","Тёплый","Яркий","Тонкомпенсация","Реверберация","Добавляет голосу объём","Эквалайзер песни работает с аудиофайлами. Звук YouTube страница изменить не может.","Сбросить","Назад 10 с","Вперёд 10 с","Нажмите на волну, чтобы играть с этого места."],
+pl:["Korektor","Ustawienie","Płaski","Wokal","Więcej basu","Więcej sopranów","Ciepły","Jasny","Loudness","Pogłos","Dodaje głosowi przestrzeni","Korektor utworu działa z plikami audio. Strona nie może zmienić dźwięku YouTube.","Resetuj","10 s wstecz","10 s do przodu","Dotknij fali, aby odtwarzać od tego miejsca."],
+tr:["Ekolayzer","Hazır ayar","Düz","Vokal","Bas artırma","Tiz artırma","Sıcak","Parlak","Loudness","Yankı","Sesinize derinlik katar","Şarkı ekolayzeri ses dosyalarında çalışır. Sayfa YouTube sesini değiştiremez.","Sıfırla","10 sn geri","10 sn ileri","Oradan çalmak için dalga formuna dokunun."],
+hi:["इक्वलाइज़र","प्रीसेट","फ़्लैट","वोकल","बेस बढ़ाएँ","ट्रेबल बढ़ाएँ","गर्म","चमकदार","लाउडनेस","रिवर्ब","आवाज़ में गूँज जोड़ता है","गाने का EQ ऑडियो फ़ाइल पर काम करता है। पेज YouTube की आवाज़ नहीं बदल सकता।","रीसेट","10 से. पीछे","10 से. आगे","उस जगह से चलाने के लिए वेवफ़ॉर्म पर टैप करें।"],
+ur:["ایکولائزر","پری سیٹ","فلیٹ","آواز","بیس بڑھائیں","ٹریبل بڑھائیں","گرم","روشن","لاؤڈنیس","ریورب","آواز میں گونج شامل کرتا ہے","گانے کا EQ آڈیو فائل پر کام کرتا ہے۔ صفحہ YouTube کی آواز نہیں بدل سکتا۔","ری سیٹ","10 سیکنڈ پیچھے","10 سیکنڈ آگے","وہاں سے چلانے کے لیے ویوفارم پر ٹیپ کریں۔"],
+ar:["المعادل الصوتي","إعداد مسبق","مستوٍ","غناء","تعزيز الجهير","تعزيز الحدة","دافئ","ساطع","جهارة","صدى","يضيف عمقًا لصوتك","يعمل معادل الأغنية مع الملفات الصوتية. لا يمكن للصفحة تغيير صوت YouTube.","إعادة ضبط","رجوع 10 ث","تقديم 10 ث","اضغط على الموجة للتشغيل من تلك النقطة."],
+my:["အီကွာလိုက်ဇာ","ကြိုတင်ချိန်ညှိ","ညီညာ","အဆို","ဘေ့စ်မြှင့်","အသံမြင့်မြှင့်","နွေးထွေး","တောက်ပ","လောက်ဒ်နက်စ်","ပဲ့တင်သံ","သင့်အသံကို ပဲ့တင်ထပ်စေသည်","သီချင်း EQ သည် အသံဖိုင်တွင် အလုပ်လုပ်သည်။ စာမျက်နှာက YouTube အသံကို မပြောင်းနိုင်ပါ။","ပြန်စရန်","10 စက္ကန့် နောက်ပြန်","10 စက္ကန့် ရှေ့သို့","ထိုနေရာမှ ဖွင့်ရန် လှိုင်းပုံကို နှိပ်ပါ။"]
+};
+for(const l in E2) K2.forEach((k,i)=>{ I18N[l][k]=E2[l][i]; });
+
 /* ISO 639-2 の言語一覧（いただいたリストより。語族の総称「(Other)」と mis/mul/und/zxx は除く） */
 const ISO_RAW="aar:Afar;abk:Abkhaz;ace:Achinese;ach:Acoli;ada:Adangme;ady:Adygei;afh:Afrihili;afr:Afrikaans;ain:Ainu;aka:Akan;akk:Akkadian;alb:Albanian;ale:Aleut;amh:Amharic;anp:Angika;ara:Arabic;arg:Aragonese;arc:Aramaic;arp:Arapaho;arw:Arawak;arm:Armenian;rup:Aromanian;asm:Assamese;ava:Avaric;ave:Avestan;awa:Awadhi;aym:Aymara;aze:Azerbaijani;ast:Asturian;ban:Balinese;bal:Baluchi;bam:Bambara;bas:Basa;bak:Bashkir;baq:Basque;btk:Batak;bej:Beja;bel:Belarusian;bem:Bemba;ben:Bengali;bho:Bhojpuri;bik:Bikol;byn:Bilin;bin:Edo;bis:Bislama;zbl:Blissymbolics;bos:Bosnian;bra:Braj;bre:Breton;bug:Bugis;bul:Bulgarian;bua:Buriat;bur:Burmese;cad:Caddo;car:Carib;cat:Catalan;ceb:Cebuano;chg:Chagatai;cha:Chamorro;che:Chechen;chr:Cherokee;chy:Cheyenne;chb:Chibcha;chi:Chinese;chn:Chinook jargon;chp:Chipewyan;cho:Choctaw;chu:Church Slavic;chv:Chuvash;cop:Coptic;cor:Cornish;cos:Corsican;cre:Cree;mus:Creek;crh:Crimean Tatar;hrv:Croatian;cze:Czech;dak:Dakota;dan:Danish;dar:Dargwa;day:Dayak;del:Delaware;din:Dinka;div:Divehi;doi:Dogri;dgr:Dogrib;dua:Duala;dut:Dutch;dum:Middle Dutch;dyu:Dyula;dzo:Dzongkha;frs:East Frisian;efi:Efik;egy:Egyptian;eka:Ekajuk;elx:Elamite;eng:English;enm:Middle English;ang:Old English;myv:Erzya;epo:Esperanto;est:Estonian;gez:Ge'ez;ewe:Ewe;ewo:Ewondo;fan:Fang;fat:Fanti;fao:Faroese;fij:Fijian;fil:Filipino;fin:Finnish;fon:Fon;fre:French;frm:Middle French;fro:Old French;fry:Frisian;fur:Friulian;ful:Fula;gaa:Ga;glg:Galician;lug:Ganda;gay:Gayo;gba:Gbaya;geo:Georgian;ger:German;gmh:Middle High German;goh:Old High German;gil:Gilbertese;gon:Gondi;gor:Gorontalo;got:Gothic;grb:Grebo;grc:Ancient Greek;gre:Greek;grn:Guarani;guj:Gujarati;gwi:Gwich'in;hai:Haida;hat:Haitian Creole;hau:Hausa;haw:Hawaiian;heb:Hebrew;her:Herero;hil:Hiligaynon;hin:Hindi;hmo:Hiri Motu;hit:Hittite;hmn:Hmong;hun:Hungarian;hup:Hupa;iba:Iban;ice:Icelandic;ido:Ido;ibo:Igbo;ilo:Iloko;smn:Inari Sami;ind:Indonesian;inh:Ingush;ina:Interlingua;ile:Interlingue;iku:Inuktitut;ipk:Inupiaq;gle:Irish;mga:Middle Irish;sga:Old Irish;ita:Italian;jpn:Japanese;jav:Javanese;jrb:Judeo-Arabic;jpr:Judeo-Persian;kbd:Kabardian;kab:Kabyle;kac:Kachin;kal:Kalaallisut;xal:Oirat;kam:Kamba;kan:Kannada;kau:Kanuri;kaa:Kara-Kalpak;krc:Karachay-Balkar;krl:Karelian;kas:Kashmiri;csb:Kashubian;kaw:Kawi;kaz:Kazakh;kha:Khasi;khm:Khmer;kho:Khotanese;kik:Kikuyu;kmb:Kimbundu;kin:Kinyarwanda;tlh:Klingon;kom:Komi;kon:Kongo;kok:Konkani;kor:Korean;kpe:Kpelle;kua:Kuanyama;kum:Kumyk;kur:Kurdish;kru:Kurukh;kos:Kosraean;kut:Kootenai;kir:Kyrgyz;lad:Ladino;lah:Lahnda;lam:Lamba;lao:Lao;lat:Latin;lav:Latvian;ltz:Luxembourgish;lez:Lezgian;lim:Limburgish;lin:Lingala;lit:Lithuanian;jbo:Lojban;nds:Low German;dsb:Lower Sorbian;loz:Lozi;lub:Luba-Katanga;lua:Luba-Lulua;lui:Luiseño;smj:Lule Sami;lun:Lunda;luo:Luo;lus:Mizo;mac:Macedonian;mad:Madurese;mag:Magahi;mai:Maithili;mak:Makasar;mlg:Malagasy;may:Malay;mal:Malayalam;mlt:Maltese;mnc:Manchu;mdr:Mandar;man:Mandingo;mni:Manipuri;glv:Manx;mao:Maori;arn:Mapuche;mar:Marathi;chm:Mari;mah:Marshallese;mwr:Marwari;mas:Maasai;men:Mende;mic:Micmac;min:Minangkabau;mwl:Mirandese;moh:Mohawk;mdf:Moksha;lol:Mongo;mon:Mongolian;mos:Moore;nah:Nahuatl;nau:Nauru;nav:Navajo;nbl:South Ndebele;nde:North Ndebele;ndo:Ndonga;nap:Neapolitan;nep:Nepali;new:Newari;nwc:Old Newari;nia:Nias;niu:Niuean;nqo:N'Ko;nog:Nogai;frr:North Frisian;sme:Northern Sami;nso:Northern Sotho;nor:Norwegian;nob:Norwegian Bokmål;nno:Norwegian Nynorsk;nym:Nyamwezi;nya:Nyanja;nyn:Nyankole;nyo:Nyoro;nzi:Nzima;oci:Occitan;oji:Ojibwa;non:Old Norse;peo:Old Persian;ori:Odia;orm:Oromo;osa:Osage;oss:Ossetic;pal:Pahlavi;pau:Palauan;pli:Pali;pam:Pampanga;pag:Pangasinan;pan:Punjabi;pap:Papiamento;per:Persian;phn:Phoenician;pol:Polish;pon:Pohnpeian;por:Portuguese;pro:Old Provençal;pus:Pashto;que:Quechua;roh:Romansh;raj:Rajasthani;rap:Rapanui;rar:Rarotongan;rum:Romanian;rom:Romani;run:Rundi;rus:Russian;syc:Classical Syriac;sam:Samaritan Aramaic;smo:Samoan;sad:Sandawe;sag:Sango;san:Sanskrit;sat:Santali;srd:Sardinian;sas:Sasak;sco:Scots;gla:Scottish Gaelic;sel:Selkup;srp:Serbian;srr:Serer;shn:Shan;sna:Shona;iii:Sichuan Yi;scn:Sicilian;sid:Sidamo;bla:Siksika;snd:Sindhi;sin:Sinhala;sms:Skolt Sami;den:Slave;slo:Slovak;slv:Slovenian;sog:Sogdian;som:Somali;son:Songhai;snk:Soninke;sot:Southern Sotho;alt:Southern Altai;sma:Southern Sami;spa:Spanish;srn:Sranan Tongo;suk:Sukuma;sux:Sumerian;sun:Sundanese;sus:Susu;swa:Swahili;ssw:Swati;swe:Swedish;gsw:Swiss German;syr:Syriac;tgl:Tagalog;tah:Tahitian;tgk:Tajik;tmh:Tamashek;tam:Tamil;tat:Tatar;tel:Telugu;tem:Temne;ter:Tereno;tet:Tetum;tha:Thai;tib:Tibetan;tig:Tigre;tir:Tigrinya;tiv:Tiv;tli:Tlingit;tpi:Tok Pisin;tkl:Tokelau;tog:Nyasa Tonga;ton:Tongan;chk:Chuukese;tsi:Tsimshian;tso:Tsonga;tsn:Tswana;tum:Tumbuka;tur:Turkish;ota:Ottoman Turkish;tuk:Turkmen;tvl:Tuvalu;tyv:Tuvinian;twi:Twi;udm:Udmurt;uga:Ugaritic;uig:Uyghur;ukr:Ukrainian;umb:Umbundu;hsb:Upper Sorbian;urd:Urdu;uzb:Uzbek;vai:Vai;ven:Venda;vie:Vietnamese;vol:Volapük;vot:Votic;wal:Wolaytta;wln:Walloon;war:Waray;was:Washo;wel:Welsh;wol:Wolof;xho:Xhosa;sah:Yakut;yao:Yao;yap:Yapese;yid:Yiddish;yor:Yoruba;zap:Zapotec;zza:Zaza;zen:Zenaga;zha:Zhuang;zul:Zulu;zun:Zuni";
 const ISO=ISO_RAW.split(';').map(s=>{ const i=s.indexOf(':'); return {c:s.slice(0,i),en:s.slice(i+1)}; });
@@ -1351,6 +1479,8 @@ function applyI18n(){
   $('langCode').textContent=fl?fl.r:(likelyRegion(L)||canon(L).toUpperCase());
   if(!micStream) say($('micStatus'),t('micTap'));
   buildAsrLang(); renderTakes(); showLyrics(); syncPlayBtn(); refreshAsrSrc(); updateOnAir();
+  if(typeof renderPresets==='function'&&$('presets')) renderPresets();
+  requestAnimationFrame(()=>{ placePill($('t_'+curTab),pill); placePill($('t_'+curTab),ghost); fitPager(); });
   if(gpuInfo&&!gpuInfo.ok) $('asrDevTip').textContent=t('noGpu');
 }
 /* 一覧：完全翻訳の20言語 → ISO 639-2 の全言語 */
@@ -1442,17 +1572,88 @@ function toast(msg,act,fn,ms=5000){
 function hideToast(){ $('toast').hidden=true; }
 
 /* ===== タブ ===== */
-const TABS=['song','lyr','mix','takes'];
-function setTab(k){ TABS.forEach(x=>{ $('p_'+x).hidden=x!==k; $('t_'+x).setAttribute('aria-selected',x===k); }); store.set('kr-tab',k); }
-TABS.forEach(x=>$('t_'+x).addEventListener('click',()=>setTab(x)));
+/* タブ：横スワイプのページと、動く四角 */
+const TABS=['song','lyr','mix','eq','takes'];
+let curTab='song', pagerLock=false;
+const pager=$('pager'), pill=$('tabPill'), ghost=$('tabGhost');
+function placePill(el,target){ target.style.width=el.offsetWidth+'px'; target.style.transform=`translateX(${el.offsetLeft}px)`; }
+function fitPager(){ const p=$('p_'+curTab); if(p) pager.style.height=p.offsetHeight+'px'; }
+function markTab(k){
+  curTab=k; store.set('kr-tab',k);
+  TABS.forEach(x=>$('t_'+x).setAttribute('aria-selected',x===k));
+  const tb=$('t_'+k); placePill(tb,pill);
+  const bar=$('tabs'); if(tb.offsetLeft<bar.scrollLeft||tb.offsetLeft+tb.offsetWidth>bar.scrollLeft+bar.clientWidth) bar.scrollTo({left:tb.offsetLeft-12,behavior:'smooth'});
+  fitPager();
+  if(k==='eq') drawCurve();
+}
+function setTab(k,instant){
+  const i=TABS.indexOf(k); if(i<0) return;
+  markTab(k);
+  pagerLock=true; pager.scrollTo({left:i*pager.clientWidth,behavior:instant?'auto':'smooth'});
+  clearTimeout(setTab.tm); setTab.tm=setTimeout(()=>{ pagerLock=false; },instant?50:600);
+}
+TABS.forEach(x=>{
+  const b=$('t_'+x);
+  b.addEventListener('click',()=>setTab(x));
+  b.addEventListener('mouseenter',()=>placePill(b,ghost));
+});
+$('tabs').addEventListener('mouseleave',()=>placePill($('t_'+curTab),ghost));
+/* スワイプ中は四角が指に合わせて滑らかに動く */
+let pagerEnd=null;
+pager.addEventListener('scroll',()=>{
+  const f=pager.scrollLeft/(pager.clientWidth||1), i0=Math.max(0,Math.min(TABS.length-1,Math.floor(f))), i1=Math.min(TABS.length-1,i0+1), r=f-i0;
+  if(!pagerLock){
+    const a=$('t_'+TABS[i0]), b=$('t_'+TABS[i1]);
+    pill.classList.add('dragging');
+    pill.style.width=(a.offsetWidth+(b.offsetWidth-a.offsetWidth)*r)+'px';
+    pill.style.transform=`translateX(${a.offsetLeft+(b.offsetLeft-a.offsetLeft)*r}px)`;
+  }
+  clearTimeout(pagerEnd);
+  pagerEnd=setTimeout(()=>{ pill.classList.remove('dragging'); const k=TABS[Math.round(pager.scrollLeft/(pager.clientWidth||1))]; if(k&&(k!==curTab||!pagerLock)) markTab(k); },90);
+},{passive:true});
+if(window.ResizeObserver){ const ro=new ResizeObserver(()=>{ fitPager(); placePill($('t_'+curTab),pill); }); TABS.forEach(x=>ro.observe($('p_'+x))); ro.observe(pager); }
+window.addEventListener('resize',()=>setTab(curTab,true));
 
 /* ===== オーディオ基盤 ===== */
-let ctx, trackGain, monitorGain, voiceGain, voiceDest, micStream, micSrc, analyser;
+let ctx, trackGain, monitorGain, voiceGain, voiceDest, micStream, micSrc, analyser, songChain, voiceChain, outAn;
+
+/* ===== イコライザー（10バンド）＋リバーブ ===== */
+const BANDS=[31,62,125,250,500,1000,2000,4000,8000,16000];
+const BLBL=['31','62','125','250','500','1k','2k','4k','8k','16k'];
+const PRESETS={
+  pFlat:[0,0,0,0,0,0,0,0,0,0], pVocal:[-3,-2,-1,0,2,3.5,3.5,2.5,1,0], pBass:[6,5,4,2,0,0,0,0,0,0],
+  pTreble:[0,0,0,0,0,1,2,4,5,6], pWarm:[2.5,2,1.5,1,0,-1,-1.5,-2,-2.5,-3], pBright:[-1,-1,0,0,0,1,2,3,4,4.5], pLoud:[5,4,2,0,-1,-1,0,2,4,5]
+};
+const eqState=(()=>{ const d={target:'voice',song:{g:PRESETS.pFlat.slice(),p:'pFlat'},voice:{g:PRESETS.pFlat.slice(),p:'pFlat',rev:15}};
+  const s=store.get('kr-eq',null); if(s&&s.song&&s.voice) return Object.assign(d,s); return d; })();
+const saveEq=()=>store.set('kr-eq',eqState);
+function impulse(c,sec,decay){
+  const len=Math.floor(c.sampleRate*sec), b=c.createBuffer(2,len,c.sampleRate);
+  for(let ch=0;ch<2;ch++){ const d=b.getChannelData(ch); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay)*(i<c.sampleRate*.012?i/(c.sampleRate*.012):1); }
+  return b;
+}
+function makeChain(c,kind){
+  const input=c.createGain(), out=c.createGain(); let prev=input;
+  const filters=BANDS.map((f,i)=>{ const b=c.createBiquadFilter(); b.type=i===0?'lowshelf':i===BANDS.length-1?'highshelf':'peaking'; b.frequency.value=f; b.Q.value=1.05; b.gain.value=eqState[kind].g[i]; prev.connect(b); prev=b; return b; });
+  prev.connect(out);
+  let wet=null;
+  if(kind==='voice'){ const conv=c.createConvolver(); conv.buffer=impulse(c,2.4,2.6); wet=c.createGain(); wet.gain.value=eqState.voice.rev/100*.55; prev.connect(conv); conv.connect(wet); wet.connect(out); }
+  return {input,output:out,filters,wet};
+}
+function applyEq(){
+  for(const [kind,ch] of [['song',songChain],['voice',voiceChain]]){ if(!ch) continue; ch.filters.forEach((b,i)=>b.gain.setTargetAtTime(eqState[kind].g[i],ctx.currentTime,.02)); }
+  if(voiceChain&&voiceChain.wet) voiceChain.wet.gain.setTargetAtTime(eqState.voice.rev/100*.55,ctx.currentTime,.03);
+  saveEq();
+}
 function ensureCtx(){
   if(!ctx){
     ctx=new (window.AudioContext||window.webkitAudioContext)();
-    trackGain=ctx.createGain(); trackGain.connect(ctx.destination);
-    voiceGain=ctx.createGain(); voiceGain.connect(ctx.destination);
+    /* 曲：音源 → 音量 → 曲EQ → 出力 ／ 声：テイク・マイク返し → 音量 → 声EQ＋リバーブ → 出力 */
+    outAn=ctx.createAnalyser(); outAn.fftSize=512; outAn.connect(ctx.destination);
+    songChain=makeChain(ctx,'song'); songChain.output.connect(outAn);
+    voiceChain=makeChain(ctx,'voice'); voiceChain.output.connect(outAn);
+    trackGain=ctx.createGain(); trackGain.connect(songChain.input);
+    voiceGain=ctx.createGain(); voiceGain.connect(voiceChain.input);
     applyMixer();
   }
   if(ctx.state!=='running') ctx.resume();
@@ -1503,10 +1704,25 @@ const ytSrc={
   player:null,ok:false,state:-1,id:'',title:'',
   ready(){ return this.ok&&this.duration()>0; }, duration(){ try{ return this.ok?this.player.getDuration():0; }catch(e){ return 0; } },
   playing(){ return this.ok&&(this.state===1||this.state===3); },
-  pos(){ try{ return this.ok?this.player.getCurrentTime():0; }catch(e){ return 0; } },
+  /* YouTube の現在位置は飛び飛びに更新されるので、間を時計で補間して滑らかにする（歌詞のズレ・速度ムラ対策） */
+  _t:0,_p:0,_raw:null,
+  rate(){ try{ return this.player.getPlaybackRate()||1; }catch(e){ return 1; } },
+  pos(){
+    if(!this.ok) return 0;
+    let raw; try{ raw=this.player.getCurrentTime()||0; }catch(e){ return 0; }
+    const now=performance.now();
+    if(this.state!==1){ this._t=raw; this._p=now; this._raw=raw; return raw; }
+    if(raw!==this._raw){
+      const est=this._t+(now-this._p)/1000*this.rate();
+      if(this._raw==null||Math.abs(est-raw)>0.3){ this._t=raw; this._p=now; }
+      else { this._t=est+(raw-est)*0.2; this._p=now; }
+      this._raw=raw;
+    }
+    return this._t+(now-this._p)/1000*this.rate();
+  },
   play(p){ if(!this.ok) return; this.player.seekTo(p,true); this.player.playVideo(); },
   stop(){ if(this.ok) this.player.pauseVideo(); },
-  seek(p){ if(this.ok) this.player.seekTo(p,true); },
+  seek(p){ if(this.ok){ this.player.seekTo(p,true); this._raw=null; this._t=p; this._p=performance.now(); } },
   setVol(v){ if(!this.ok) return; try{ this.player.setVolume(Math.round(Math.min(1,v)*100)); v>0?this.player.unMute():this.player.mute(); }catch(e){} }
 };
 const src=()=>mode==='yt'?ytSrc:fileSrc;
@@ -1521,11 +1737,56 @@ function setMode(m){
   if(m==='yt'){ nowTitle=ytSrc.title||''; srcKey=ytSrc.id?'yt:'+ytSrc.id:''; }
   else { nowTitle=fileSrc.name; srcKey=fileSrc.name?'file:'+fileSrc.name:''; }
   showNow(); refreshDuration(); updateButtons(); refreshAsrSrc();
+  $('eqYt').hidden=!(eqState.target==='song'&&m==='yt');
 }
 $('modeYt').addEventListener('click',()=>setMode('yt'));
 $('modeFile').addEventListener('click',()=>setMode('file'));
 
-function setArt(url){ $('ambient').style.backgroundImage=url?`url("${url}")`:''; $('fullBg').style.backgroundImage=url?`url("${url}")`:''; }
+/* アートワーク：背景のにじみ＋全画面の色 */
+let artUrl='';
+function setArt(url){
+  $('ambient').style.backgroundImage=url?`url("${url}")`:'';
+  const fa=$('fullArt'); fa.hidden=!url; if(url) fa.src=url;
+  if(url===artUrl&&url) return; artUrl=url;
+  paletteFrom(url).then(p=>applyPalette(p||hashPalette(nowTitle||fileSrc.name||'karaoke')));
+}
+function hsl2hex(h,s,l){ s/=100; l/=100; const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l), f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  return '#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join(''); }
+function hashPalette(s){ let h=0; for(const ch of String(s)) h=(h*31+ch.charCodeAt(0))>>>0; const b=h%360;
+  return [hsl2hex(b,55,42),hsl2hex((b+40)%360,50,38),hsl2hex((b+320)%360,60,46),hsl2hex((b+180)%360,35,32)]; }
+function paletteFrom(url){
+  return new Promise(res=>{
+    if(!url) return res(null);
+    const img=new Image(); img.crossOrigin='anonymous';
+    img.onload=()=>{ try{
+      const c=document.createElement('canvas'); c.width=48; c.height=27; const g=c.getContext('2d'); g.drawImage(img,0,0,48,27);
+      const d=g.getImageData(0,0,48,27).data, bins=new Array(18).fill(null).map(()=>({w:0,r:0,g:0,b:0}));
+      for(let i=0;i<d.length;i+=4){
+        const r=d[i]/255,gg=d[i+1]/255,b=d[i+2]/255, mx=Math.max(r,gg,b), mn=Math.min(r,gg,b), l=(mx+mn)/2, dl=mx-mn;
+        if(l<.08||l>.92||dl<.08) continue;
+        const s=dl/(1-Math.abs(2*l-1)); let h=mx===r?((gg-b)/dl)%6:mx===gg?(b-r)/dl+2:(r-gg)/dl+4; h=(h*60+360)%360;
+        const bn=bins[Math.floor(h/20)], w=s*(1-Math.abs(l-.5));
+        bn.w+=w; bn.r+=d[i]*w; bn.g+=d[i+1]*w; bn.b+=d[i+2]*w;
+      }
+      const top=bins.filter(x=>x.w>0).sort((a,b)=>b.w-a.w).slice(0,4);
+      if(!top.length) return res(null);
+      const cols=top.map(x=>{ const r=x.r/x.w,g2=x.g/x.w,b=x.b/x.w; return toMood(r,g2,b); });
+      while(cols.length<4) cols.push(cols[cols.length-1]);
+      res(cols);
+    }catch(e){ res(null); } };
+    img.onerror=()=>res(null);
+    img.src=url;
+  });
+}
+/* 夜の映像のように、彩度は残しつつ明るさを落として「エモい」色に寄せる */
+function toMood(r,g,b){ r/=255; g/=255; b/=255; const mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2, d=mx-mn;
+  let h=0; if(d){ h=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4; h=(h*60+360)%360; }
+  const s=d?d/(1-Math.abs(2*l-1)):0;
+  return hsl2hex(h,Math.round(Math.min(72,Math.max(38,s*100))),Math.round(Math.min(52,Math.max(30,l*100)))); }
+function applyPalette(p){ const f=$('full'); p.forEach((c,i)=>f.style.setProperty('--c'+(i+1),c)); }
+(function makeGrain(){ try{ const c=document.createElement('canvas'); c.width=c.height=160; const g=c.getContext('2d'), im=g.createImageData(160,160);
+  for(let i=0;i<im.data.length;i+=4){ const v=Math.random()*255; im.data[i]=im.data[i+1]=im.data[i+2]=v; im.data[i+3]=255; }
+  g.putImageData(im,0,0); $('grain').style.backgroundImage=`url(${c.toDataURL()})`; }catch(e){} })();
 function showNow(){
   const yt=mode==='yt'&&ytSrc.id;
   $('ytWrap').hidden=!yt; $('art').hidden=!!yt;
@@ -1693,7 +1954,7 @@ async function setupMic(deviceId){
   micStream=st; micSrc=ctx.createMediaStreamSource(st);
   if(!analyser){
     analyser=ctx.createAnalyser(); analyser.fftSize=1024;
-    monitorGain=ctx.createGain(); monitorGain.connect(ctx.destination);
+    monitorGain=ctx.createGain(); monitorGain.connect(voiceChain.input);
     voiceDest=ctx.createMediaStreamDestination();
     drawMeter();
   }
@@ -1749,6 +2010,7 @@ function updateButtons(){
   $('recBtn').disabled=$('fRec').disabled=!(r&&micStream);
   $('playBtn').disabled=!r||busy; $('fPlay').disabled=!r||busy;
   $('seek').disabled=$('fSeek').disabled=busy||!r;
+  $('back10').disabled=$('fwd10').disabled=busy||!(r||tp);
   $('syncBtn').disabled=!r||!lines.length||busy;
   $('fullBtn').disabled=!lines.length;
   $('modeYt').disabled=$('modeFile').disabled=busy;
@@ -1845,17 +2107,20 @@ function startVoice(tk,when,into){
   n.onended=()=>{ if(tp&&tp.node===n) stopTake(); };
   n.start(when,Math.max(0,into)); if(tp){ tp.vt0=when-Math.max(0,into); } return n;
 }
-function playTake(tk,withSong){
+/* from = テイクの何秒目から再生するか（波形タップ・10秒送りで使う） */
+function playTake(tk,withSong,from=0){
   ensureCtx(); stopTake();
   if(!tk.voiceBuf) return;
+  from=Math.max(0,Math.min(tk.voiceBuf.duration-0.05,from));
   const offS=mix.off/1000;
-  tp={t:tk,node:null,waitYt:false,vt0:0};
-  if(withSong&&canOverlay(tk)){
-    src().play(tk.startPos);
-    if(tk.mode==='file'){ const when=fileSrc.t0+(offS<0?-offS:0); tp.node=startVoice(tk,when,Math.max(0,offS)); }
+  const ov=withSong&&canOverlay(tk);
+  tp={t:tk,node:null,waitYt:false,vt0:0,withSong:ov};
+  if(ov){
+    src().play(tk.startPos+from);
+    if(tk.mode==='file'){ const into=from+offS, when=fileSrc.t0+(into<0?-into:0); tp.node=startVoice(tk,when,Math.max(0,into)); }
     else tp.waitYt=true;
-  } else tp.node=startVoice(tk,ctx.currentTime+0.02,Math.max(0,offS));
-  renderTakes(); syncPlayBtn();
+  } else tp.node=startVoice(tk,ctx.currentTime+0.02,from);
+  renderTakes(); syncPlayBtn(); updateButtons();
 }
 function ytStarted(){
   if(!tp||!tp.waitYt) return;
@@ -1863,12 +2128,27 @@ function ytStarted(){
   const into=mix.off/1000+(ytSrc.pos()-tp.t.startPos);
   tp.node=startVoice(tp.t,ctx.currentTime+(into<0?-into:0),Math.max(0,into));
 }
+const takePos=()=>tp&&tp.t.voiceBuf?Math.max(0,ctx.currentTime-tp.vt0):0;
+/* ±10秒：テイク再生中はテイクの中を、それ以外は曲を移動 */
+function skip(d){
+  if(recorder) return;
+  if(tp){ playTake(tp.t,tp.withSong,takePos()+d); return; }
+  const s=src(); if(!s.ready()) return;
+  const dur=s.duration(), cur=s.playing()?s.pos():+$('seek').value, p=Math.max(0,Math.min(dur-0.5,cur+d));
+  $('seek').value=$('fSeek').value=p; paintRange($('seek')); paintRange($('fSeek'));
+  $('timeNow').textContent=$('fNow').textContent=fmt(p);
+  if(s.playing()) s.seek(p); else if(mode==='yt') ytSrc.seek(p);
+  if(mode==='file') drawArtWave(p/(dur||1));
+  if(hasTimes()){ const k=lineAt(p); if(k>=0) setLine(k,true); }
+}
+$('back10').addEventListener('click',()=>skip(-10));
+$('fwd10').addEventListener('click',()=>skip(10));
 function stopTake(){
   if(!tp) return;
   const p=tp; tp=null;
   if(p.node){ try{p.node.stop()}catch(e){} }
   if(src().playing()) src().stop();
-  renderTakes(); syncPlayBtn();
+  renderTakes(); syncPlayBtn(); updateButtons();
 }
 function deleteTake(tk){
   if(tp&&tp.t===tk) stopTake();
@@ -1881,8 +2161,10 @@ async function renderMix(tk){
   const dur=Math.max(0.1,vb.duration-Math.max(0,offS));
   const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
   const off=new OAC(2,Math.ceil(dur*sr),sr);
-  const a=off.createBufferSource(); a.buffer=sb; const ag=off.createGain(); ag.gain.value=eff(mix.song); a.connect(ag); ag.connect(off.destination);
-  const v=off.createBufferSource(); v.buffer=vb; const vg=off.createGain(); vg.gain.value=eff(mix.voice); v.connect(vg); vg.connect(off.destination);
+  /* 書き出しにも、今のイコライザーとリバーブをそのまま掛ける */
+  const sc=makeChain(off,'song'), vc=makeChain(off,'voice'); sc.output.connect(off.destination); vc.output.connect(off.destination);
+  const a=off.createBufferSource(); a.buffer=sb; const ag=off.createGain(); ag.gain.value=eff(mix.song); a.connect(ag); ag.connect(sc.input);
+  const v=off.createBufferSource(); v.buffer=vb; const vg=off.createGain(); vg.gain.value=eff(mix.voice); v.connect(vg); vg.connect(vc.input);
   a.start(0,tk.startPos);
   if(offS>=0) v.start(0,offS); else v.start(-offS,0);
   const out=await new Promise(res=>{ off.oncomplete=e=>res(e.renderedBuffer); const p=off.startRendering(); if(p&&p.then) p.then(res); });
@@ -1918,14 +2200,28 @@ function renderTakes(){
         <div class="meta"><b>${esc(t('take',{n:tk.n}))}</b><span>${esc(stamp)} · ${fmt(tk.startPos)}→ · ${tk.voiceBuf?fmt(tk.voiceBuf.duration):'--:--'}${tk.title?' · '+esc(tk.title):''}</span></div>
         <button class="iconbtn ghost" data-a="del" aria-label="${esc(t('del'))}">${ic('trash','sm')}</button>
       </div>
-      <div class="wave"><canvas width="560" height="80"></canvas><i class="ph"></i></div>
+      <div class="wave" role="slider" aria-valuemin="0" aria-valuemax="${tk.voiceBuf?Math.round(tk.voiceBuf.duration):0}" aria-label="${esc(t('waveHint'))}" tabindex="0"><canvas class="base" width="560" height="88"></canvas><div class="prog"><canvas class="hi" width="560" height="88"></canvas></div><i class="hv"></i><i class="ph"></i></div>
       <p class="tip">${esc(ov?t('overlay'):t('voiceOnlyNote'))}</p>
       <div class="row acts">
         <button data-a="voice">${ic('voice','sm')}${esc(t('voiceOnly'))}</button>
         <a class="btn" href="${tk.url}" download="karaoke_take${tk.n}_voice.${ext}">${ic('down','sm')}${esc(t('saveVoice'))}</a>
         ${tk.mode==='file'&&ov&&tk.voiceBuf?`<button data-a="mix">${ic('down','sm')}${esc(t('saveMix'))}</button>`:''}
       </div>`;
-    if(tk.peaks) drawPeaks(el.querySelector('canvas'),tk.peaks,1,'#8e8e98','#8e8e98');
+    if(tk.peaks){
+      drawPeaks(el.querySelector('canvas.base'),tk.peaks,1,'#4a4a54','#4a4a54');
+      drawPeaks(el.querySelector('canvas.hi'),tk.peaks,1,'#ededf0','#ededf0');
+      const wv=el.querySelector('.wave'), hv=wv.querySelector('.hv');
+      /* 波形の幅に合わせて明るい波形を並べる（再生済みの部分だけ見える） */
+      requestAnimationFrame(()=>{ const hi=wv.querySelector('canvas.hi'); hi.style.width=wv.clientWidth+'px'; });
+      const frac=e=>{ const r=wv.getBoundingClientRect(); return Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)); };
+      wv.addEventListener('pointermove',e=>{ hv.style.left=(frac(e)*100)+'%'; });
+      wv.addEventListener('click',e=>playTake(tk,true,frac(e)*tk.voiceBuf.duration));
+      wv.addEventListener('keydown',e=>{
+        if(e.key==='ArrowRight'||e.key==='ArrowLeft'){ e.preventDefault(); e.stopPropagation(); const cur=tp&&tp.t===tk?takePos():0; playTake(tk,true,cur+(e.key==='ArrowRight'?5:-5)); }
+        if(e.key==='Enter'){ e.preventDefault(); playTake(tk,true,0); }
+      });
+      if(playing){ const pr=Math.min(1,takePos()/tk.voiceBuf.duration); wv.querySelector('.prog').style.width=(pr*100)+'%'; wv.querySelector('.ph').style.left=(pr*100)+'%'; }
+    }
     el.querySelector('[data-a="play"]').addEventListener('click',()=>playing?stopTake():playTake(tk,true));
     el.querySelector('[data-a="voice"]').addEventListener('click',()=>playTake(tk,false));
     el.querySelector('[data-a="del"]').addEventListener('click',()=>deleteTake(tk));
@@ -1967,15 +2263,36 @@ function showLyrics(){
   $('fullEmpty').hidden=hasTimes()||!has;
   curLine=-1; updateButtons();
 }
-function setLine(i){
+/* 歌詞を中央へ、一定の速さで滑らかに送る（指で動かした直後は3秒待つ） */
+const scrollJob=new WeakMap(), userHold=new WeakMap();
+function smoothCenter(list,item,instant){
+  if(!list||!item) return;
+  if((userHold.get(list)||0)>performance.now()) return;
+  const top=Math.max(0,Math.min(list.scrollHeight-list.clientHeight,item.offsetTop+item.offsetHeight/2-list.clientHeight/2));
+  if(instant){ list.scrollTop=top; return; }
+  const from=list.scrollTop, d=top-from; if(Math.abs(d)<1) return;
+  const id={}, t0=performance.now(), dur=Math.min(700,Math.max(380,Math.abs(d)*2.2)); scrollJob.set(list,id);
+  (function step(now){ if(scrollJob.get(list)!==id) return; const p=Math.min(1,(now-t0)/dur), e=p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2; list.scrollTop=from+d*e; if(p<1) requestAnimationFrame(step); })(t0);
+}
+['lyricsList','fullList'].forEach(id=>{ const l=$(id); const hold=()=>{ userHold.set(l,performance.now()+3000); scrollJob.set(l,null); };
+  l.addEventListener('wheel',hold,{passive:true}); l.addEventListener('touchstart',hold,{passive:true}); });
+function setLine(i,instant){
   if(i===curLine) return;
   const items=$('lyricsList').children, fitems=$('fullList').children;
   if(items[curLine]) items[curLine].classList.remove('cur');
   if(fitems[curLine]){ fitems[curLine].classList.remove('cur'); fitems[curLine].style.removeProperty('--p'); }
   curLine=i;
   for(let k=0;k<fitems.length;k++) fitems[k].classList.toggle('past',k<i);
-  if(items[i]){ items[i].classList.add('cur'); const ol=$('lyricsList'); if(!ol.closest('[hidden]')) ol.scrollTo({top:items[i].offsetTop-ol.offsetTop-ol.clientHeight/3,behavior:'smooth'}); }
-  if(fitems[i]){ fitems[i].classList.add('cur'); if(!$('full').hidden){ const fl=$('fullList'); fl.scrollTo({top:fitems[i].offsetTop-fl.offsetTop-fl.clientHeight*.32,behavior:'smooth'}); } }
+  for(let k=0;k<items.length;k++) items[k].classList.toggle('near',Math.abs(k-i)===1);
+  if(items[i]){ items[i].classList.add('cur'); smoothCenter($('lyricsList'),items[i],instant); }
+  if(fitems[i]){ fitems[i].classList.add('cur'); if(!$('full').hidden) smoothCenter($('fullList'),fitems[i],instant); }
+}
+/* 行の色づき：行の長さに合わせて一定の速さで進み、次の行の少し前に塗り終える */
+function lineFill(k,p){
+  const t0=times[k], nt=nextTimed(k), gap=nt!=null?nt-t0:5;
+  const len=[...(lines[k]||'')].length||1;
+  const dur=Math.max(.6,Math.min(gap-.12,Math.max(1.2,len*.32)));
+  return Math.max(0,Math.min(1,(p+lyrOff-t0)/dur));
 }
 function lineAt(p){ p+=lyrOff; let k=-1; for(let i=0;i<lines.length;i++) if(times[i]!=null&&times[i]<=p) k=i; return k; }
 function nextTimed(i){ for(let k=i+1;k<lines.length;k++) if(times[k]!=null) return times[k]; return null; }
@@ -2074,7 +2391,7 @@ $('editLyricsBtn').addEventListener('click',()=>{
 $('syncBtn').addEventListener('click',()=>{
   if(recorder) return; ensureCtx(); stopTake();
   syncing=true; times=new Array(lines.length).fill(null); syncIdx=nextNonBlank(0);
-  showLyrics(); $('syncBar').hidden=false; $('lyricsHint').hidden=true;
+  showLyrics(); $('syncBar').hidden=false; $('lyricsHint').hidden=true; $('lyricsList').classList.add('syncing');
   $('seek').value=0; src().play(0); setTimeout(syncPlayBtn,80); setLine(syncIdx);
 });
 function markNext(){
@@ -2084,18 +2401,23 @@ function markNext(){
   syncIdx=nextNonBlank(syncIdx+1);
   if(syncIdx<lines.length) setLine(syncIdx); else endSync();
 }
-function endSync(){ syncing=false; $('syncBar').hidden=true; $('lyricsHint').hidden=false; saveLyrics(); showLyrics(); }
+function endSync(){ syncing=false; $('syncBar').hidden=true; $('lyricsHint').hidden=false; $('lyricsList').classList.remove('syncing'); saveLyrics(); showLyrics(); }
 $('nextLineBtn').addEventListener('click',markNext);
 $('syncDoneBtn').addEventListener('click',()=>{ endSync(); src().stop(); setTimeout(syncPlayBtn,80); });
 
 /* 全画面歌詞 */
-function openFull(){ $('full').hidden=false; document.documentElement.style.overflow='hidden'; $('fullEmpty').hidden=hasTimes()||!lines.length; const c=curLine; curLine=-1; setLine(c>=0?c:0); }
+function openFull(){
+  $('full').hidden=false; document.documentElement.style.overflow='hidden'; $('fullEmpty').hidden=hasTimes()||!lines.length;
+  const s=src(), p=s.ready()&&s.playing()?s.pos():+$('seek').value, k=hasTimes()?lineAt(p):-1;
+  const c=k>=0?k:(curLine>=0?curLine:0); curLine=-1; setLine(c,true);
+}
 function closeFull(){ $('full').hidden=true; document.documentElement.style.overflow=''; }
 $('fullBtn').addEventListener('click',openFull); $('fullBtn2').addEventListener('click',openFull);
 $('fullClose').addEventListener('click',closeFull);
-function showOff(){ $('offVal').textContent=(lyrOff>0?'+':'')+lyrOff.toFixed(1)+t('sec'); store.set('kr-lyroff',lyrOff); }
-$('offPlus').addEventListener('click',()=>{ lyrOff=Math.round((lyrOff+.1)*10)/10; showOff(); });
-$('offMinus').addEventListener('click',()=>{ lyrOff=Math.round((lyrOff-.1)*10)/10; showOff(); });
+function showOff(){ const s=(lyrOff>0?'+':'')+lyrOff.toFixed(1)+t('sec'); $('offVal').textContent=$('offVal2').textContent=s; store.set('kr-lyroff',lyrOff); }
+const nudge=d=>{ lyrOff=Math.round((lyrOff+d)*10)/10; showOff(); };
+$('offPlus').addEventListener('click',()=>nudge(.1)); $('offPlus2').addEventListener('click',()=>nudge(.1));
+$('offMinus').addEventListener('click',()=>nudge(-.1)); $('offMinus2').addEventListener('click',()=>nudge(-.1));
 
 /* ===== AI文字起こし ===== */
 const ASR_WORKER=`
@@ -2322,6 +2644,66 @@ $('asrStart').addEventListener('click',async()=>{
   else asrWorker.postMessage({model,device,dtype,probe:loudestWindow(audio)});
 });
 
+/* ===== イコライザー画面 ===== */
+const eqKind=()=>eqState.target;
+function setEqTarget(k){
+  eqState.target=k; saveEq();
+  $('eqTSong').setAttribute('aria-pressed',k==='song'); $('eqTVoice').setAttribute('aria-pressed',k==='voice');
+  $('chRev').hidden=k!=='voice';
+  $('eqYt').hidden=!(k==='song'&&mode==='yt');
+  renderFaders(); renderPresets(); drawCurve(); fitPager();
+}
+$('eqTSong').addEventListener('click',()=>setEqTarget('song'));
+$('eqTVoice').addEventListener('click',()=>setEqTarget('voice'));
+function renderPresets(){
+  const box=$('presets'); box.innerHTML='';
+  for(const k of Object.keys(PRESETS)){
+    const b=document.createElement('button'); b.type='button'; b.textContent=t(k);
+    b.setAttribute('aria-pressed',eqState[eqKind()].p===k);
+    b.addEventListener('click',()=>{ const s=eqState[eqKind()]; s.g=PRESETS[k].slice(); s.p=k; applyEq(); renderFaders(); renderPresets(); drawCurve(); });
+    box.appendChild(b);
+  }
+}
+$('eqReset').addEventListener('click',()=>{ const s=eqState[eqKind()]; s.g=PRESETS.pFlat.slice(); s.p='pFlat'; applyEq(); renderFaders(); renderPresets(); drawCurve(); });
+const DB=12;
+function renderFaders(){
+  const box=$('faders'); box.innerHTML='';
+  BANDS.forEach((f,i)=>{
+    const col=document.createElement('div'); col.className='fader';
+    col.innerHTML=`<output></output><div class="track" role="slider" tabindex="0" aria-label="${BLBL[i]} Hz" aria-valuemin="-12" aria-valuemax="12"><i class="fill"></i><i class="cap"></i></div><small>${BLBL[i]}</small>`;
+    const tr=col.querySelector('.track'), cap=col.querySelector('.cap'), fill=col.querySelector('.fill'), out=col.querySelector('output');
+    const paint=()=>{ const v=eqState[eqKind()].g[i], y=(1-(v+DB)/(2*DB)); cap.style.top=`calc(6px + ${y} * (100% - 12px))`;
+      const mid=.5, a=Math.min(y,mid), b=Math.max(y,mid); fill.style.top=`calc(6px + ${a} * (100% - 12px))`; fill.style.height=`calc(${b-a} * (100% - 12px))`;
+      out.textContent=(v>0?'+':'')+(Math.round(v*10)/10); tr.setAttribute('aria-valuenow',v); };
+    const set=v=>{ const s=eqState[eqKind()]; s.g[i]=Math.round(Math.max(-DB,Math.min(DB,v))*2)/2; s.p=''; paint(); applyEq(); drawCurve(); renderPresets(); };
+    const fromY=e=>{ const r=tr.getBoundingClientRect(); const y=(e.clientY-r.top-6)/(r.height-12); return (1-Math.max(0,Math.min(1,y)))*2*DB-DB; };
+    tr.addEventListener('pointerdown',e=>{ tr.setPointerCapture(e.pointerId); set(fromY(e)); });
+    tr.addEventListener('pointermove',e=>{ if(tr.hasPointerCapture(e.pointerId)) set(fromY(e)); });
+    tr.addEventListener('dblclick',()=>set(0));
+    tr.addEventListener('keydown',e=>{ const v=eqState[eqKind()].g[i]; if(e.key==='ArrowUp'){ e.preventDefault(); set(v+.5); } if(e.key==='ArrowDown'){ e.preventDefault(); set(v-.5); } if(e.key==='0') set(0); });
+    paint(); box.appendChild(col);
+  });
+}
+/* 周波数特性のカーブ（各バンドの山を対数軸で足し合わせた近似） */
+function drawCurve(){
+  const c=$('eqCurve'); if(!c||!c.offsetWidth) return;
+  const W=c.width, H=c.height, g=c.getContext('2d'), gains=eqState[eqKind()].g;
+  g.clearRect(0,0,W,H);
+  g.strokeStyle='#26262c'; g.lineWidth=1;
+  for(const db of [-12,-6,0,6,12]){ const y=H/2-db/DB*(H/2-14); g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
+  g.fillStyle='#5f5f69'; g.font='18px IBM Plex Mono, monospace';
+  BANDS.forEach((f,i)=>{ const x=(Math.log2(f/20)/Math.log2(20000/20))*W; g.fillRect(x,H-6,1,6); });
+  const pts=[]; for(let x=0;x<=W;x+=4){ const f=20*Math.pow(1000,x/W); let db=0;
+    gains.forEach((gn,i)=>{ const o=Math.log2(f/BANDS[i]);
+      if(i===0) db+=gn/(1+Math.exp(o*3)); else if(i===BANDS.length-1) db+=gn/(1+Math.exp(-o*3)); else db+=gn*Math.exp(-(o*o)/(2*.42*.42)); });
+    pts.push([x,H/2-Math.max(-DB,Math.min(DB,db))/DB*(H/2-14)]); }
+  const grd=g.createLinearGradient(0,0,0,H); grd.addColorStop(0,'rgba(237,237,240,.22)'); grd.addColorStop(1,'rgba(237,237,240,0)');
+  g.beginPath(); g.moveTo(0,H/2); pts.forEach(([x,y])=>g.lineTo(x,y)); g.lineTo(W,H/2); g.closePath(); g.fillStyle=grd; g.fill();
+  g.beginPath(); pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y)); g.strokeStyle='#ededf0'; g.lineWidth=2.5; g.stroke();
+}
+$('revAmt').value=eqState.voice.rev; $('outRev').textContent=eqState.voice.rev+'%'; paintRange($('revAmt'));
+$('revAmt').addEventListener('input',e=>{ eqState.voice.rev=+e.target.value; $('outRev').textContent=eqState.voice.rev+'%'; paintRange(e.target); applyEq(); });
+
 /* ===== キーボード ===== */
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ if(!$('langSheet').hidden) closeLang(); else if(!$('full').hidden) closeFull(); else if(counting) counting.cancel=true; return; }
@@ -2330,6 +2712,8 @@ document.addEventListener('keydown',e=>{
   if(e.code==='Space'){ e.preventDefault(); if(syncing) markNext(); else if(!$('playBtn').disabled||tp) togglePlay(); }
   else if(e.key==='r'||e.key==='R'){ if(!$('recBtn').disabled) $('recBtn').click(); }
   else if(e.key==='l'||e.key==='L'){ if(!$('full').hidden) closeFull(); else if(lines.length) openFull(); }
+  else if(e.key==='ArrowLeft'){ e.preventDefault(); skip(-10); }
+  else if(e.key==='ArrowRight'){ e.preventDefault(); skip(10); }
 });
 
 /* ===== 起動 ===== */
@@ -2337,7 +2721,10 @@ bindChannel('song','swSong','volSong','outSong','chSong');
 bindChannel('voice','swVoice','volVoice','outVoice','chVoice');
 bindChannel('mon','swMon','volMon','outMon','chMon');
 setEngine(asrEngine); applyKeyUi(); showOff();
-applyI18n(); setMode(mode); setTab(store.get('kr-tab','song')); restoreYt();
+curTab=TABS.includes(store.get('kr-tab','song'))?store.get('kr-tab','song'):'song';
+applyI18n(); setMode(mode); setEqTarget(eqState.target); restoreYt();
+requestAnimationFrame(()=>setTab(curTab,true));
+if(!artUrl) applyPalette(hashPalette(nowTitle||'karaoke'));
 paintRange($('seek')); paintRange($('fSeek'));
 
 (function tick(){
@@ -2353,13 +2740,21 @@ paintRange($('seek')); paintRange($('fSeek'));
     if(k>=0){
       setLine(k);
       const fi=$('fullList').children[k], nt=nextTimed(k);
-      if(fi&&!$('full').hidden){ const span=Math.min(nt!=null?nt-times[k]:4,8), pr=Math.max(0,Math.min(1,(p+lyrOff-times[k])/Math.max(.5,span*.85))); fi.style.setProperty('--p',(pr*100).toFixed(1)+'%'); }
+      if(fi&&!$('full').hidden) fi.style.setProperty('--p',(lineFill(k,p)*100).toFixed(1)+'%');
     }
   }
   if(recorder) $('recLabel').textContent='REC '+fmt((performance.now()-recT0)/1000);
   if(tp&&tp.node&&tp.t.voiceBuf){
-    const el=document.querySelector(`.take[data-n="${tp.t.n}"] .ph`);
-    if(el) el.style.left=Math.max(0,Math.min(100,(ctx.currentTime-tp.vt0)/tp.t.voiceBuf.duration*100))+'%';
+    const w=document.querySelector(`.take[data-n="${tp.t.n}"] .wave`);
+    if(w){ const pr=Math.max(0,Math.min(100,takePos()/tp.t.voiceBuf.duration*100)); w.querySelector('.ph').style.left=pr+'%'; w.querySelector('.prog').style.width=pr+'%'; }
+  }
+  /* 全画面の背景：曲の音に合わせてわずかに呼吸する（YouTubeはゆっくり一定に） */
+  if(!$('full').hidden){
+    let lv=0;
+    if(outAn&&(fileSrc.playing()||tp)){ const a=tick.buf||(tick.buf=new Uint8Array(outAn.frequencyBinCount)); outAn.getByteFrequencyData(a); let s=0; for(let i=1;i<24;i++) s+=a[i]; lv=s/(23*255); }
+    else if(playing) lv=.18+.06*Math.sin(performance.now()/900);
+    tick.lv=(tick.lv||0)*.85+lv*.15;
+    $('full').style.setProperty('--pulse',(1+tick.lv*.07).toFixed(4));
   }
   requestAnimationFrame(tick);
 })();

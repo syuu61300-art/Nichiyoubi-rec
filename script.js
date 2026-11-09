@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Karaoke Rec Original — YouTube EQ
 // @namespace    karaoke-rec-original
-// @version      1.0.0
-// @description  10-band equalizer for YouTube. Inside the Karaoke Rec Original page it follows the app's "Song" equalizer.
+// @version      1.1.0
+// @description  10-band equalizer for YouTube. Inside the Karaoke Rec Original page it follows the app's "Song" equalizer and reports singing activity every 10 ms so the lyrics stay in time.
 // @match        https://www.youtube.com/*
 // @match        https://m.youtube.com/*
 // @match        https://www.youtube-nocookie.com/*
@@ -83,7 +83,7 @@
       const lim = c.createDynamicsCompressor();
       lim.threshold.value = -2; lim.knee.value = 4; lim.ratio.value = 14; lim.attack.value = 0.003; lim.release.value = 0.12;
       prev.connect(lim); lim.connect(c.destination);
-      const ch = { pre, filters };
+      const ch = { pre, filters, video, vad: makeVad(c, src) };
       chains.set(video, ch); all.add(ch);
       apply();
       announce();
@@ -124,14 +124,55 @@
     .observe(document.documentElement, { childList: true, subtree: true });
   window.addEventListener('yt-navigate-finish', () => setTimeout(scan, 300));
 
+  /* ---------- 歌声の検出（0.01秒ごと） ----------
+     曲の音を左右に分け、声の帯域（約300〜3400Hz）だけを取り出す。
+     ボーカルは中央に定位していることが多いので「中央の成分 ÷ 左右の差の成分」が大きく、
+     かつ普段の音量より十分大きいときを「歌っている」とみなす。 */
+  function makeVad(c, src) {
+    try {
+      const sp = c.createChannelSplitter(2);
+      src.connect(sp);
+      const mk = ch => { const hp = c.createBiquadFilter(), lp = c.createBiquadFilter(), an = c.createAnalyser();
+        hp.type = 'highpass'; hp.frequency.value = 280; lp.type = 'lowpass'; lp.frequency.value = 3400; an.fftSize = 512;
+        sp.connect(hp, ch); hp.connect(lp); lp.connect(an); return an; };
+      return { L: mk(0), R: mk(1), bl: new Float32Array(512), br: new Float32Array(512), floor: -9, on: false, offFor: 1, onFor: 0, lastOn: 0 };
+    } catch (e) { return null; }
+  }
+  function vadStep(v) {
+    v.L.getFloatTimeDomainData(v.bl); v.R.getFloatTimeDomainData(v.br);
+    let em = 0, es = 0, el = 0, er = 0;
+    for (let i = 0; i < v.bl.length; i++) { const l = v.bl[i], r = v.br[i], m = (l + r) * .5, s = (l - r) * .5; em += m * m; es += s * s; el += l * l; er += r * r; }
+    const n = v.bl.length; em /= n; es /= n;
+    const mono = er < el * 1e-4 || el < er * 1e-4;              // 片側しか無い音源は中央判定をしない
+    const ratio = mono ? 99 : em / (es + 1e-10);
+    const le = Math.log(em + 1e-10);
+    if (le < v.floor) v.floor = le; else v.floor += (le - v.floor) * 0.0025;   // ゆっくり上がる下限（その曲の「静かなとき」）
+    const score = le - v.floor;
+    const want = v.on ? (score > 0.9 && ratio > 1.25) : (score > 1.6 && ratio > 1.8);
+    let onset = 0;
+    if (want) { v.onFor += 0.01; if (!v.on && v.onFor >= 0.04) { if (v.offFor >= 0.35) onset = 1; v.on = true; v.offFor = 0; } }
+    else { v.onFor = 0; if (v.on) { v.offFor += 0.01; if (v.offFor >= 0.08) v.on = false; } else v.offFor += 0.01; }
+    return { a: v.on ? 1 : 0, o: onset, s: Math.round(score * 100) / 100, r: Math.round(Math.min(ratio, 99) * 10) / 10 };
+  }
+  let linked = false;
+  setInterval(() => {
+    if (!linked || window.parent === window) return;
+    for (const ch of all) {
+      if (!ch.vad || !ch.video || ch.video.paused) continue;
+      const f = vadStep(ch.vad);
+      window.parent.postMessage({ type: 'kr-vad', t: ch.video.currentTime - (f.o ? 0.04 : 0), a: f.a, o: f.o, s: f.s, r: f.r }, '*');
+    }
+  }, 10);
+
   /* ---------- カラオケ録音オリジナルとの連携（埋め込みプレーヤー内） ---------- */
-  function announce() { if (window.parent !== window) window.parent.postMessage({ type: 'kr-eq-ready', v: 1 }, '*'); }
+  function announce() { if (window.parent !== window) window.parent.postMessage({ type: 'kr-eq-ready', v: 2, vad: true }, '*'); }
   window.addEventListener('message', e => {
     const d = e.data;
     if (!d || typeof d !== 'object') return;
-    if (d.type === 'kr-eq-ping') { announce(); return; }
+    if (d.type === 'kr-eq-ping') { linked = true; announce(); return; }
+    if (d.type === 'kr-vad-on') { linked = !!d.on; return; }
     if (d.type !== 'kr-eq' || !Array.isArray(d.g) || d.g.length !== 10) return;
-    remote = true;
+    remote = true; linked = true;
     st = { on: d.on !== false, g: d.g.map(clamp), p: '' };
     apply(); syncUI();
   });

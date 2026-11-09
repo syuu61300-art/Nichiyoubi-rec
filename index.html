@@ -144,6 +144,16 @@ input[type=range]:disabled{opacity:.5}
 .lrc-results button[aria-current="true"]{border-color:var(--hot)}
 .lyr-src{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--mute);min-width:0}
 .lyr-src span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.asr{display:grid;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px}
+.asr-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.asr-h b{font-size:15px}
+.lbl{font-size:12px;color:var(--mute);margin-bottom:-4px}
+select.field{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px;font-size:15px}
+.prog{height:6px;border-radius:3px;background:var(--line);overflow:hidden;position:relative}
+.prog i{position:absolute;inset:0 auto 0 0;width:0;background:var(--grad);transition:width .2s}
+.prog.busy i{width:35%!important;animation:slide 1.2s ease-in-out infinite}
+@keyframes slide{0%{left:-35%}100%{left:100%}}
 /* takes */
 .takes{display:grid;gap:12px}
 .take{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:10px}
@@ -350,7 +360,45 @@ input[type=range]:disabled{opacity:.5}
         <span class="status">この端末のブラウザ内にだけ保存されます</span></div>
         </div>
       </details>
-      <p class="tip">歌詞データ：<a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a></p>
+
+      <div class="asr" id="asrBox">
+        <div class="asr-h"><b>🎙 AIで歌詞を文字起こし</b><span class="badge sync">Whisper</span></div>
+        <p class="tip">録音したテイク（自分の声）を聞き取らせるのがおすすめです。伴奏が入らないので精度が上がります。</p>
+        <label class="lbl" for="asrSrc">聞き取る音声</label>
+        <select class="field" id="asrSrc"></select>
+        <div class="seg" role="group" aria-label="文字起こしの方法">
+          <button id="engLocal" aria-pressed="true">端末内（無料）</button>
+          <button id="engGroq" aria-pressed="false">Groq（高精度）</button>
+        </div>
+        <div class="stack" id="asrLocal">
+          <label class="lbl" for="asrModel">モデル</label>
+          <select class="field" id="asrModel">
+            <option value="onnx-community/whisper-base">標準 — whisper-base（約80MB・速い）</option>
+            <option value="onnx-community/whisper-small">高め — whisper-small（約250MB）</option>
+            <option value="onnx-community/whisper-large-v3-turbo">最高 — large-v3-turbo（約600MB・WebGPU必須）</option>
+          </select>
+          <p class="tip" id="asrDevTip">初回だけモデルをダウンロードし、次回からは端末に保存されたものを使います。音声は端末の外に出ません。</p>
+        </div>
+        <div class="stack" id="asrGroq" hidden>
+          <p class="warn" style="background:rgba(255,181,71,.08);border-color:rgba(255,181,71,.35)">この方法では、選んだ音声がGroqのサーバーに送信されます。</p>
+          <div class="row" style="flex-wrap:nowrap">
+            <input class="field" id="groqKey" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="gsk_…（GroqのAPIキー）" aria-label="GroqのAPIキー" style="font-family:var(--mono)">
+          </div>
+          <select class="field" id="groqModel" aria-label="Groqのモデル">
+            <option value="whisper-large-v3">whisper-large-v3（精度重視）</option>
+            <option value="whisper-large-v3-turbo">whisper-large-v3-turbo（速さ・安さ重視）</option>
+          </select>
+          <p class="tip">キーは <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys ↗</a> で無料で作れます。この端末にだけ保存されます。</p>
+        </div>
+        <div class="row">
+          <button class="primary" id="asrStart">文字起こしを開始</button>
+          <button id="asrCancel" hidden>中止</button>
+        </div>
+        <div class="prog" id="asrProg" hidden><i id="asrBar"></i></div>
+        <span class="status" id="asrStatus" hidden></span>
+      </div>
+
+      <p class="tip">歌詞データ：<a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a> ／ 文字起こし：OpenAI Whisper</p>
     </div>
     <div class="stack" id="lyricsView" hidden>
       <div class="lyr-src"><span id="lyrSrc"></span></div>
@@ -495,7 +543,7 @@ function setMode(m){
   $('iosVolTip').hidden=!(isIOS&&m==='yt');
   if(m==='yt'){ nowTitle=ytSrc.title||''; srcKey=ytSrc.id?'yt:'+ytSrc.id:''; }
   else { nowTitle=fileSrc.name; srcKey=fileSrc.name?'file:'+fileSrc.name:''; }
-  showNow(); refreshDuration(); updateButtons();
+  showNow(); refreshDuration(); updateButtons(); refreshAsrSrc();
 }
 $('modeYt').addEventListener('click',()=>setMode('yt'));
 $('modeFile').addEventListener('click',()=>setMode('file'));
@@ -637,7 +685,7 @@ $('songFile').addEventListener('change',async e=>{
   try{ ensureCtx(); stopTake(); fileSrc.stop();
     fileSrc.buf=await decodeAB(await f.arrayBuffer()); fileSrc.name=f.name.replace(/\.[^.]+$/,'');
     nowTitle=fileSrc.name; srcKey='file:'+fileSrc.name; showNow();
-    say($('songStatus'),'✓ '+f.name,'ok'); $('seek').value=0; refreshDuration(); updateButtons(); autoLyrics();
+    say($('songStatus'),'✓ '+f.name,'ok'); $('seek').value=0; refreshDuration(); updateButtons(); refreshAsrSrc(); autoLyrics();
   }catch(err){ say($('songStatus'),'読み込めませんでした（配信アプリの保護された曲は使えません）','err'); }
 });
 
@@ -798,6 +846,7 @@ function toWav(buf){
 }
 function renderTakes(){
   const box=$('takes'); box.innerHTML='';
+  refreshAsrSrc();
   if(!takes.length){ box.innerHTML='<p class="empty">● を押すと、曲が流れて録音が始まります</p>'; return; }
   for(const t of takes){
     const ty=t.blob.type, ext=ty.includes('mp4')?'m4a':ty.includes('ogg')?'ogg':'webm';
@@ -899,7 +948,12 @@ async function searchLrc(q,auto){
   const seq=++lrcSeq;
   say($('lrcStatus'),'歌詞を検索中…'); $('lrcBtn').disabled=true;
   try{
-    let items=await lrclibSearch({q});
+    /* 「アーティスト - 曲名」形式なら、曲名とアーティストを分けて先に探す */
+    let items=[];
+    const raw=(nowTitle||'').replace(/【[^】]*】|\([^)]*\)|（[^）]*）|MV|Music Video|Official/gi,'').trim();
+    const parts=raw.split(/\s*[-–—／/]\s*/).filter(Boolean);
+    if(parts.length>=2) items=await lrclibSearch({track_name:parts.slice(1).join(' '),artist_name:parts[0]});
+    if(!items.length) items=await lrclibSearch({q});
     if(!items.length){
       const words=q.split(' ').filter(Boolean);
       if(words.length>2) items=await lrclibSearch({track_name:words.slice(-2).join(' '),artist_name:words.slice(0,-2).join(' ')});
@@ -948,6 +1002,174 @@ function autoLyrics(){
   $('lrcQ').value=q; searchLrc(q,true);
 }
 
+/* ---------- AI文字起こし（Whisper） ---------- */
+const ASR_WORKER=`
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1';
+env.allowLocalModels = false;
+let asr = null, loaded = '';
+self.onmessage = async (e) => {
+  const { model, device, dtype, audio } = e.data;
+  try {
+    const key = model + '|' + device + '|' + JSON.stringify(dtype);
+    if (!asr || loaded !== key) {
+      self.postMessage({ type: 'phase', phase: 'load' });
+      asr = await pipeline('automatic-speech-recognition', model, {
+        device, dtype,
+        progress_callback: (p) => { if (p.status === 'progress') self.postMessage({ type: 'progress', file: p.file, loaded: p.loaded, total: p.total }); }
+      });
+      loaded = key;
+    }
+    self.postMessage({ type: 'phase', phase: 'run' });
+    const out = await asr(audio, { language: 'japanese', task: 'transcribe', return_timestamps: true, chunk_length_s: 30, stride_length_s: 5 });
+    self.postMessage({ type: 'done', chunks: out.chunks || [], text: out.text || '' });
+  } catch (err) {
+    self.postMessage({ type: 'error', message: String((err && err.message) || err) });
+  }
+};`;
+let asrWorker=null, asrEngine=store.get('kr-asr-engine','local'), gpuInfo=null;
+$('groqKey').value=store.get('kr-groq-key','');
+$('asrModel').value=store.get('kr-asr-model','onnx-community/whisper-base');
+$('groqModel').value=store.get('kr-groq-model','whisper-large-v3');
+$('asrModel').addEventListener('change',e=>store.set('kr-asr-model',e.target.value));
+$('groqModel').addEventListener('change',e=>store.set('kr-groq-model',e.target.value));
+$('groqKey').addEventListener('change',e=>store.set('kr-groq-key',e.target.value.trim()));
+function setEngine(m){
+  asrEngine=m; store.set('kr-asr-engine',m);
+  $('engLocal').setAttribute('aria-pressed',m==='local'); $('engGroq').setAttribute('aria-pressed',m==='groq');
+  $('asrLocal').hidden=m!=='local'; $('asrGroq').hidden=m!=='groq';
+}
+$('engLocal').addEventListener('click',()=>setEngine('local'));
+$('engGroq').addEventListener('click',()=>setEngine('groq'));
+async function detectGpu(){
+  if(gpuInfo) return gpuInfo;
+  gpuInfo={ok:false,f16:false};
+  try{ if(navigator.gpu){ const a=await navigator.gpu.requestAdapter(); if(a){ gpuInfo={ok:true,f16:a.features.has('shader-f16')}; } } }catch(e){}
+  const big=$('asrModel').querySelector('[value$="large-v3-turbo"]');
+  if(!gpuInfo.ok){ big.disabled=true; if($('asrModel').value===big.value) $('asrModel').value='onnx-community/whisper-base';
+    $('asrDevTip').textContent='この端末はWebGPUが使えないため、CPUで処理します（少し時間がかかります）。初回だけモデルをダウンロードし、音声は端末の外に出ません。'; }
+  return gpuInfo;
+}
+
+/* 聞き取る音声の候補：テイク（自分の声）と音源ファイル */
+function refreshAsrSrc(){
+  const sel=$('asrSrc'), prev=sel.value; sel.innerHTML='';
+  for(const t of takes){ if(t.voiceBuf){ const o=document.createElement('option'); o.value='take:'+t.n; o.textContent=`テイク ${t.n}（自分の声・${fmt(t.voiceBuf.duration)}）おすすめ`; sel.appendChild(o); } }
+  if(mode==='file'&&fileSrc.buf){ const o=document.createElement('option'); o.value='song'; o.textContent='曲の音源ファイル（伴奏ありのため精度は下がります）'; sel.appendChild(o); }
+  if(!sel.options.length){ const o=document.createElement('option'); o.value=''; o.textContent=mode==='yt'?'まず ● で1曲歌って録音してください（YouTubeの音は聞き取れません）':'音源ファイルを読み込むか、● で録音してください'; sel.appendChild(o); }
+  if([...sel.options].some(o=>o.value===prev)) sel.value=prev;
+  $('asrStart').disabled=!sel.value||!!asrWorker&&asrBusy;
+}
+let asrBusy=false;
+function asrSay(msg,cls){ say($('asrStatus'),msg,cls); }
+function asrProgress(v){ const p=$('asrProg'); p.hidden=v==null; p.classList.toggle('busy',v===-1); if(v>=0) $('asrBar').style.width=(v*100).toFixed(0)+'%'; }
+function asrDone(){ asrBusy=false; $('asrCancel').hidden=true; $('asrStart').disabled=false; refreshAsrSrc(); }
+
+async function to16kMono(buf){
+  const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  const off=new OAC(1,Math.ceil(buf.duration*16000),16000);
+  const s=off.createBufferSource(); s.buffer=buf; s.connect(off.destination); s.start(0);
+  const r=await new Promise(res=>{ off.oncomplete=e=>res(e.renderedBuffer); const p=off.startRendering(); if(p&&p.then) p.then(res); });
+  return r.getChannelData(0).slice();
+}
+function rms(a,s,e){ const i0=Math.max(0,Math.floor(s*16000)), i1=Math.min(a.length,Math.ceil(e*16000)); let sum=0; for(let i=i0;i<i1;i++) sum+=a[i]*a[i]; return i1>i0?Math.sqrt(sum/(i1-i0)):0; }
+const HALLU=/ご視聴ありがとうございました|チャンネル登録|高評価|字幕|thank(s)? for watching|subscribe|お疲れ様でした|ご覧いただき/i;
+
+/* 文字起こし結果 → 歌詞の行と時間 */
+function segmentsToLines(segs,audio,shift){
+  const level=(()=>{ let s=0; for(let i=0;i<audio.length;i+=160) s+=audio[i]*audio[i]; return Math.sqrt(s/(audio.length/160)); })();
+  const out=[]; let last='', rep=0;
+  for(const g of segs){
+    let text=(g.text||'').trim(); const st=g.start, en=g.end!=null?g.end:st+3;
+    if(!text||st==null) continue;
+    if(HALLU.test(text)) continue;
+    if(/^[\s.,、。!?！？♪～〜…・ー-]+$/.test(text)) continue;
+    if(rms(audio,st,en)<level*0.25) continue;                 // ほぼ無音の区間に出た文字は幻覚とみなす
+    if(text===last){ if(++rep>=2) continue; } else { rep=0; last=text; }
+    // 長すぎる行は、空白や読点で区切って時間を割り振る
+    const parts=text.length>22?text.split(/(?<=[、。！？!?\s　])/).map(s=>s.trim()).filter(Boolean):[text];
+    const total=parts.reduce((n,p)=>n+p.length,0)||1; let t=st;
+    for(const p of parts){ out.push({t:Math.max(0,t+shift),s:p.replace(/[。]$/,'')}); t+=(en-st)*p.length/total; }
+  }
+  return out;
+}
+function applyAsr(rows,label){
+  if(!rows.length){ asrSay('歌詞として使える言葉を聞き取れませんでした。声が小さい場合は近くで歌って録音し直してください。','err'); return; }
+  if(syncing) endSync();
+  lines=rows.map(r=>r.s); times=rows.map(r=>r.t);
+  lyrKey=srcKey; lyrLabel=label; saveLyrics(); showLyrics();
+  asrSay(`${rows.length}行を書き起こしました。聞き間違いは「別の歌詞」→「自分で貼り付ける」で直せます。`,'ok');
+}
+
+$('asrStart').addEventListener('click',async()=>{
+  const v=$('asrSrc').value; if(!v||asrBusy) return;
+  ensureCtx();
+  let buf, shift=0, label;
+  if(v==='song'){ buf=fileSrc.buf; }
+  else { const t=takes.find(x=>'take:'+x.n===v); if(!t) return; buf=t.voiceBuf; shift=t.startPos-mix.off/1000; }
+  asrBusy=true; $('asrStart').disabled=true; $('asrCancel').hidden=false;
+  asrSay('音声を準備中…'); asrProgress(-1);
+  let audio;
+  try{ audio=await to16kMono(buf); }catch(e){ asrSay('音声を変換できませんでした。','err'); asrProgress(null); asrDone(); return; }
+
+  if(asrEngine==='groq'){
+    const key=$('groqKey').value.trim(); store.set('kr-groq-key',key);
+    if(!key){ asrSay('GroqのAPIキーを入れてください。','err'); asrProgress(null); asrDone(); $('groqKey').focus(); return; }
+    const wav=toWav16(audio);
+    if(wav.size>24*1024*1024){ asrSay('音声が長すぎます（25MBまで）。短く録音したテイクを選んでください。','err'); asrProgress(null); asrDone(); return; }
+    const model=$('groqModel').value; label='AI文字起こし（Groq '+model+'）';
+    asrSay('Groqで文字起こし中…');
+    const fd=new FormData(); fd.append('file',wav,'voice.wav'); fd.append('model',model); fd.append('language','ja');
+    fd.append('response_format','verbose_json'); fd.append('temperature','0'); fd.append('timestamp_granularities[]','segment');
+    asrAbort=new AbortController();
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{Authorization:'Bearer '+key},body:fd,signal:asrAbort.signal});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok){
+        asrSay(r.status===401?'GroqのAPIキーが正しくないようです。':r.status===429?'Groqの利用上限に達しました。少し待ってから試してください。':'Groqでエラーが出ました（'+r.status+'）。','err');
+      } else {
+        const segs=(j.segments||[]).filter(s=>!(s.no_speech_prob>0.6)).map(s=>({start:s.start,end:s.end,text:s.text}));
+        applyAsr(segmentsToLines(segs,audio,shift),label);
+      }
+    }catch(e){ if(e.name!=='AbortError') asrSay('Groqに接続できませんでした。ネット接続とキーを確認してください。','err'); }
+    asrProgress(null); asrDone(); return;
+  }
+
+  /* 端末内：Transformers.js（WebGPU があれば使い、無ければCPU） */
+  const g=await detectGpu();
+  const model=$('asrModel').value, big=/large/.test(model);
+  if(big&&!g.ok){ asrSay('このモデルはWebGPUが必要です。標準モデルを選んでください。','err'); asrProgress(null); asrDone(); return; }
+  const device=g.ok?'webgpu':'wasm';
+  const dtype=device==='webgpu'?{encoder_model:big&&g.f16?'fp16':'fp32',decoder_model_merged:'q4'}:'q8';
+  label='AI文字起こし（'+model.split('/')[1]+'）';
+  try{ asrWorker=new Worker(URL.createObjectURL(new Blob([ASR_WORKER],{type:'text/javascript'})),{type:'module'}); }
+  catch(e){ asrSay('このブラウザでは端末内の文字起こしが使えません。Groqを試してください。','err'); asrProgress(null); asrDone(); return; }
+  const files={};
+  asrWorker.onmessage=e=>{
+    const m=e.data;
+    if(m.type==='phase'){ if(m.phase==='load'){ asrSay('モデルを準備中…（初回はダウンロードに数分かかります）'); asrProgress(0); } else { asrSay('文字起こし中…（3〜5分の曲で数十秒〜数分）'); asrProgress(-1); } }
+    else if(m.type==='progress'){ files[m.file]={l:m.loaded||0,t:m.total||0}; let l=0,t=0; for(const k in files){ l+=files[k].l; t+=files[k].t; }
+      if(t) { asrProgress(l/t); asrSay(`モデルをダウンロード中… ${(l/1048576).toFixed(0)} / ${(t/1048576).toFixed(0)} MB`); } }
+    else if(m.type==='done'){
+      const segs=m.chunks.map(c=>({start:c.timestamp&&c.timestamp[0],end:c.timestamp&&c.timestamp[1],text:c.text}));
+      applyAsr(segmentsToLines(segs,audio,shift),label); asrProgress(null); asrDone();
+    }
+    else if(m.type==='error'){ asrSay('文字起こしに失敗しました：'+m.message.slice(0,120),'err'); asrProgress(null); asrDone(); killWorker(); }
+  };
+  asrWorker.onerror=()=>{ asrSay('文字起こしの読み込みに失敗しました。ネット接続を確認してください。','err'); asrProgress(null); asrDone(); killWorker(); };
+  asrWorker.postMessage({model,device,dtype,audio});
+});
+let asrAbort=null;
+function killWorker(){ if(asrWorker){ asrWorker.terminate(); asrWorker=null; } }
+$('asrCancel').addEventListener('click',()=>{ killWorker(); if(asrAbort) asrAbort.abort(); asrSay('中止しました。'); asrProgress(null); asrDone(); });
+function toWav16(f32){
+  const ab=new ArrayBuffer(44+f32.length*2), dv=new DataView(ab);
+  const w=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i))};
+  w(0,'RIFF');dv.setUint32(4,36+f32.length*2,true);w(8,'WAVE');w(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);
+  dv.setUint32(24,16000,true);dv.setUint32(28,32000,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,f32.length*2,true);
+  for(let i=0,o=44;i<f32.length;i++,o+=2){ const s=Math.max(-1,Math.min(1,f32[i])); dv.setInt16(o,s<0?s*0x8000:s*0x7FFF,true); }
+  return new Blob([ab],{type:'audio/wav'});
+}
+
 $('saveLyricsBtn').addEventListener('click',()=>{
   const text=$('lyricsInput').value.replace(/\r/g,''), lrc=parseLrc(text);
   if(lrc.length>=3){ lines=lrc.map(x=>x.s); times=lrc.map(x=>x.s?x.t:null); }
@@ -963,6 +1185,11 @@ $('saveLyricsBtn').addEventListener('click',()=>{
   saveLyrics(); showLyrics(); if(hasTimes()) openFull();
 });
 $('editLyricsBtn').addEventListener('click',()=>{
+  /* 今の歌詞を時間付きのまま編集欄へ（聞き間違いの手直し用） */
+  if(lines.length){
+    $('lyricsInput').value=lines.map((s,i)=>times[i]!=null?`[${String(Math.floor(times[i]/60)).padStart(2,'0')}:${(times[i]%60).toFixed(2).padStart(5,'0')}]${s}`:s).join('\n');
+    $('pasteDetails').open=true;
+  }
   lines=[]; times=[]; showLyrics();
   if(lrcItems.length) renderLrcResults();
   $('lrcQ').focus();

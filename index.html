@@ -448,6 +448,66 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
   .reclabel{display:none}
   .toast{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
 }
+/* playlist */
+.plhead{display:flex;gap:6px;align-items:center}
+.plhead select{flex:1;min-width:0}
+.plctl{display:flex;gap:6px;align-items:center}
+#plShuf{width:44px;padding:0}
+#plShuf[aria-pressed="true"],#plRep:not([data-m="off"]){color:var(--ok);border-color:rgba(50,215,75,.45)}
+#plRepTx{font:500 10px var(--mono);letter-spacing:.06em}
+.plcount{margin-left:auto;font:500 11px var(--mono);color:var(--mute)}
+.pl{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.pl:empty{display:none}
+.pl li{display:flex;align-items:center;gap:2px;border-radius:10px;background:var(--s1);transition:background .15s,box-shadow .15s}
+.pl li.drag{background:var(--s3);box-shadow:0 10px 28px rgba(0,0,0,.5);position:relative;z-index:2}
+.pl .grip{width:26px;height:46px;display:grid;place-items:center;color:var(--dim);cursor:grab;touch-action:none;flex:none}
+.pl .pli{flex:1;min-width:0;justify-content:flex-start;text-align:left;gap:10px;padding:5px;min-height:0;border:1px solid transparent;background:transparent}
+.pl .pli:hover{background:var(--s2)}
+.pl li.now .pli{background:var(--s2);border-color:var(--line2)}
+.pl img,.pl .fthumb{width:64px;aspect-ratio:16/9;object-fit:cover;border-radius:5px;background:var(--s3);flex:none;display:grid;place-items:center;color:var(--mute)}
+.pl .t{display:grid;gap:4px;min-width:0;line-height:1.3}
+.pl .t b{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl .t span{display:flex;gap:6px;align-items:center}
+.pl .t .tag{padding:2px 5px;font-size:9.5px;font-style:normal}
+.pl .pldel{width:34px;min-height:34px;color:var(--dim);flex:none}
+.eqbars{display:inline-flex;gap:2px;align-items:flex-end;height:10px}
+.eqbars i{width:2px;height:40%;background:var(--ok);border-radius:1px;animation:eqb .9s ease-in-out infinite}
+.eqbars i:nth-child(2){animation-delay:-.3s}.eqbars i:nth-child(3){animation-delay:-.6s}
+@keyframes eqb{0%,100%{height:30%}50%{height:100%}}
+.pladd{display:flex;gap:6px;flex-wrap:wrap}
+.pladd>*{flex:1 1 140px}
+.results li{display:flex;align-items:center;gap:2px}
+.results li>button:first-child{flex:1;min-width:0}
+.results .addpl{width:36px;min-height:36px;padding:0;flex:none;color:var(--mute)}
+/* timing editor */
+.sheet-panel.tim{max-width:600px;max-height:92vh;max-height:92dvh}
+.timbar{display:flex;align-items:center;gap:8px;padding-bottom:10px}
+#timPlay{width:42px;height:42px;padding:0;border-radius:50%}
+#timNow{font:500 14px var(--mono);min-width:76px}
+#timTap{margin-left:auto}
+.timscroll{overflow-y:auto;min-height:0;flex:1;display:grid;gap:10px;align-content:start;overscroll-behavior:contain}
+.timglob{display:grid;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.tg{display:grid;gap:6px}
+.tstep{display:grid;grid-template-columns:auto auto minmax(70px,1fr) auto auto auto;gap:4px;align-items:center}
+.tstep button{min-height:36px;padding:0 7px;font:500 11px var(--mono)}
+.tstep input{width:100%;text-align:center;padding:7px 6px;font:500 15px var(--mono)}
+.chk{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mute);cursor:pointer}
+.chk input{accent-color:#fff;width:17px;height:17px;margin:0}
+.timlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.trow{border:1px solid var(--line);border-radius:12px;padding:8px;display:grid;gap:6px;background:var(--s1);transition:border-color .2s,background .2s}
+.trow.cur{border-color:rgba(50,215,75,.6);background:color-mix(in srgb,var(--ok) 7%,var(--s1))}
+.trow.bad .tt{border-color:#ff453a;color:#ff8a80}
+.trow-h{display:flex;gap:6px;align-items:center}
+.trow .tn{font:500 10.5px var(--mono);color:var(--dim);width:22px;flex:none;text-align:right}
+.trow .tx{flex:1;min-width:0;background:transparent;border:1px solid transparent;border-radius:8px;color:var(--ink);font:16px var(--font);padding:6px 8px}
+.trow .tx:focus{border-color:var(--line2);outline:none;background:var(--bg)}
+.trow .tplay{width:36px;min-height:36px;padding:0;flex:none}
+.trow-c{display:flex;gap:4px;align-items:center;flex-wrap:wrap;padding-left:0}
+@media (min-width:520px){.trow-c{padding-left:28px}}
+.trow-c button{min-height:34px;padding:0 8px;font:500 11.5px var(--mono)}
+.trow .tt{width:88px;text-align:center;padding:6px;font:500 14px var(--mono)}
+.tg .sl{display:flex;align-items:center;gap:10px}.tg .sl input{flex:1}.tg output{font:500 12px var(--mono);color:var(--mute);min-width:48px;text-align:right}
+.trow .tsp{width:auto;padding:6px 8px;font:500 12.5px var(--mono);margin-left:auto}
 </style>
 </head>
 <body>
@@ -468,6 +528,11 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6.5 9.5l5.5 5.5 5.5-5.5"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.4 4.4L19 7.4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4.5 19.5l1-4.2L15.8 5a1.9 1.9 0 0 1 2.7 0l.5.5a1.9 1.9 0 0 1 0 2.7L8.7 18.5z"/><path d="M13.9 6.9l3.2 3.2M4.5 19.5h4.2"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3.5 7h3.2c1.6 0 3 .8 3.9 2.1l2.8 5.8c.9 1.3 2.3 2.1 3.9 2.1h2.2"/><path d="M3.5 17h3.2c1.2 0 2.3-.5 3.1-1.3M13.4 8.3c.8-.8 1.9-1.3 3.1-1.3h2.2"/><path d="M17.3 4.6L19.7 7l-2.4 2.4M17.3 14.6l2.4 2.4-2.4 2.4"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4.5 11.2V9.6c0-1.6 1.3-2.9 2.9-2.9h11.1"/><path d="M15.9 4.2l2.6 2.5-2.6 2.5"/><path d="M19.5 12.8v1.6c0 1.6-1.3 2.9-2.9 2.9H5.5"/><path d="M8.1 19.8l-2.6-2.5 2.6-2.5"/></symbol>
+  <symbol id="i-grip" viewBox="0 0 24 24"><path d="M9 6.5h.01M15 6.5h.01M9 12h.01M15 12h.01M9 17.5h.01M15 17.5h.01" stroke-width="2.6" stroke-linecap="round"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 6.8h15M9.6 6.8V4.6c0-.5.4-.9.9-.9h3c.5 0 .9.4.9.9v2.2"/><path d="M6.6 6.8l.9 12.6c.1.9.8 1.6 1.7 1.6h5.6c.9 0 1.6-.7 1.7-1.6l.9-12.6"/><path d="M10.2 10.8v6M13.8 10.8v6"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11.2M7.4 10.8l4.6 4.6 4.6-4.6"/><path d="M5 17.5v1.6c0 .9.7 1.6 1.6 1.6h10.8c.9 0 1.6-.7 1.6-1.6v-1.6"/></symbol>
   <symbol id="i-file" viewBox="0 0 24 24"><path d="M13.8 3H7.3c-.9 0-1.6.7-1.6 1.6v14.8c0 .9.7 1.6 1.6 1.6h9.4c.9 0 1.6-.7 1.6-1.6V7.5z"/><path d="M13.8 3v4.5h4.5"/><path d="M10.6 16.6v-5.2l3.6-.8v4.6" stroke-width="1.4"/><circle cx="9.6" cy="16.7" r="1.1" stroke-width="1.4"/><circle cx="13.2" cy="15.3" r="1.1" stroke-width="1.4"/></symbol>
@@ -528,6 +593,7 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
     <span class="pill" id="tabPill" aria-hidden="true"></span>
     <span class="pill ghost" id="tabGhost" aria-hidden="true"></span>
     <button role="tab" id="t_song" aria-selected="true"><i class="dot" id="dotSong"></i><span data-i18n="chipSong"></span></button>
+    <button role="tab" id="t_pl" aria-selected="false"><span data-i18n="chipPl"></span><span class="badge" id="plBadge">0</span></button>
     <button role="tab" id="t_lyr" aria-selected="false"><i class="dot" id="dotLyr"></i><span data-i18n="chipLyr"></span></button>
     <button role="tab" id="t_mix" aria-selected="false"><span data-i18n="s3"></span></button>
     <button role="tab" id="t_eq" aria-selected="false"><span data-i18n="eq"></span></button>
@@ -587,12 +653,46 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
     </div>
   </section>
 
+  <!-- playlist -->
+  <section class="panel" id="p_pl" role="tabpanel">
+    <div class="plhead">
+      <select class="field" id="plSel" data-i18n-aria="chipPl"></select>
+      <button class="iconbtn" id="plNew" data-i18n-aria="plNew"><svg class="i"><use href="#i-plus"/></svg></button>
+      <button class="iconbtn" id="plRen" data-i18n-aria="plRename"><svg class="i"><use href="#i-pen"/></svg></button>
+      <button class="iconbtn" id="plDel" data-i18n-aria="plDelete"><svg class="i"><use href="#i-trash"/></svg></button>
+    </div>
+    <div class="plctl">
+      <button class="solid" id="plPlay"><svg class="i sm"><use href="#i-play"/></svg><span data-i18n="plPlayAll"></span></button>
+      <button id="plShuf" aria-pressed="false" data-i18n-aria="plShuffle"><svg class="i sm"><use href="#i-shuffle"/></svg></button>
+      <button id="plRep" data-m="all" data-i18n-aria="plRepeat"><svg class="i sm"><use href="#i-repeat"/></svg><span id="plRepTx">ALL</span></button>
+      <span class="plcount" id="plCount"></span>
+    </div>
+    <ol class="pl" id="plList"></ol>
+    <p class="tip" id="plEmpty" data-i18n="plEmpty"></p>
+    <div class="pladd">
+      <button id="plAddCur"><svg class="i sm"><use href="#i-plus"/></svg><span data-i18n="plAddCur"></span></button>
+      <label class="btn" for="plFile"><svg class="i sm"><use href="#i-file"/></svg><span data-i18n="plAddFile"></span><input id="plFile" type="file" accept="audio/*,video/*,.mp3,.m4a,.wav,.aac,.mp4" multiple></label>
+    </div>
+    <form class="search" id="plImport">
+      <svg class="i"><use href="#i-link"/></svg>
+      <input id="plUrl" type="url" inputmode="url" autocomplete="off" data-i18n-ph="plImportPh" data-i18n-aria="plImportPh">
+      <button class="solid" type="submit"><span data-i18n="plImport"></span></button>
+    </form>
+    <span class="status" id="plStatus" hidden></span>
+    <div class="ch" id="bgRow">
+      <span class="ico"><svg class="i sm"><use href="#i-phones"/></svg></span>
+      <span class="nm"><b data-i18n="bgPlay"></b><small data-i18n="bgPlaySub"></small></span>
+      <button class="switch" role="switch" aria-checked="true" id="swBg" data-i18n-aria="bgPlay"></button>
+    </div>
+  </section>
+
   <!-- lyrics -->
   <section class="panel" id="p_lyr" role="tabpanel">
     <div class="stack" id="lyricsView" hidden>
       <div class="lyrhead">
         <span class="src" id="lyrSrc"></span>
         <button class="iconbtn" id="syncBtn" disabled data-i18n-aria="timing"><svg class="i"><use href="#i-metro"/></svg></button>
+        <button class="iconbtn" id="timBtn" data-i18n-aria="timTitle"><svg class="i"><use href="#i-sliders"/></svg></button>
         <button class="iconbtn" id="editLyricsBtn" data-i18n-aria="another"><svg class="i"><use href="#i-lines"/></svg></button>
         <button class="iconbtn" id="fullBtn2" data-i18n-aria="lyrics"><svg class="i"><use href="#i-expand"/></svg></button>
       </div>
@@ -796,6 +896,29 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 </div>
 
 <!-- language sheet -->
+<div class="sheet" id="timSheet" hidden role="dialog" aria-modal="true">
+  <div class="sheet-panel tim">
+    <div class="sheet-h"><svg class="i"><use href="#i-sliders"/></svg><b data-i18n="timTitle"></b><button class="iconbtn ghost" id="timClose" data-i18n-aria="close"><svg class="i"><use href="#i-close"/></svg></button></div>
+    <div class="timbar">
+      <button id="timPlay" data-i18n-aria="play"><svg class="i"><use href="#i-play" id="timPlayIco"/></svg></button>
+      <span id="timNow">0:00.00</span>
+      <button id="timTap"><svg class="i sm"><use href="#i-metro"/></svg><span data-i18n="timTap"></span></button>
+    </div>
+    <div class="timscroll">
+      <div class="timglob">
+        <div class="tg"><span class="lbl" data-i18n="timFirst"></span>
+          <div class="tstep" id="timFirst"><button data-d="-0.5">−0.5</button><button data-d="-0.05">−0.05</button><input class="field" id="timFirstIn" inputmode="decimal" placeholder="--:--.--"><button data-d="0.05">+0.05</button><button data-d="0.5">+0.5</button><button id="timFirstNow" data-i18n-aria="timNow"><svg class="i sm"><use href="#i-metro"/></svg></button></div>
+          <small class="tip" data-i18n="timFirstSub"></small></div>
+        <div class="tg"><span class="lbl" data-i18n="timRate"></span><div class="sl"><input type="range" id="timRate" min="50" max="200" step="5" value="100" data-i18n-aria="timRate"><output id="timRateOut">1.00×</output></div></div>
+        <label class="chk"><input type="checkbox" id="timLink" checked><span data-i18n="timLink"></span></label>
+        <button id="timAuto"><span data-i18n="timAuto"></span></button>
+      </div>
+      <ol class="timlist" id="timList"></ol>
+      <p class="tip" data-i18n="timHint"></p>
+    </div>
+  </div>
+</div>
+
 <div class="sheet" id="langSheet" hidden role="dialog" aria-modal="true">
   <div class="sheet-panel">
     <div class="sheet-h"><svg class="i"><use href="#i-globe"/></svg><b data-i18n="langTitle"></b><button class="iconbtn ghost" id="langClose" data-i18n-aria="close"><svg class="i"><use href="#i-close"/></svg></button></div>
@@ -1723,6 +1846,24 @@ function loadMT(c){ const d=store.get('kr-mt-'+c,null); if(d) MT[c]=d; return d;
 let L=store.get('kr-lang','en'); if(fullKey(L)) L=fullKey(L); else loadMT(L);
 function uiLocale(){ try{ return Intl.getCanonicalLocales(canon(L))[0]; }catch(e){ return 'en'; } }
 const US_URL='karaoke-youtube-eq.user.js';
+Object.assign(I18N.en,{chipPl:"Playlist",plDefault:"My playlist",plNew:"New playlist",plRename:"Rename",plDelete:"Delete playlist",plDelConfirm:'Delete "{name}"?',plNamePrompt:"Playlist name",
+ plPlayAll:"Play",plShuffle:"Shuffle",plRepeat:"Repeat",plCount:"{n} items",plEmpty:"Nothing here yet. Add the current song, files on this device, or a YouTube playlist link.",
+ plAddCur:"Add current song",plAddFile:"Add files",plImportPh:"YouTube playlist or video link",plImport:"Import",plImporting:"Importing…",plImported:"Imported {n}",
+ plImportFail:"Couldn't read that link. Paste a YouTube playlist (…list=…) or video link.",plAdded:'Added {n} to "{name}"',plDup:"Already in this playlist",plNoCur:"Nothing is loaded yet",
+ plMissing:"This file is no longer on this device. Please add it again.",plSaveFail:"Couldn't save the file on this device (storage may be full).",plRemoved:"Removed from the playlist",plRemove:"Remove",plEnd:"End of the playlist",addToPl:"Add to playlist",
+ bgPlay:"Background playback",bgPlaySub:"Audio files keep playing with the screen off or in another app. YouTube only plays while this screen is open (a YouTube restriction).",bgYtWait:"YouTube paused in the background. It will continue when you come back.",
+ timTitle:"Lyric timing",timTap:"Tap along",timFirst:"First lyric starts at",timFirstSub:"Moving this moves every line together.",timRate:"Highlight speed (all lines)",timLink:"Move the following lines too",
+ timAuto:"Fill empty times automatically",timAutoDone:"Filled {n} lines",timNeedStart:"Set when the first line starts first.",timNow:"Now",timSpd:"Line speed",
+ timHint:"“Now” sets the line to the current playback position. ▶ plays from just before the line. ×speed changes how fast that line's highlight moves.",timOpen:"Adjust timing"});
+Object.assign(I18N.ja,{chipPl:"プレイリスト",plDefault:"マイプレイリスト",plNew:"新しいプレイリスト",plRename:"名前を変更",plDelete:"プレイリストを削除",plDelConfirm:"「{name}」を削除しますか？",plNamePrompt:"プレイリストの名前",
+ plPlayAll:"再生",plShuffle:"シャッフル",plRepeat:"リピート",plCount:"{n}曲",plEmpty:"まだ空です。今の曲、この端末の音楽ファイル、YouTubeのプレイリストのリンクから追加できます。",
+ plAddCur:"今の曲を追加",plAddFile:"ファイルを追加",plImportPh:"YouTubeのプレイリスト・動画のリンク",plImport:"取り込む",plImporting:"取り込み中…",plImported:"{n}曲を取り込みました",
+ plImportFail:"リンクを読み取れませんでした。YouTubeのプレイリスト（…list=…）か動画のリンクを貼ってください。",plAdded:"「{name}」に{n}曲追加しました",plDup:"すでにこのプレイリストにあります",plNoCur:"まだ曲が読み込まれていません",
+ plMissing:"このファイルは端末に残っていません。もう一度追加してください。",plSaveFail:"端末に保存できませんでした（空き容量を確認してください）。",plRemoved:"プレイリストから外しました",plRemove:"外す",plEnd:"プレイリストの最後です",addToPl:"プレイリストに追加",
+ bgPlay:"バックグラウンド再生",bgPlaySub:"画面を消しても、別のアプリを開いても、音源ファイルは流れ続けます。YouTubeは仕組み上、この画面を開いている間だけ再生できます。",bgYtWait:"YouTubeは裏では止まります。戻ってくると続きから再生します。",
+ timTitle:"歌詞のタイミング",timTap:"タップで記録",timFirst:"最初の歌詞のスタート",timFirstSub:"ここを動かすと、全部の行が一緒に動きます。",timRate:"塗りの速さ（全体）",timLink:"後ろの行も一緒にずらす",
+ timAuto:"空欄の時間を自動で埋める",timAutoDone:"{n}行の時間を埋めました",timNeedStart:"先に最初の行のスタートを決めてください。",timNow:"今",timSpd:"行の速さ",
+ timHint:"「今」で今の再生位置をその行のスタートにします。▶ は行の少し前から再生します。×の数字はその行の塗りの速さです。",timOpen:"タイミングを調整"});
 I18N.en.usInstall='Install userscript ↗'; I18N.ja.usInstall='ユーザースクリプトを入れる ↗';
 function usLink(){ const a=document.createElement('a'); a.href=US_URL; a.target='_blank'; a.rel='noopener'; a.className='uslink'; a.textContent=t('usInstall'); return a; }
 function t(k,v){
@@ -1844,7 +1985,7 @@ function hideToast(){ $('toast').hidden=true; }
 
 /* ===== タブ ===== */
 /* タブ：横スワイプのページと、動く四角 */
-const TABS=['song','lyr','mix','eq','takes'];
+const TABS=['song','pl','lyr','mix','eq','takes'];
 let curTab='song', pagerLock=false;
 const pager=$('pager'), pill=$('tabPill'), ghost=$('tabGhost');
 function placePill(el,target){ target.style.width=el.offsetWidth+'px'; target.style.transform=`translateX(${el.offsetLeft}px)`; }
@@ -2141,6 +2282,7 @@ $('ytLoad').addEventListener('click',()=>{ const id=parseYt($('ytUrl').value); i
 $('ytUrl').addEventListener('keydown',e=>{ if(e.key==='Enter') $('ytLoad').click(); });
 async function openYt(id,autoplay,title){
   if(recorder) return;
+  if(!plOpening) plClear();
   stopTake();
   /* 「前へ」で戻れるように、今の動画を履歴に積む */
   if(ytSrc.id&&ytSrc.id!==id&&!openYt.fromHistory){ ytHist.push({id:ytSrc.id,title:ytSrc.title}); if(ytHist.length>50) ytHist.shift(); }
@@ -2161,6 +2303,8 @@ async function openYt(id,autoplay,title){
         if(e.data===1) ytStarted();
         if(e.data===0) onEnded();
         if(e.data===2&&performance.now()-ytSrc.selfPause>1200){ if(recorder) stopRec(); if(tp) stopTake(); }
+        /* 画面を閉じた瞬間に止められたら、もう一度だけ再生を試す（Android/PCでは続く。iPhoneはYouTube側の制限で止まる） */
+        if(e.data===2&&document.hidden&&bgOn&&bg.ytAt&&performance.now()-bg.ytAt<3000&&performance.now()-ytSrc.selfPause>1200){ bg.ytResume=true; setTimeout(()=>{ try{ ytSrc.player.playVideo(); }catch(_){} },250); }
         syncPlayBtn(); updateOnAir();
       },
       onError(e){ say($('ytStatus'),(e.data===101||e.data===150)?t('ytBlocked'):t('ytErr'),'err'); }
@@ -2169,7 +2313,8 @@ async function openYt(id,autoplay,title){
 function waitYt(n=0){
   const d=ytSrc.duration();
   if(d>0){
-    try{ const tt=ytSrc.player.getVideoData().title; if(tt&&!ytSrc.title){ ytSrc.title=tt; nowTitle=tt; showNow(); store.set('kr-yt',{id:ytSrc.id,title:tt}); } }catch(e){}
+    try{ const tt=ytSrc.player.getVideoData().title; if(tt&&!ytSrc.title){ ytSrc.title=tt; nowTitle=tt; showNow(); store.set('kr-yt',{id:ytSrc.id,title:tt}); }
+      if(tt) plTitle(ytSrc.id,tt); mediaMeta(); }catch(e){}
     say($('ytStatus'),''); refreshDuration(); updateButtons(); autoLyrics();
     pingYtEq(); setTimeout(pingYtEq,1500);
   } else if(n<40) setTimeout(()=>waitYt(n+1),250);
@@ -2217,6 +2362,9 @@ function renderResults(items,append){
     const li=document.createElement('li'); li.style.setProperty('--d',k);
     li.innerHTML=`<button type="button" aria-current="${!append&&i===0}"><img src="${esc(th)}" alt="" loading="lazy"><span class="t"><b>${esc(unesc(sn.title))}</b><span>${esc(unesc(sn.channelTitle))}</span></span></button>`;
     li.firstChild.addEventListener('click',()=>{ if(recorder) return; openYt(it.id.videoId,true,unesc(sn.title)); });
+    const ad=document.createElement('button'); ad.type='button'; ad.className='iconbtn ghost addpl'; ad.setAttribute('aria-label',t('addToPl')); ad.innerHTML='<svg class="i sm"><use href="#i-plus"/></svg>';
+    ad.addEventListener('click',()=>{ const n=plAdd([{type:'yt',id:it.id.videoId,title:unesc(sn.title)}]); bump(ad,'hit'); toast(n?t('plAdded',{n,name:curPl().name}):t('plDup'),null,null,2200); });
+    li.appendChild(ad);
     ul.appendChild(li);
   });
 }
@@ -2231,7 +2379,9 @@ async function ytPage(q,token){
   return {items:(j.items||[]).filter(it=>it.id&&it.id.videoId),token:j.nextPageToken||''};
 }
 async function nextVideo(){
-  if(recorder||mode!=='yt') return;
+  if(recorder) return;
+  if(plActive()){ plNext(false); return; }
+  if(mode!=='yt') return;
   if(!apiKey){ toast(t('nextNeedKey')); return; }
   $('nextV').disabled=true;
   try{
@@ -2260,6 +2410,7 @@ async function nextVideo(){
 function prevVideo(){
   if(recorder) return;
   if(tp){ playTake(tp.t,tp.withSong,0); return; }
+  if(plActive()){ plPrev(); return; }
   const s=src(), cur=s.ready()?(s.playing()?s.pos():+$('seek').value):0;
   /* 3秒以上進んでいれば頭へ、頭付近なら前の動画へ */
   if(cur>3||mode!=='yt'||!ytHist.length){ skip(-cur); return; }
@@ -2267,6 +2418,303 @@ function prevVideo(){
 }
 $('prevV').addEventListener('click',()=>{ bump($('prevV'),'nudge'); prevVideo(); });
 $('nextV').addEventListener('click',()=>{ bump($('nextV'),'nudge'); nextVideo(); });
+
+/* ===================== プレイリスト =====================
+   ・YouTube は動画IDだけ、音源ファイルは端末の中（IndexedDB）に本体を保存
+   ・曲が終わると次へ。シャッフル／リピート（全体・1曲・なし）
+   ・ドックの ⏮ ⏭ もプレイリストの前後に切り替わる */
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const idb=(()=>{
+  let dbp=null;
+  const open=()=>dbp||(dbp=new Promise((res,rej)=>{ const r=indexedDB.open('kr-db',1); r.onupgradeneeded=()=>r.result.createObjectStore('files'); r.onsuccess=()=>res(r.result); r.onerror=()=>{ dbp=null; rej(r.error); }; }));
+  const run=async(mode,fn)=>{ const db=await open(); return new Promise((res,rej)=>{ const tx=db.transaction('files',mode), q=fn(tx.objectStore('files')); tx.oncomplete=()=>res(q&&q.result); tx.onerror=()=>rej(tx.error); tx.onabort=()=>rej(tx.error); }); };
+  return { put:(k,v)=>run('readwrite',st=>st.put(v,k)), get:k=>run('readonly',st=>st.get(k)), del:k=>run('readwrite',st=>st.delete(k)) };
+})();
+var pls=store.get('kr-pls',null);
+if(!Array.isArray(pls)||!pls.length) pls=[{id:uid(),name:t('plDefault'),items:[]}];
+var plCur=store.get('kr-plcur',pls[0].id); if(!pls.some(x=>x.id===plCur)) plCur=pls[0].id;
+var plMode={shuffle:store.get('kr-plshuf',false),repeat:store.get('kr-plrep','all')};
+var plNow={list:null,k:null}, plHist=[], plOpening=false;
+const savePls=()=>{ store.set('kr-pls',pls); store.set('kr-plcur',plCur); };
+const plOf=id=>pls.find(x=>x.id===id);
+const curPl=()=>plOf(plCur)||pls[0];
+function plIndex(){ if(!plNow||!plNow.list) return -1; const P=plOf(plNow.list); return P?P.items.findIndex(x=>x.k===plNow.k):-1; }
+function plActive(){ try{ return plIndex()>=0; }catch(e){ return false; } }
+function plClear(){ if(plNow&&plNow.list){ plNow={list:null,k:null}; renderPL(); updateButtons(); } }
+function plTitle(id,tt){ let ch=false; pls.forEach(P=>P.items.forEach(x=>{ if(x.type==='yt'&&x.id===id&&!x.title){ x.title=tt; ch=true; } })); if(ch){ savePls(); renderPL(); } }
+
+function renderPL(){
+  const sel=$('plSel'); if(!sel) return;
+  sel.innerHTML=''; pls.forEach(P=>{ const o=document.createElement('option'); o.value=P.id; o.textContent=`${P.name}  (${P.items.length})`; sel.appendChild(o); }); sel.value=plCur;
+  const P=curPl(), ul=$('plList'); ul.innerHTML='';
+  $('plEmpty').hidden=P.items.length>0; $('plPlay').disabled=!P.items.length;
+  $('plCount').textContent=P.items.length?t('plCount',{n:P.items.length}):'';
+  $('plBadge').textContent=P.items.length;
+  P.items.forEach((it,i)=>{
+    const li=document.createElement('li'); li.dataset.k=it.k;
+    const on=plNow.list===P.id&&plNow.k===it.k; li.classList.toggle('now',on);
+    const th=it.type==='yt'?`<img src="https://i.ytimg.com/vi/${encodeURIComponent(it.id)}/mqdefault.jpg" alt="" loading="lazy">`:`<span class="fthumb"><svg class="i"><use href="#i-file"/></svg></span>`;
+    li.innerHTML=`<span class="grip"><svg class="i sm"><use href="#i-grip"/></svg></span>`+
+      `<button class="pli" type="button">${th}<span class="t"><b>${esc(it.title||'YouTube · '+(it.id||''))}</b><span><i class="tag">${it.type==='yt'?'YOUTUBE':'FILE'}</i>${on?'<i class="eqbars"><i></i><i></i><i></i></i>':''}</span></span></button>`+
+      `<button class="iconbtn ghost pldel" type="button" aria-label="${esc(t('plRemove'))}"><svg class="i sm"><use href="#i-close"/></svg></button>`;
+    li.querySelector('.pli').addEventListener('click',()=>plPlay(P.id,i));
+    li.querySelector('.pldel').addEventListener('click',()=>plRemove(P.id,it.k));
+    li.querySelector('.grip').addEventListener('pointerdown',e=>plDrag(e,li));
+    ul.appendChild(li);
+  });
+  $('plShuf').setAttribute('aria-pressed',plMode.shuffle);
+  $('plRep').dataset.m=plMode.repeat; $('plRepTx').textContent=plMode.repeat==='one'?'1':plMode.repeat==='all'?'ALL':'OFF';
+  if(typeof fitPager==='function') requestAnimationFrame(fitPager);
+}
+function plAdd(items,lid){
+  const P=plOf(lid||plCur)||curPl(); let n=0;
+  for(const it of items){ if(it.type==='yt'&&P.items.some(x=>x.type==='yt'&&x.id===it.id)) continue; P.items.push(Object.assign({k:uid()},it)); n++; }
+  savePls(); renderPL(); return n;
+}
+async function plAddFiles(files){
+  let n=0; say($('plStatus'),t('loading'));
+  for(const f of files){
+    try{
+      let fid=(fileSrc.file===f&&fileSrc.fid)||null;
+      if(!fid){ fid=uid(); await idb.put(fid,{ab:await f.arrayBuffer(),name:f.name,type:f.type||''}); if(fileSrc.file===f) fileSrc.fid=fid; }
+      n+=plAdd([{type:'file',fid,title:f.name.replace(/\.[^.]+$/,''),size:f.size}]);
+    }catch(e){ say($('plStatus'),t('plSaveFail'),'err'); return; }
+  }
+  say($('plStatus'),''); if(n) toast(t('plAdded',{n,name:curPl().name}),null,null,2400);
+  try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){}
+}
+function plAddCurrent(){
+  if(mode==='yt'&&ytSrc.id){ const n=plAdd([{type:'yt',id:ytSrc.id,title:ytSrc.title||nowTitle||''}]); toast(n?t('plAdded',{n,name:curPl().name}):t('plDup'),null,null,2400); return; }
+  if(mode==='file'&&fileSrc.file){ plAddFiles([fileSrc.file]); return; }
+  toast(t('plNoCur'),null,null,2400);
+}
+async function gcFiles(){
+  const used=new Set(); pls.forEach(P=>P.items.forEach(x=>x.fid&&used.add(x.fid)));
+  for(const x of (gcFiles.gone||[])) if(!used.has(x)) try{ await idb.del(x); }catch(e){}
+  gcFiles.gone=[];
+}
+function plRemove(lid,k){
+  const P=plOf(lid), i=P.items.findIndex(x=>x.k===k); if(i<0) return;
+  const [it]=P.items.splice(i,1); savePls(); renderPL(); updateButtons();
+  if(it.fid){ (gcFiles.gone=gcFiles.gone||[]).push(it.fid); clearTimeout(gcFiles.tm); gcFiles.tm=setTimeout(gcFiles,7000); }
+  toast(t('plRemoved'),t('undo'),()=>{ P.items.splice(Math.min(i,P.items.length),0,it); savePls(); renderPL(); updateButtons(); },5000);
+}
+async function plPlay(lid,i,opt){
+  if(recorder) return;
+  const P=plOf(lid), it=P&&P.items[i]; if(!it) return;
+  if(plNow.k&&plNow.k!==it.k&&!(opt&&opt.back)){ plHist.push({list:plNow.list,k:plNow.k}); if(plHist.length>200) plHist.shift(); }
+  plNow={list:lid,k:it.k}; renderPL();
+  plOpening=true;
+  try{
+    if(it.type==='yt'){ if(mode!=='yt') setMode('yt'); openYt.fromHistory=true; await openYt(it.id,true,it.title||''); }
+    else {
+      let rec=null; try{ rec=await idb.get(it.fid); }catch(e){}
+      if(!rec){ toast(t('plMissing')); return; }
+      if(mode!=='file') setMode('file');
+      const f=new File([rec.ab],rec.name,{type:rec.type||''});
+      if(await loadSongFile(f,it.fid)){ ensureCtx(); fileSrc.play(0); setTimeout(syncPlayBtn,60); }
+    }
+  } finally { plOpening=false; updateButtons(); mediaMeta(); }
+}
+function plNextIdx(auto){
+  const P=plOf(plNow.list); if(!P) return -1; const n=P.items.length, i=plIndex(); if(!n) return -1;
+  if(auto&&plMode.repeat==='one'&&i>=0) return i;
+  if(plMode.shuffle&&n>1){
+    const recent=new Set(plHist.filter(h=>h.list===P.id).slice(-(n-1)).map(h=>h.k)); recent.add(plNow.k);
+    let cand=P.items.map((x,j)=>j).filter(j=>!recent.has(P.items[j].k));
+    if(!cand.length){ if(auto&&plMode.repeat==='off') return -1; cand=P.items.map((x,j)=>j).filter(j=>j!==i); }
+    return cand[Math.floor(Math.random()*cand.length)];
+  }
+  if(i+1<n) return i+1;
+  return (auto&&plMode.repeat==='off')?-1:0;
+}
+function plNext(auto){ const j=plNextIdx(auto); if(j<0){ toast(t('plEnd'),null,null,2000); return false; } plPlay(plNow.list,j); return true; }
+function plPrev(){
+  const s=src(), cur=s.ready()?(s.playing()?s.pos():+$('seek').value):0;
+  if(cur>3){ skip(-cur); return; }
+  const P=plOf(plNow.list); let h;
+  while((h=plHist.pop())){ if(h.list===P.id){ const j=P.items.findIndex(x=>x.k===h.k); if(j>=0){ plPlay(P.id,j,{back:true}); return; } } }
+  const i=plIndex(); plPlay(P.id,(i-1+P.items.length)%P.items.length,{back:true});
+}
+/* 並べ替え：左のつまみを上下にドラッグ */
+function plDrag(e,li){
+  e.preventDefault(); const ul=$('plList'); li.classList.add('drag');
+  const mv=ev=>{ ev.preventDefault(); const y=ev.clientY; let before=null;
+    for(const x of ul.children){ if(x===li) continue; const r=x.getBoundingClientRect(); if(y<r.top+r.height/2){ before=x; break; } }
+    if(before!==li.nextSibling&&before!==li) ul.insertBefore(li,before); };
+  const up=()=>{ window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',up); window.removeEventListener('pointercancel',up);
+    li.classList.remove('drag'); const P=curPl(), order=[...ul.children].map(x=>x.dataset.k);
+    P.items.sort((a,b)=>order.indexOf(a.k)-order.indexOf(b.k)); savePls(); renderPL(); };
+  window.addEventListener('pointermove',mv,{passive:false}); window.addEventListener('pointerup',up); window.addEventListener('pointercancel',up);
+}
+/* YouTube のプレイリスト／動画リンクを取り込む */
+async function plImport(raw){
+  raw=(raw||'').trim(); if(!raw) return;
+  const m=raw.match(/[?&]list=([\w-]+)/)||(/^(PL|OL|UU|FL|LL)[\w-]{10,}$/.test(raw)?[0,raw]:null);
+  if(!m){
+    const id=parseYt(raw);
+    if(id){ const n=plAdd([{type:'yt',id,title:''}]); fillTitles(); toast(n?t('plAdded',{n,name:curPl().name}):t('plDup'),null,null,2400); $('plUrl').value=''; say($('plStatus'),''); }
+    else say($('plStatus'),t('plImportFail'),'err');
+    return;
+  }
+  const list=m[1]; say($('plStatus'),t('plImporting'));
+  try{
+    let items=[];
+    if(apiKey){
+      let tok='';
+      do{
+        const r=await fetch('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId='+encodeURIComponent(list)+(tok?'&pageToken='+encodeURIComponent(tok):'')+'&key='+encodeURIComponent(apiKey));
+        const j=await r.json(); if(!r.ok) throw new Error(r.status);
+        for(const x of j.items||[]){ const sn=x.snippet||{}, vid=sn.resourceId&&sn.resourceId.videoId; if(vid&&!/^(Private|Deleted) video$/.test(sn.title||'')) items.push({type:'yt',id:vid,title:unesc(sn.title||'')}); }
+        tok=j.nextPageToken||'';
+      }while(tok&&items.length<500);
+    }
+    if(!items.length){ const ids=await ytListIds(list); items=ids.map(id=>({type:'yt',id,title:''})); }
+    if(!items.length) throw new Error('empty');
+    const n=plAdd(items); say($('plStatus'),t('plImported',{n}),'ok'); $('plUrl').value=''; fillTitles();
+  }catch(e){ say($('plStatus'),t('plImportFail'),'err'); }
+}
+/* APIキーが無いときは、見えないプレーヤーにプレイリストを読ませて動画IDを受け取る */
+function ytListIds(list){
+  return new Promise(async res=>{
+    try{ await loadYtApi(); }catch(e){ res([]); return; }
+    const host=document.createElement('div'); host.style.cssText='position:fixed;left:-10000px;top:0;width:320px;height:180px;opacity:0;pointer-events:none';
+    const d=document.createElement('div'); host.appendChild(d); document.body.appendChild(host);
+    let done=false, pl=null;
+    const fin=v=>{ if(done) return; done=true; try{ pl&&pl.destroy(); }catch(e){} host.remove(); res(v||[]); };
+    pl=new YT.Player(d,{width:320,height:180,playerVars:{listType:'playlist',list,playsinline:1,autoplay:0,mute:1},events:{
+      onReady:()=>{ let n=0; const iv=setInterval(()=>{ let ids=null; try{ ids=pl.getPlaylist(); }catch(e){} if(ids&&ids.length){ clearInterval(iv); fin(ids.slice()); } else if(++n>48){ clearInterval(iv); fin([]); } },250); },
+      onError:()=>fin([]) }});
+    setTimeout(()=>fin([]),16000);
+  });
+}
+/* 題名が分からない動画は、公開の oEmbed で題名だけ取ってくる */
+const ttTried=new Set(); let ttBusy=false;
+async function fillTitles(){
+  if(ttBusy) return; ttBusy=true;
+  try{
+    for(let round=0;round<40;round++){
+      const todo=[]; pls.forEach(P=>P.items.forEach(x=>{ if(x.type==='yt'&&!x.title&&!ttTried.has(x.id)&&!todo.includes(x.id)) todo.push(x.id); }));
+      if(!todo.length) break;
+      await Promise.all(todo.slice(0,4).map(async id=>{
+        ttTried.add(id); const u='https://www.youtube.com/watch?v='+id;
+        for(const api of ['https://www.youtube.com/oembed?format=json&url=','https://noembed.com/embed?url=']){
+          try{ const r=await fetch(api+encodeURIComponent(u)); if(!r.ok) continue; const j=await r.json(); if(j&&j.title){ plTitle(id,j.title); break; } }catch(e){}
+        }
+      }));
+    }
+  } finally { ttBusy=false; }
+}
+$('plSel').addEventListener('change',e=>{ plCur=e.target.value; savePls(); renderPL(); });
+$('plNew').addEventListener('click',()=>{ const nm=(prompt(t('plNamePrompt'),t('plDefault')+' '+(pls.length+1))||'').trim(); if(!nm) return; const P={id:uid(),name:nm,items:[]}; pls.push(P); plCur=P.id; savePls(); renderPL(); });
+$('plRen').addEventListener('click',()=>{ const P=curPl(); const nm=(prompt(t('plNamePrompt'),P.name)||'').trim(); if(!nm) return; P.name=nm; savePls(); renderPL(); });
+$('plDel').addEventListener('click',()=>{
+  const P=curPl(); if(!confirm(t('plDelConfirm',{name:P.name}))) return;
+  (gcFiles.gone=gcFiles.gone||[]).push(...P.items.filter(x=>x.fid).map(x=>x.fid));
+  pls=pls.filter(x=>x!==P); if(!pls.length) pls=[{id:uid(),name:t('plDefault'),items:[]}];
+  if(plNow.list===P.id) plNow={list:null,k:null};
+  plCur=pls[0].id; savePls(); renderPL(); updateButtons(); gcFiles();
+});
+$('plPlay').addEventListener('click',()=>{ const P=curPl(); if(!P.items.length) return; ensureCtx(); const i=plMode.shuffle?Math.floor(Math.random()*P.items.length):0; plHist=[]; plNow={list:null,k:null}; plPlay(P.id,i); });
+$('plShuf').addEventListener('click',()=>{ plMode.shuffle=!plMode.shuffle; store.set('kr-plshuf',plMode.shuffle); renderPL(); });
+$('plRep').addEventListener('click',()=>{ plMode.repeat={all:'one',one:'off',off:'all'}[plMode.repeat]||'all'; store.set('kr-plrep',plMode.repeat); renderPL(); });
+$('plAddCur').addEventListener('click',plAddCurrent);
+$('plFile').addEventListener('change',e=>{ const fs=[...e.target.files]; e.target.value=''; if(fs.length) plAddFiles(fs); });
+$('plImport').addEventListener('submit',e=>{ e.preventDefault(); $('plUrl').blur(); plImport($('plUrl').value); });
+renderPL(); setTimeout(fillTitles,1500);
+
+/* ===================== 裏で流し続ける（バックグラウンド再生） =====================
+   ・音源ファイル：画面が隠れた瞬間に、ふつうの <audio> へ同じ位置から引き継ぐ（iPhoneでも画面ロック中に流れ続ける）
+     戻ってきたら、元の高音質の再生（イコライザー・録音対応）へ同じ位置で戻す。プレイリストの次のファイルも裏で続ける
+   ・ロック画面／コントロールセンターの ⏯ ⏮ ⏭ にも対応（Media Session） */
+var bgOn=store.get('kr-bg',true);
+const bg={on:false,el:null,url:'',pending:null,ytAt:0,ytResume:false,waitYt:-1};
+$('swBg').setAttribute('aria-checked',bgOn);
+$('swBg').addEventListener('click',()=>{ bgOn=!bgOn; store.set('kr-bg',bgOn); $('swBg').setAttribute('aria-checked',bgOn); });
+function bgEl(){
+  if(!bg.el){ const a=document.createElement('audio'); a.preload='auto'; a.setAttribute('playsinline',''); a.setAttribute('webkit-playsinline','');
+    a.addEventListener('ended',bgEnded); document.body.appendChild(a); bg.el=a; }
+  return bg.el;
+}
+/* iPhoneは「タップから始めた再生」しか許さないので、操作のたびに裏用プレーヤーを一度だけ起こしておく */
+function bgBless(){
+  if(!bgOn||mode!=='file'||!fileSrc.url||bg.on) return;
+  const a=bgEl(); if(a._bl===fileSrc.url) return; a._bl=fileSrc.url;
+  a.src=fileSrc.url; a.muted=true;
+  const pr=a.play(); if(pr&&pr.then) pr.then(()=>{ a.pause(); a.muted=false; }).catch(()=>{ a.muted=false; a._bl=''; }); else { a.pause(); a.muted=false; }
+}
+['pointerdown','touchend','keydown'].forEach(ev=>document.addEventListener(ev,bgBless,{passive:true}));
+function bgHide(){
+  if(!bgOn||recorder||tp) return;
+  if(!(IOS||/Android/i.test(navigator.userAgent))) return;   // PCのブラウザは裏でもそのまま鳴り続ける
+  if(mode==='file'&&fileSrc.playing()&&fileSrc.url){
+    const a=bgEl(), p=fileSrc.pos();
+    if(a.src!==fileSrc.url) a.src=fileSrc.url;
+    try{ a.currentTime=p; }catch(e){}
+    a.muted=false; bg.on=true; bg.pending=null; bg.waitYt=-1;
+    const pr=a.play();
+    fileSrc.stop();
+    if(pr&&pr.catch) pr.catch(()=>{ bg.on=false; ensureCtx(); fileSrc.play(p); });
+  } else if(mode==='yt'&&ytSrc.playing()) bg.ytAt=performance.now();
+}
+async function bgShow(){
+  bg.ytAt=0;
+  if(bg.ytResume){ bg.ytResume=false; if(mode==='yt'&&ytSrc.ok&&!ytSrc.playing()&&!recorder) try{ ytSrc.player.playVideo(); }catch(e){} }
+  if(!bg.on) return;
+  const a=bg.el, p=a.currentTime||0, was=!a.paused; a.pause(); bg.on=false;
+  if(bg.waitYt>=0){ const j=bg.waitYt; bg.waitYt=-1; plPlay(plNow.list,j); return; }
+  if(bg.pending){ const f=bg.pending; bg.pending=null; plOpening=true; let ok=false; try{ ok=await loadSongFile(f.file,f.fid); } finally{ plOpening=false; } if(!ok) return; }
+  $('seek').value=p; if(was){ ensureCtx(); fileSrc.play(p); } else refreshDuration();
+  setTimeout(syncPlayBtn,60); renderPL(); mediaMeta();
+}
+async function bgEnded(){
+  if(!bg.on||!plActive()) return;
+  const j=plNextIdx(true); if(j<0) return;
+  const P=plOf(plNow.list), it=P.items[j];
+  if(it.type!=='file'){ bg.waitYt=j; return; }   // YouTube は裏では始められない → 戻ってきたら再生
+  let rec=null; try{ rec=await idb.get(it.fid); }catch(e){} if(!rec) return;
+  const f=new File([rec.ab],rec.name,{type:rec.type||''});
+  if(bg.url) URL.revokeObjectURL(bg.url); bg.url=URL.createObjectURL(f);
+  bg.el.src=bg.url; try{ bg.el.currentTime=0; }catch(e){} bg.el.play().catch(()=>{});
+  plHist.push({list:plNow.list,k:plNow.k}); plNow={list:P.id,k:it.k};
+  bg.pending={file:f,fid:it.fid}; renderPL(); mediaMeta(it.title);
+}
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) bgHide(); else bgShow(); });
+window.addEventListener('pagehide',bgHide);
+
+/* ロック画面・コントロールセンター */
+function mediaMeta(title){
+  if(!('mediaSession' in navigator)) return;
+  try{
+    const P=plActive()?plOf(plNow.list):null;
+    const art=mode==='yt'&&ytSrc.id&&!title?[{src:`https://i.ytimg.com/vi/${ytSrc.id}/hqdefault.jpg`,sizes:'480x360',type:'image/jpeg'}]:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}];
+    navigator.mediaSession.metadata=new MediaMetadata({title:title||nowTitle||'Karaoke REC',artist:P?P.name:(mode==='yt'?'YouTube':''),album:'カラオケ録音オリジナル',artwork:art});
+  }catch(e){}
+}
+if('mediaSession' in navigator){
+  const H=(a,f)=>{ try{ navigator.mediaSession.setActionHandler(a,f); }catch(e){} };
+  H('play',()=>{ if(bg.on){ bg.el.play().catch(()=>{}); return; } if(!src().playing()) togglePlay(); });
+  H('pause',()=>{ if(bg.on){ bg.el.pause(); return; } if(src().playing()) togglePlay(); });
+  H('previoustrack',()=>{ if(bg.on){ try{ bg.el.currentTime=0; }catch(e){} return; } prevVideo(); });
+  H('nexttrack',()=>{ if(bg.on){ bgEnded(); return; } nextVideo(); });
+  H('seekbackward',()=>{ if(bg.on){ bg.el.currentTime=Math.max(0,bg.el.currentTime-10); return; } skip(-10); });
+  H('seekforward',()=>{ if(bg.on){ bg.el.currentTime+=10; return; } skip(10); });
+  H('seekto',d=>{ if(bg.on){ bg.el.currentTime=d.seekTime; return; } const s=src(); if(s.ready()){ $('seek').value=d.seekTime; if(s.playing()) s.seek(d.seekTime); else if(mode==='yt') ytSrc.seek(d.seekTime); } });
+  let lastKey='';
+  setInterval(()=>{
+    try{
+      const ms=navigator.mediaSession, s=src(), playing=bg.on?!bg.el.paused:(s.ready()&&s.playing());
+      ms.playbackState=playing?'playing':'paused';
+      const key=mode+'|'+nowTitle+'|'+ytSrc.id; if(key!==lastKey&&!bg.on){ lastKey=key; mediaMeta(); }
+      const d=bg.on?bg.el.duration:s.duration(), p=bg.on?bg.el.currentTime:(s.ready()?(s.playing()?s.pos():+$('seek').value):0);
+      if(ms.setPositionState&&d>0&&isFinite(d)) ms.setPositionState({duration:d,position:Math.max(0,Math.min(d,p)),playbackRate:1});
+    }catch(e){}
+  },1000);
+}
+/* 音の扱い：マイクを使っていない間は「再生専用」にして、消音スイッチや画面ロックで止まりにくくする */
+function setAudioSession(){ try{ if(navigator.audioSession) navigator.audioSession.type=micStream?'play-and-record':'playback'; }catch(e){} }
+['pointerdown','touchend'].forEach(ev=>document.addEventListener(ev,setAudioSession,{passive:true}));
+
 $('pasteBtn').addEventListener('click',async()=>{
   let text=''; try{ text=await navigator.clipboard.readText(); }catch(e){}
   const id=parseYt(text);
@@ -2289,15 +2737,18 @@ function drawPeaks(cv,peaks,prog,colA,colB){
   for(let i=0;i<n;i++){ const h=Math.max(1.5,peaks[i]*H*.92); g.fillStyle=(i/n)<prog?colA:colB; g.fillRect(i*bw+.5,(H-h)/2,Math.max(1,bw-1.2),h); }
 }
 function drawArtWave(prog){ if(fileSrc.peaks) drawPeaks($('artWave'),fileSrc.peaks,prog,'#ededf0','#3a3a43'); }
-$('songFile').addEventListener('change',async e=>{
-  const f=e.target.files[0]; if(!f) return;
+$('songFile').addEventListener('change',e=>{ const f=e.target.files[0]; if(f) loadSongFile(f); });
+async function loadSongFile(f,fid){
+  if(!plOpening) plClear();
   say($('songStatus'),t('loading'));
   try{ ensureCtx(); stopTake(); fileSrc.stop();
     fileSrc.buf=await decodeAB(await f.arrayBuffer()); fileSrc.name=f.name.replace(/\.[^.]+$/,''); fileSrc.peaks=computePeaks(fileSrc.buf,160);
+    fileSrc.file=f; fileSrc.fid=fid||null; if(fileSrc.url) URL.revokeObjectURL(fileSrc.url); fileSrc.url=URL.createObjectURL(f);
     nowTitle=fileSrc.name; srcKey='file:'+fileSrc.name; resetAuto(); vadLocal=null; showNow();
-    say($('songStatus'),f.name,'ok'); $('seek').value=0; refreshDuration(); updateButtons(); refreshAsrSrc(); autoLyrics();
-  }catch(err){ say($('songStatus'),t('fileFail'),'err'); }
-});
+    say($('songStatus'),f.name,'ok'); $('seek').value=0; refreshDuration(); updateButtons(); refreshAsrSrc(); autoLyrics(); mediaMeta();
+    return true;
+  }catch(err){ say($('songStatus'),t('fileFail'),'err'); return false; }
+}
 
 /* ===== マイク ===== */
 async function setupMic(deviceId){
@@ -2366,7 +2817,7 @@ function updateButtons(){
   $('seek').disabled=$('fSeek').disabled=busy||!r;
   $('back10').disabled=$('fwd10').disabled=busy||!(r||tp);
   $('prevV').disabled=busy||!(r||tp);
-  $('nextV').disabled=busy||mode!=='yt'||!ytSrc.id;
+  $('nextV').disabled=busy||!(plActive()||(mode==='yt'&&ytSrc.id));
   $('syncBtn').disabled=!r||!lines.length||busy;
   $('fullBtn').disabled=!lines.length;
   $('modeYt').disabled=$('modeFile').disabled=busy;
@@ -2391,6 +2842,7 @@ function onEnded(){
   const wasRec=!!recorder, wasTake=!!tp;
   if(syncing) endSync(); if(recorder) stopRec(); if(tp) stopTake(); syncPlayBtn();
   /* 普通に聴いていて曲が終わったら、検索結果の次の動画へ（録音・テイク再生の後は止まったまま） */
+  if(!wasRec&&!wasTake&&plActive()){ setTimeout(()=>{ if(!recorder&&!tp&&!src().playing()) plNext(true); },500); return; }
   if(!wasRec&&!wasTake&&mode==='yt'&&queue&&apiKey) setTimeout(()=>{ if(!recorder&&!tp&&!ytSrc.playing()) nextVideo(); },1200);
 }
 function togglePlay(){
@@ -2636,21 +3088,26 @@ setInterval(()=>{ let on=false; try{ const s=src(); on=!!(recorder||(s.ready()&&
 
 /* ===== 歌詞 ===== */
 let lines=[], times=[], subs=[], lyrSig='', curLine=-1, syncing=false, syncIdx=0, lyrKey='', lyrLabel='';
-(function(){ const s=store.get('kr-lyrics',null); if(s&&s.lines){ lines=s.lines; times=s.times||[]; subs=s.subs||[]; lyrKey=s.key||''; lyrLabel=s.label||''; lyrSig=sigOf(); } })();
+var spd=[], spdSig='', fillRate=store.get('kr-fillrate',1), timEditing=false;
+(function(){ const s=store.get('kr-lyrics',null); if(s&&s.lines){ lines=s.lines; times=s.times||[]; subs=s.subs||[]; lyrKey=s.key||''; lyrLabel=s.label||''; spd=s.spd||[]; spdSig=s.spdSig||''; lyrSig=sigOf(); } })();
+/* 行ごとの塗りの速さ：歌詞が変わったら全部 ×1 に戻す */
+function ensureSpd(){ const sg=lines.join('\u0001'); if(spd.length!==lines.length||spdSig!==sg){ spd=lines.map(()=>1); spdSig=sg; } }
 function sigOf(){ return lines.length+'|'+lines.join('\u0001')+'|'+times.join(','); }
 let lyrOff=store.get('kr-lyroff',0);
-const saveLyrics=()=>{ mergeDup(); store.set('kr-lyrics',{lines,times,subs,key:lyrKey,label:lyrLabel}); };
+const saveLyrics=()=>{ mergeDup(); ensureSpd(); store.set('kr-lyrics',{lines,times,subs,spd,spdSig,key:lyrKey,label:lyrLabel}); };
 /* 同じ時刻の行（原文と訳など）は1行にまとめ、2行目は小さく添える。同時に光って重なるのを防ぐ */
 function mergeDup(){
+  if(timEditing) return;
   if(sigOf()===lyrSig&&subs.length===lines.length) return;
   if(subs.length!==lines.length) subs=lines.map(()=> '');
-  const L=[],T=[],S=[];
+  ensureSpd();
+  const L=[],T=[],S=[],P=[];
   for(let i=0;i<lines.length;i++){
     const j=L.length-1;
     if(j>=0&&times[i]!=null&&T[j]!=null&&Math.abs(times[i]-T[j])<0.06&&lines[i].trim()&&L[j].trim()){ S[j]=(S[j]?S[j]+' / ':'')+lines[i]; continue; }
-    L.push(lines[i]); T.push(times[i]); S.push(subs[i]||'');
+    L.push(lines[i]); T.push(times[i]); S.push(subs[i]||''); P.push(spd[i]||1);
   }
-  lines=L; times=T; subs=S; lyrSig=sigOf(); tokCache=[];
+  lines=L; times=T; subs=S; spd=P; spdSig=lines.join('\u0001'); lyrSig=sigOf(); tokCache=[];
 }
 const hasTimes=()=>times.some(x=>x!=null);
 function seekToLine(i){
@@ -2838,7 +3295,8 @@ function syncStep(){
   const li=$('fullList').children[k]; if(!li||!li._tk) return;
   if(eng.k!==k){ eng.k=k; eng.b=0; eng.total=li._tk.reduce((a,x)=>a+x.w,0)||1; eng.silent=0; eng.hold=0; eng.crossed=-1; }
   const t0=times[k], nt=nextTimed(k), gap=nt!=null?nt-t0:6, into=p+off-t0, left=(t0+gap)-(p+off);
-  const D=Math.max(.9,Math.min(gap*.92-.1,Math.max(1.3,eng.total*.36)));
+  const rate=(fillRate||1)*(spd[k]||1);
+  const D=Math.max(.4,Math.min(gap*.92-.1,Math.max(1.3,eng.total*.36)/rate));
   const base=eng.total/D, remaining=eng.total-eng.b;
   const need=left>.12?remaining/(left-.1):remaining/.02;      // 次の行に間に合わせるための最低速度
   let speed=Math.max(base,need);
@@ -2957,7 +3415,7 @@ $('saveLyricsBtn').addEventListener('click',()=>{
     if(raw.join('\n')!==lines.join('\n')) times=[];
     lines=raw;
   }
-  lyrKey=srcKey; lyrLabel=t('pasted'); saveLyrics(); showLyrics(); if(hasTimes()) openFull();
+  lyrKey=srcKey; lyrLabel=t('pasted'); saveLyrics(); showLyrics(); if(hasTimes()) openFull(); else openTim();
 });
 $('editLyricsBtn').addEventListener('click',()=>{
   if(lines.length){
@@ -2982,6 +3440,119 @@ function markNext(){
 function endSync(){ syncing=false; $('syncBar').hidden=true; $('lyricsHint').hidden=false; $('lyricsList').classList.remove('syncing'); saveLyrics(); showLyrics(); }
 $('nextLineBtn').addEventListener('click',markNext);
 $('syncDoneBtn').addEventListener('click',()=>{ endSync(); src().stop(); setTimeout(syncPlayBtn,80); });
+
+/* ===================== 歌詞のタイミング調整 =====================
+   ・行ごとのスタート時刻（0.01秒単位）／−0.1・+0.1／「今」で再生位置をそのまま記録／▶で少し前から試聴
+   ・行ごとの塗りの速さ（×0.5〜×2）と全体の速さ
+   ・最初の歌詞のスタートを動かすと全部の行が一緒に動く
+   ・時刻が空欄の行は、前後の行の時刻と文字数から自動で埋める */
+const fmtc=v=>{ if(v==null||!isFinite(v)) return ''; v=Math.max(0,v); const m=Math.floor(v/60), x=v-m*60; return m+':'+x.toFixed(2).padStart(5,'0'); };
+function parseTc(x){ x=String(x).trim().replace(/：/g,':').replace(/,/g,'.'); if(!x) return null;
+  let m=x.match(/^(\d+):(\d{1,2}(?:\.\d+)?)$/); if(m) return +m[1]*60+parseFloat(m[2]);
+  return /^\d+(?:\.\d+)?$/.test(x)?parseFloat(x):NaN; }
+const r2=v=>Math.round(v*100)/100;
+const firstNB=()=>{ for(let i=0;i<lines.length;i++) if(lines[i].trim()) return i; return -1; };
+function openTim(){
+  if(!lines.length) return;
+  timEditing=true; ensureSpd(); while(times.length<lines.length) times.push(null);
+  for(let i=0;i<times.length;i++) if(times[i]===undefined) times[i]=null;
+  $('timRate').value=Math.round((fillRate||1)*100); $('timRateOut').textContent=(fillRate||1).toFixed(2)+'×'; paintRange($('timRate'));
+  timRender(); $('timSheet').hidden=false;
+}
+function closeTim(){
+  if($('timSheet').hidden) return;
+  $('timSheet').hidden=true; timEditing=false; clearTimeout(timApply.tm);
+  saveLyrics(); showLyrics();
+}
+function timRender(){
+  const ol=$('timList'); ol.innerHTML='';
+  lines.forEach((ln,i)=>{
+    if(!ln.trim()) return;
+    const li=document.createElement('li'); li.className='trow'; li.dataset.i=i;
+    li.innerHTML=`<div class="trow-h"><span class="tn">${i+1}</span><input class="tx" enterkeyhint="done"><button class="tplay" type="button" aria-label="${esc(t('play'))}"><svg class="i sm"><use href="#i-play"/></svg></button></div>`+
+      `<div class="trow-c"><button type="button" data-d="-0.1">−0.1</button><input class="field tt" inputmode="decimal" placeholder="--:--.--" aria-label="${esc(t('timFirst'))}"><button type="button" data-d="0.1">+0.1</button>`+
+      `<button type="button" class="tnow"><svg class="i sm"><use href="#i-metro"/></svg>${esc(t('timNow'))}</button>`+
+      `<select class="field tsp" aria-label="${esc(t('timSpd'))}">${[0.5,0.75,1,1.25,1.5,2].map(v=>`<option value="${v}">×${v}</option>`).join('')}</select></div>`;
+    const tx=li.querySelector('.tx'), tt=li.querySelector('.tt'), sp=li.querySelector('.tsp');
+    tx.value=ln; tt.value=fmtc(times[i]); sp.value=String(spd[i]||1);
+    tx.addEventListener('change',()=>{ const v=tx.value.trim(); if(!v){ tx.value=lines[i]; return; } lines[i]=v; spdSig=lines.join('\u0001'); tokCache=[]; timApply(); });
+    tt.addEventListener('change',()=>{ const v=parseTc(tt.value); if(Number.isNaN(v)){ tt.value=fmtc(times[i]); return; } if(v==null){ times[i]=null; timApply(); return; } timSet(i,v); });
+    li.querySelectorAll('[data-d]').forEach(b=>b.addEventListener('click',()=>{ timShift(i,+b.dataset.d); bump(b,'hit'); }));
+    li.querySelector('.tnow').addEventListener('click',e=>{ const s=src(); if(!s.ready()) return; const p=s.playing()?s.pos():+$('seek').value; timSet(i,p+effOff()); bump(e.currentTarget,'hit'); });
+    li.querySelector('.tplay').addEventListener('click',()=>timPreview(i));
+    sp.addEventListener('change',()=>{ spd[i]=+sp.value; eng.k=-1; timApply(true); });
+    ol.appendChild(li);
+  });
+  timRefresh();
+}
+/* 表示だけ更新（入力中の欄は書き換えない） */
+function timRefresh(){
+  const f=firstNB(); $('timFirstIn').value=f>=0?fmtc(times[f]):'';
+  let prev=-1;
+  for(const li of $('timList').children){
+    const i=+li.dataset.i, tt=li.querySelector('.tt');
+    if(document.activeElement!==tt) tt.value=fmtc(times[i]);
+    const bad=times[i]!=null&&prev>=0&&times[i]<prev-0.001; li.classList.toggle('bad',bad);
+    if(times[i]!=null) prev=times[i];
+  }
+}
+function timApply(light){
+  resetAuto(); lyrSig=sigOf(); timRefresh();
+  store.set('kr-lyrics',{lines,times,subs,spd,spdSig,key:lyrKey,label:lyrLabel});
+  if(light) return;
+  clearTimeout(timApply.tm); timApply.tm=setTimeout(()=>{ showLyrics(); },250);
+}
+function timShift(i,d,all){
+  if(times[i]==null){ let base=0; for(let k=i-1;k>=0;k--) if(times[k]!=null){ base=times[k]+2; break; } times[i]=r2(Math.max(0,base+Math.max(0,d))); timApply(); return; }
+  const link=all||$('timLink').checked;
+  for(let k=i;k<lines.length;k++){ if(times[k]==null) continue; if(k>i&&!link) break; times[k]=r2(Math.max(0,times[k]+d)); }
+  timApply();
+}
+function timSet(i,v){ v=r2(Math.max(0,v)); if(times[i]==null){ times[i]=v; timApply(); return; } timShift(i,v-times[i]); }
+function timPreview(i){
+  if(times[i]==null||recorder) return; const s=src(); if(!s.ready()) return;
+  ensureCtx(); stopTake();
+  const p=Math.max(0,times[i]-effOff()-1.2); $('seek').value=p;
+  if(s.playing()) s.seek(p); else s.play(p);
+  setTimeout(syncPlayBtn,80);
+}
+/* 空欄を埋める：前後の行の時刻のあいだを、各行の長さ（拍の数）で割り振る。最後の行より後は1拍0.38秒で伸ばす */
+function timAutoFill(){
+  const idx=lines.map((x,i)=>i).filter(i=>lines[i].trim()); if(!idx.length) return;
+  if(times[idx[0]]==null){ toast(t('timNeedStart'),null,null,2600); $('timFirstIn').focus(); return; }
+  const w=i=>beats(lines[i])*.38+1.0; let n=0;
+  for(let a=0;a<idx.length;){
+    let b=a+1; while(b<idx.length&&times[idx[b]]==null) b++;
+    if(b>a+1){
+      const t0=times[idx[a]];
+      if(b<idx.length){ const t1=times[idx[b]]; let tot=0; for(let k=a;k<b;k++) tot+=w(idx[k]); let acc=t0; for(let k=a+1;k<b;k++){ acc+=(t1-t0)*w(idx[k-1])/tot; times[idx[k]]=r2(acc); n++; } }
+      else { let acc=t0; for(let k=a+1;k<b;k++){ acc+=w(idx[k-1]); times[idx[k]]=r2(acc); n++; } }
+    }
+    a=b;
+  }
+  timApply(); timRefresh(); toast(t('timAutoDone',{n}),null,null,2200);
+}
+$('timBtn').addEventListener('click',openTim);
+$('timClose').addEventListener('click',closeTim);
+$('timSheet').addEventListener('click',e=>{ if(e.target===$('timSheet')) closeTim(); });
+$('timPlay').addEventListener('click',()=>{ ensureCtx(); togglePlay(); });
+$('timTap').addEventListener('click',()=>{ closeTim(); setTab('lyr'); setTimeout(()=>{ if(!$('syncBtn').disabled) $('syncBtn').click(); },350); });
+$('timAuto').addEventListener('click',timAutoFill);
+$('timFirst').querySelectorAll('[data-d]').forEach(b=>b.addEventListener('click',()=>{ const f=firstNB(); if(f<0) return; timShift(f,+b.dataset.d,true); bump(b,'hit'); }));
+$('timFirstIn').addEventListener('change',()=>{ const f=firstNB(); if(f<0) return; const v=parseTc($('timFirstIn').value); if(v==null||Number.isNaN(v)){ timRefresh(); return; }
+  if(times[f]==null){ times[f]=r2(v); timApply(); } else timShift(f,r2(v)-times[f],true); });
+$('timFirstNow').addEventListener('click',e=>{ const f=firstNB(), s=src(); if(f<0||!s.ready()) return; const p=(s.playing()?s.pos():+$('seek').value)+effOff();
+  if(times[f]==null){ times[f]=r2(p); timApply(); } else timShift(f,r2(p)-times[f],true); bump(e.currentTarget,'hit'); });
+$('timRate').addEventListener('input',e=>{ fillRate=+e.target.value/100; $('timRateOut').textContent=fillRate.toFixed(2)+'×'; paintRange(e.target); store.set('kr-fillrate',fillRate); eng.k=-1; });
+/* 再生位置と今の行を表示 */
+setInterval(()=>{
+  if($('timSheet').hidden) return;
+  const s=src(), on=s.ready()&&s.playing(), p=s.ready()?(on?s.pos():+$('seek').value):0;
+  $('timNow').textContent=fmtc(p+effOff()); $('timPlayIco').setAttribute('href',on?'#i-pause':'#i-play');
+  const k=hasTimes()?lineAt(p):-1;
+  if(k!==timRefresh.k){ timRefresh.k=k; for(const li of $('timList').children){ const on2=+li.dataset.i===k; li.classList.toggle('cur',on2); if(on2&&on) li.scrollIntoView({block:'nearest',behavior:'smooth'}); } }
+},100);
+
 
 /* 全画面歌詞 */
 /* 歌詞リストの上下の余白は、リスト自身の高さから決める（画面の高さで決めると低い画面で下のボタンが押し出される） */
@@ -3415,7 +3986,7 @@ $('revAmt').addEventListener('input',e=>{ eqState.voice.rev=+e.target.value; $('
 
 /* ===== キーボード ===== */
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){ if(!$('langSheet').hidden) closeLang(); else if(!$('full').hidden) closeFull(); else if(counting) counting.cancel=true; return; }
+  if(e.key==='Escape'){ if(!$('timSheet').hidden) closeTim(); else if(!$('langSheet').hidden) closeLang(); else if(!$('full').hidden) closeFull(); else if(counting) counting.cancel=true; return; }
   if(e.metaKey||e.ctrlKey||e.altKey) return;
   const a=document.activeElement; if(a&&(/TEXTAREA|SELECT/.test(a.tagName)||(a.tagName==='INPUT'&&a.type!=='range'))) return;
   if(e.code==='Space'){ e.preventDefault(); if(syncing) markNext(); else if(!$('playBtn').disabled||tp) togglePlay(); }

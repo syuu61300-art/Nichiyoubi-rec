@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="カラオケ録音">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f0f11">
 <title>カラオケ録音オリジナル</title>
@@ -125,7 +130,9 @@ canvas#meter{flex:1;height:10px;min-width:0;display:block}
 .pager{display:flex;align-items:flex-start;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;direction:ltr;
   transition:height .28s ease;min-width:0;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .pager::-webkit-scrollbar{display:none}
-.pager>.panel{flex:0 0 100%;min-width:0;max-width:100%;scroll-snap-align:start;scroll-snap-stop:always}
+.pager>.panel{flex:0 0 100%;min-width:0;max-width:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;overflow:clip;contain:paint;grid-template-columns:minmax(0,1fr)}
+.panel .stack{grid-template-columns:minmax(0,1fr)}
+.lyrics li{overflow-wrap:anywhere}
 .panel>*{min-width:0}
 .presets{flex:1;min-width:0}
 [dir="rtl"] .pager>.panel{direction:rtl}
@@ -350,7 +357,13 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 .lyrics li .sub{font-size:12px;color:var(--dim);margin-top:2px}
 .autostate{font:500 11px var(--mono);letter-spacing:.08em;color:var(--dim)}
 .autostate.live{color:var(--ok)}
-.autobadge{font:500 10px var(--mono);letter-spacing:.1em;color:#0b0b0d;background:var(--ok);border-radius:4px;padding:2px 6px}
+.autobadge{font:500 10.5px var(--mono)!important;letter-spacing:.08em;color:#fff;background:rgba(255,255,255,.14)!important;border:0!important;border-radius:999px!important;min-height:28px!important;padding:0 10px!important;gap:6px}
+.full-list li{overflow-wrap:anywhere}
+.autobadge{white-space:nowrap;flex:none}
+.autobadge::before{content:"";width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);flex:none}
+.autobadge[aria-checked="true"]::before{background:var(--ok)}
+.autobadge.live::before{box-shadow:0 0 0 3px rgba(50,215,75,.25)}
+.autobadge[aria-checked="false"]{color:rgba(255,255,255,.55)}
 .full-empty{text-align:center;color:rgba(255,255,255,.7);margin:auto;font-size:14px;max-width:30em}
 .full-bottom{max-width:760px;width:100%;margin:0 auto;display:grid;gap:10px;padding-block:6px 14px}
 .full-off{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;color:rgba(255,255,255,.65)}
@@ -772,7 +785,7 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed}
   <div class="full-bottom">
     <div class="full-off">
       <span data-i18n="offLabel"></span>
-      <button id="offMinus">−0.1</button><output id="offVal">0.0</output><button id="offPlus">+0.1</button><span class="autobadge" id="autoBadge" hidden>AUTO</span><button class="calib" id="calibF" data-i18n-aria="calibHint"><svg class="i sm"><use href="#i-metro"/></svg><span data-i18n="calib"></span></button>
+      <button id="offMinus">−0.1</button><output id="offVal">0.0</output><button id="offPlus">+0.1</button><button class="autobadge" id="autoBadge" role="switch" aria-checked="true" data-i18n-aria="autoSync">AUTO</button><button class="calib" id="calibF" data-i18n-aria="calibHint"><svg class="i sm"><use href="#i-metro"/></svg><span data-i18n="calib"></span></button>
     </div>
     <div class="bar"><span class="time" id="fNow" style="color:rgba(255,255,255,.7)">0:00</span><input id="fSeek" type="range" min="0" max="0" step="0.1" value="0" aria-label="Position"><span class="time" id="fDur" style="color:rgba(255,255,255,.7)">0:00</span></div>
     <div class="full-ctrl">
@@ -2292,7 +2305,7 @@ async function setupMic(deviceId){
   const st=await navigator.mediaDevices.getUserMedia({audio:{deviceId:deviceId?{exact:deviceId}:undefined,echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
   if(micStream) micStream.getTracks().forEach(x=>x.stop());
   if(micSrc) try{ micSrc.disconnect(); }catch(e){}
-  micStream=st; micSrc=ctx.createMediaStreamSource(st);
+  micStream=st; micSrc=ctx.createMediaStreamSource(st); vadMic=null;
   if(!analyser){
     analyser=ctx.createAnalyser(); analyser.fftSize=1024;
     monitorGain=ctx.createGain(); monitorGain.connect(voiceChain.input);
@@ -2525,7 +2538,18 @@ async function renderMix(tk){
   if(offS>=0) v.start(0,offS); else v.start(-offS,0);
   const out=await new Promise(res=>{ off.oncomplete=e=>res(e.renderedBuffer); const p=off.startRendering(); if(p&&p.then) p.then(res); });
   if(tk.mixUrl) URL.revokeObjectURL(tk.mixUrl);
-  tk.mixUrl=URL.createObjectURL(toWav(out));
+  tk.mixBlob=toWav(out); tk.mixUrl=URL.createObjectURL(tk.mixBlob);
+}
+/* 保存：iPhone（とくにホーム画面に追加したアプリ）は download が効かないので共有シートで「ファイルに保存」へ */
+const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+async function saveFile(blob,url,name){
+  if(blob&&(IOS||STANDALONE)&&navigator.canShare){
+    try{ const f=new File([blob],name,{type:blob.type||'application/octet-stream'});
+      if(navigator.canShare({files:[f]})){ await navigator.share({files:[f],title:name}); return; } }
+    catch(e){ if(e&&e.name==='AbortError') return; }
+  }
+  const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
 }
 function toWav(buf){
   const ch=buf.numberOfChannels,len=buf.length,rate=buf.sampleRate;
@@ -2563,7 +2587,7 @@ function renderTakes(){
       <p class="tip">${esc(ov?t('overlay'):t('voiceOnlyNote'))}</p>
       <div class="row acts">
         <button data-a="voice">${ic('voice','sm')}${esc(t('voiceOnly'))}</button>
-        <a class="btn" href="${tk.url}" download="karaoke_take${tk.n}_voice.${ext}">${ic('down','sm')}${esc(t('saveVoice'))}</a>
+        <button data-a="save">${ic('down','sm')}${esc(t('saveVoice'))}</button>
         ${tk.mode==='file'&&ov&&tk.voiceBuf?`<button data-a="mix">${ic('down','sm')}${esc(t('saveMix'))}</button>`:''}
       </div>`;
     if(tk.peaks){
@@ -2584,16 +2608,31 @@ function renderTakes(){
     el.querySelector('[data-a="play"]').addEventListener('click',()=>playing?stopTake():playTake(tk,true));
     el.querySelector('[data-a="voice"]').addEventListener('click',()=>playTake(tk,false));
     el.querySelector('[data-a="del"]').addEventListener('click',()=>deleteTake(tk));
+    el.querySelector('[data-a="save"]').addEventListener('click',()=>saveFile(tk.blob,tk.url,`karaoke_take${tk.n}_voice.${ext}`));
     const mb=el.querySelector('[data-a="mix"]');
     if(mb) mb.addEventListener('click',async()=>{
       mb.disabled=true; const lbl=mb.innerHTML; mb.textContent=t('making');
       await renderMix(tk);
-      const a=document.createElement('a'); a.href=tk.mixUrl; a.download=`karaoke_take${tk.n}_mix.wav`; document.body.appendChild(a); a.click(); a.remove();
+      await saveFile(tk.mixBlob,tk.mixUrl,`karaoke_take${tk.n}_mix.wav`);
       mb.disabled=false; mb.innerHTML=lbl;
     });
     box.appendChild(el);
   }
 }
+
+/* ホーム画面アプリ：戻ってきたら音を再開、再生・録音中は画面を消さない */
+let wakeLk=null;
+async function keepAwake(on){
+  try{
+    if(on&&!wakeLk&&navigator.wakeLock&&!document.hidden){ wakeLk=await navigator.wakeLock.request('screen'); wakeLk.addEventListener('release',()=>{ wakeLk=null; }); }
+    else if(!on&&wakeLk){ const w=wakeLk; wakeLk=null; await w.release(); }
+  }catch(e){}
+}
+function wakeUp(){ if(ctx&&ctx.state!=='running'&&ctx.state!=='closed') ctx.resume().catch(()=>{}); }
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ wakeUp(); } });
+window.addEventListener('pageshow',wakeUp);
+['pointerdown','touchend','keydown'].forEach(ev=>document.addEventListener(ev,wakeUp,{passive:true}));
+setInterval(()=>{ let on=false; try{ const s=src(); on=!!(recorder||(s.ready()&&s.playing())); }catch(e){} keepAwake(on); },2000);
 
 /* ===== 歌詞 ===== */
 let lines=[], times=[], subs=[], lyrSig='', curLine=-1, syncing=false, syncIdx=0, lyrKey='', lyrLabel='';
@@ -2732,6 +2771,15 @@ function makeLocalVad(){
     vadLocal={L:mk(0),R:mk(1),bl:new Float32Array(512),br:new Float32Array(512),floor:-9,on:false,offFor:1,onFor:0};
   }catch(e){ vadLocal=null; }
 }
+let vadMic=null;
+function makeMicVad(){
+  if(vadMic||!ctx||!micSrc) return;
+  try{ const hp=ctx.createBiquadFilter(), lp=ctx.createBiquadFilter(), an=ctx.createAnalyser();
+    hp.type='highpass'; hp.frequency.value=280; lp.type='lowpass'; lp.frequency.value=3400; an.fftSize=512;
+    micSrc.connect(hp); hp.connect(lp); lp.connect(an);
+    const b=new Float32Array(512); vadMic={L:an,R:an,bl:b,br:b,floor:-9,on:false,offFor:1,onFor:0};
+  }catch(e){ vadMic=null; }
+}
 function vadStep(v){
   v.L.getFloatTimeDomainData(v.bl); v.R.getFloatTimeDomainData(v.br);
   let em=0,es=0,el=0,er=0;
@@ -2781,6 +2829,8 @@ function syncStep(){
   const now=performance.now(), dt=Math.min(.05,Math.max(0,(now-(syncStep.last||now))/1000)); syncStep.last=now;
   const s=src(), playing=s.ready()&&s.playing();
   if(autoOn&&playing&&mode==='file'){ makeLocalVad(); if(vadLocal) onVad(vadStep(vadLocal),fileSrc.pos(),'file'); }
+  /* ユーザースクリプトが使えない（ホーム画面アプリなど）YouTubeでは、マイクに入る自分の歌声で合わせる */
+  else if(autoOn&&playing&&mode==='yt'&&micSrc&&!(vad.src==='yt'&&now-vad.at<500)){ makeMicVad(); if(vadMic) onVad(vadStep(vadMic),s.pos(),'mic'); }
   /* 補正値は急に飛ばさず、1秒あたり最大2秒ずつ寄せる */
   if(autoOn){ const d=autoTarget-autoAdj; autoAdj+=Math.max(-.02,Math.min(.02,d)); }
   if(!playing||syncing||!hasTimes()||$('full').hidden) return;
@@ -2950,16 +3000,19 @@ $('fullClose').addEventListener('click',closeFull);
 $('fullSwap').addEventListener('click',()=>{ closeFull(); setTab('lyr'); if(lines.length) $('editLyricsBtn').click(); setTimeout(()=>$('lrcQ').focus({preventScroll:true}),400); });
 function showOff(){ const s=(lyrOff>0?'+':'')+lyrOff.toFixed(1)+t('sec'); $('offVal').textContent=$('offVal2').textContent=s; store.set('kr-lyroff',lyrOff); }
 const nudge=d=>{ lyrOff=Math.round((lyrOff+d)*10)/10; showOff(); };
-$('swAuto').setAttribute('aria-checked',autoOn);
-$('swAuto').addEventListener('click',()=>{ autoOn=!autoOn; store.set('kr-autosync',autoOn); $('swAuto').setAttribute('aria-checked',autoOn); if(!autoOn) resetAuto(); showOff(); });
+function setAuto(v){ autoOn=!!v; store.set('kr-autosync',autoOn); $('swAuto').setAttribute('aria-checked',autoOn); $('autoBadge').setAttribute('aria-checked',autoOn); if(!autoOn) resetAuto(); showOff(); }
+setAuto(autoOn);
+$('swAuto').addEventListener('click',()=>setAuto(!autoOn));
+$('autoBadge').addEventListener('click',e=>{ setAuto(!autoOn); bump(e.currentTarget,'hit'); toast(t('autoSync')+': '+(autoOn?'ON':'OFF'),null,null,1600); });
 /* 自動同期の状態：聞き取り中か、どれだけ補正しているか */
 setInterval(()=>{
   const live=autoOn&&vad.at&&performance.now()-vad.at<400;
   const st=$('autoState'); st.classList.toggle('live',!!live);
-  st.textContent=!autoOn?'OFF':live?('● LIVE '+(autoAdj>=0?'+':'')+autoAdj.toFixed(2)+t('sec')):'—';
-  { const an=$('autoNote'), h=!(autoOn&&mode==='yt'&&!live&&!ytEqLinked); an.hidden=h;
+  st.textContent=!autoOn?'OFF':live?('● LIVE'+(vad.src==='mic'?' MIC ':' ')+(autoAdj>=0?'+':'')+autoAdj.toFixed(2)+t('sec')):'—';
+  { const an=$('autoNote'), h=!(autoOn&&mode==='yt'&&!live&&!ytEqLinked&&!micSrc); an.hidden=h;
     if(!h&&!an.querySelector('a')){ an.textContent=t('autoNoSrc')+' '; an.appendChild(usLink()); } }
-  $('autoBadge').hidden=!live; if(live) $('autoBadge').textContent='AUTO '+(autoAdj>=0?'+':'')+autoAdj.toFixed(1)+t('sec');
+  const ab=$('autoBadge'); ab.classList.toggle('live',!!live);
+  ab.textContent=!autoOn?'AUTO OFF':live?('AUTO '+(autoAdj>=0?'+':'')+autoAdj.toFixed(1)+t('sec')):'AUTO ON';
 },120);
 /* 歌い出しの瞬間に1回タップ → いちばん近い行の開始時刻に合わせて、ズレ補正を自動で決める */
 function calibrate(btn){

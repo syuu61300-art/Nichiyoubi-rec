@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Karaoke Rec Original — YouTube EQ
 // @namespace    karaoke-rec-original
-// @version      1.1.0
-// @description  10-band equalizer for YouTube. Inside the Karaoke Rec Original page it follows the app's "Song" equalizer and reports singing activity every 10 ms so the lyrics stay in time.
+// @version      1.2.0
+// @description  10-band equalizer for YouTube. Presses YouTube's own "Skip" button as soon as it appears and keeps ads muted. Inside the Karaoke Rec Original page it follows the app's "Song" equalizer and reports singing activity every 10 ms so the lyrics stay in time.
 // @match        https://www.youtube.com/*
 // @match        https://m.youtube.com/*
 // @match        https://www.youtube-nocookie.com/*
@@ -279,6 +279,26 @@
     faders.forEach(({ r, out }, i) => { if (!fromSlider) r.value = st.g[i]; out.textContent = (st.g[i] > 0 ? '+' : '') + st.g[i]; });
     note.hidden = !remote;
   }
+
+  /* ---------- 広告：YouTube の「スキップ」ボタンが出たらすぐ押す・広告のあいだは消音 ----------
+     （広告そのものを消したり早送りしたりはしない。スキップできない広告は終わるまで消音で待つ） */
+  let adWas = false, adPrevMuted = null;
+  const SKIP = '.ytp-skip-ad-button, .ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-ad-skip-button-container button, button[id^="skip-button"]';
+  setInterval(() => {
+    const pl = document.querySelector('.html5-video-player'); if (!pl) return;
+    const ad = pl.classList.contains('ad-showing') || pl.classList.contains('ad-interrupting');
+    const v = pl.querySelector('video');
+    if (ad) {
+      const sk = pl.querySelector(SKIP);
+      if (sk && sk.offsetParent !== null) sk.click();
+      if (v && adPrevMuted === null) { adPrevMuted = v.muted; v.muted = true; }
+    } else if (adPrevMuted !== null) {
+      if (v) v.muted = adPrevMuted; adPrevMuted = null;
+    }
+    const oc = document.querySelector('.ytp-ad-overlay-close-button, .ytp-ad-overlay-close-container button');
+    if (oc && oc.offsetParent !== null) oc.click();
+    if (ad !== adWas) { adWas = ad; if (window.parent !== window) window.parent.postMessage({ type: 'kr-ad', on: ad }, '*'); }
+  }, 200);
 
   scan();
 })();
